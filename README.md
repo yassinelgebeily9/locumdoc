@@ -10,7 +10,9 @@ Email notifications go out for sign-ups, new applications, status changes, invit
 
 ## Run it locally
 
-Requires Python 3.10+.
+**On a Mac:** double-click `start-local.command` in Finder. It sets everything up on first run and opens the site at http://localhost:5050 with demo data (admin login: admin@test.local / admin-password-1).
+
+**Manually** (Python 3.10+):
 
 ```bash
 pip install -r requirements.txt

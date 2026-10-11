@@ -164,7 +164,7 @@ def edit_job(job_id):
 def job(job_id):
     j = own_job(job_id)
     status = request.args.get("status", "")
-    sql = ("SELECT a.*, d.title AS dtitle, d.first_name, d.last_name, d.grade, d.years_experience,"
+    sql = ("SELECT a.*, d.title AS dtitle, d.first_name, d.last_name, d.grade, d.academic_rank, d.years_experience,"
            " d.qatar_license_status, d.current_country, d.available_from, s.name AS specialty FROM applications a"
            " JOIN doctors d ON d.user_id = a.doctor_id LEFT JOIN specialties s ON s.id = d.specialty_id"
            " WHERE a.job_id = ?")
@@ -223,7 +223,7 @@ def application_status(app_id):
 def doctors():
     fac = get_facility(g.user["id"])
     specialties = query("SELECT id, name FROM specialties ORDER BY name")
-    f = {k: request.args.get(k, "").strip() for k in ("specialty", "grade", "licence", "available", "q")}
+    f = {k: request.args.get(k, "").strip() for k in ("specialty", "grade", "academic", "licence", "available", "q")}
     rows, total, page, per = [], 0, 1, 20
     if fac["verified"]:
         where = ["d.visible_to_facilities = 1", "u.is_active = 1"]
@@ -234,6 +234,11 @@ def doctors():
         if f["grade"]:
             where.append("d.grade = ?")
             args.append(f["grade"])
+        if f["academic"] == "any":
+            where.append("d.academic_rank != ''")
+        elif f["academic"]:
+            where.append("d.academic_rank = ?")
+            args.append(f["academic"])
         if f["licence"] == "any_progress":
             where.append("d.qatar_license_status != 'none'")
         elif f["licence"]:

@@ -58,6 +58,9 @@ def migrate():
     cols = {r[1] for r in db.execute("PRAGMA table_info(users)")}
     if "lang" not in cols:
         db.execute("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'")
+    cols = {r[1] for r in db.execute("PRAGMA table_info(doctors)")}
+    if "academic_rank" not in cols:
+        db.execute("ALTER TABLE doctors ADD COLUMN academic_rank TEXT NOT NULL DEFAULT ''")
     db.commit()
 
 
@@ -177,6 +180,8 @@ def seed_demo():
         db.execute("INSERT INTO documents (user_id, kind, original_name, storage_name, mime_type, size_bytes)"
                    " VALUES (?, 'cv', ?, ?, 'application/pdf', ?)",
                    (uid, f"CV {fn} {ln}.pdf", name, os.path.getsize(os.path.join(current_app.config["UPLOAD_DIR"], name))))
+    db.execute("UPDATE doctors SET academic_rank = 'assistant_professor' WHERE academic_rank = '' AND user_id ="
+               " (SELECT id FROM users WHERE email = 'doctor4@demo.locumdoc.me')")
     db.commit()
     if db.execute("SELECT COUNT(*) FROM applications").fetchone()[0] == 0:
         for email, specialty, status in (("doctor1@demo.locumdoc.me", "Anaesthesia", "shortlisted"),

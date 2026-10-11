@@ -13,7 +13,7 @@
     <a class="btn btn-outline" href="{{ url_for('facility.new_job') }}">{{ _('Draft a job meanwhile') }}</a>
   </div>
   {% else %}
-  <form class="filters" method="get">
+  <form class="filters filters-wide" method="get">
     <div class="field"><label for="q">{{ _('Name or keyword') }}</label><input id="q" type="search" name="q" value="{{ f.q }}" placeholder="{{ _('Name, subspecialty, qualification') }}"></div>
     <div class="field"><label for="specialty">{{ _('Specialty') }}</label>
       <select id="specialty" name="specialty"><option value="">{{ _('All specialties') }}</option>
@@ -24,13 +24,18 @@
         <option value="any_progress" {% if f.licence == 'any_progress' %}selected{% endif %}>{{ _('Started or licensed') }}</option>
         {% for k, l in ref.QATAR_LICENSE_STATUS %}<option value="{{ k }}" {% if f.licence == k %}selected{% endif %}>{{ _(l) }}</option>{% endfor %}
       </select></div>
+    <div class="field"><label for="academic">{{ _('Academic title') }}</label>
+      <select id="academic" name="academic"><option value="">{{ _('Any') }}</option>
+        <option value="any" {% if f.academic == 'any' %}selected{% endif %}>{{ _('Any academic title') }}</option>
+        {% for k, l in ref.ACADEMIC_RANKS %}<option value="{{ k }}" {% if f.academic == k %}selected{% endif %}>{{ _(l) }}</option>{% endfor %}
+      </select></div>
     <div class="field"><label for="available">{{ _('Available on') }}</label><input id="available" type="date" name="available" value="{{ f.available }}"></div>
     <button class="btn btn-ink" type="submit">{{ _('Search') }}</button>
   </form>
   <div class="panel">
     <div class="panel-head"><h2>{{ _('Doctors: %(n)s', n=total) }}</h2>
       <form method="get" class="inline-form">
-        {% for k in ('q','specialty','licence','available') %}<input type="hidden" name="{{ k }}" value="{{ f[k] }}">{% endfor %}
+        {% for k in ('q','specialty','licence','available','academic') %}<input type="hidden" name="{{ k }}" value="{{ f[k] }}">{% endfor %}
         <label class="visually-hidden" for="grade">{{ _('Grade') }}</label>
         <select id="grade" name="grade" data-autosubmit><option value="">{{ _('All grades') }}</option>
           {% for k, l in ref.GRADES %}<option value="{{ k }}" {% if f.grade == k %}selected{% endif %}>{{ _(l) }}</option>{% endfor %}
@@ -45,7 +50,7 @@
       <tr>
         <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=d.user_id) }}">{{ _(d.title) }} {{ d.first_name }} {{ d.last_name }}</a>
           {% if d.verified %} {{ m.verified_tag() }}{% endif %}
-          <span class="sub">{{ _(d.specialty) }}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% if d.current_country %}{{ comma }}{{ _('in %(country)s', country=d.current_country) }}{% endif %}</span></td>
+          <span class="sub">{{ _(d.specialty) }}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% if d.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, d.academic_rank) }}{% endif %}{% if d.current_country %}{{ comma }}{{ _('in %(country)s', country=d.current_country) }}{% endif %}</span></td>
         <td class="hide-sm num">{{ d.years_experience|years }}<span class="sub">{{ d.qualifications|truncate(40) }}</span></td>
         <td class="hide-sm">{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</td>
         <td class="num">{% if d.available_from %}{{ d.available_from|d }}{% if d.available_to %}<span class="sub">{{ _('until %(date)s', date=d.available_to|d) }}</span>{% endif %}{% else %}<span class="muted">{{ _('Not given') }}</span>{% endif %}</td>

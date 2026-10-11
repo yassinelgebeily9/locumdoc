@@ -339,6 +339,7 @@ input[type=file] { font: inherit; width: 100%; padding: 10px; border: 1px dashed
 
 /* ---------------------------------------------------------------- jobs */
 .filters { display: grid; grid-template-columns: 2fr repeat(3, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 20px; }
+.filters.filters-wide { grid-template-columns: 1.6fr repeat(4, 1fr) auto; }
 .filters .field label { font-size: var(--s-1); font-weight: 500; color: var(--ink-2); }
 .job-list { list-style: none; margin: 0; padding: 0; }
 .job-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 24px; padding: 22px 24px; border-bottom: 1px solid var(--line-2); align-items: start; }
@@ -434,7 +435,7 @@ dl.kv dd { font-weight: 500; }
   .countries-row { grid-template-columns: repeat(3, 1fr); }
   .country-cell:nth-child(3n) { border-inline-end: 0; }
   .country-cell:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
-  .filters { grid-template-columns: 1fr 1fr; }
+  .filters, .filters.filters-wide { grid-template-columns: 1fr 1fr; }
   .filters .field:first-child { grid-column: 1 / -1; }
   .site-footer .cols { grid-template-columns: 1fr 1fr; }
 }
@@ -460,7 +461,7 @@ dl.kv dd { font-weight: 500; }
   .country-cell:nth-child(2n) { border-inline-end: 0 !important; }
   .job-item { grid-template-columns: 1fr; padding: 18px; }
   .job-item .rate { text-align: start; }
-  .filters { grid-template-columns: 1fr; }
+  .filters, .filters.filters-wide { grid-template-columns: 1fr; }
   dl.kv { grid-template-columns: 1fr; }
   dl.kv dt { border-bottom: 0; padding-bottom: 0; }
   .file-drop, .check-group.two { grid-template-columns: 1fr; }

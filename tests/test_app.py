@@ -351,3 +351,43 @@ class ArabicTests(Base):
         fid = self.db("SELECT user_id FROM facilities")[0]["user_id"]
         self.post(adm, f"/admin/facilities/{fid}", {"action": "verify"})
         self.assertIn(b"Locum anaesthetist", self.client().get("/jobs?q=تخدير").data)
+
+
+class GradeTests(Base):
+    def test_academic_title_saved_shown_and_filtered(self):
+        doc = self.signup_doctor()
+        spec = self.db("SELECT id FROM specialties WHERE name='Anaesthesia'")[0]["id"]
+        r = self.post(doc, "/doctor/profile", {
+            "title": "Prof", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "British",
+            "current_country": "United Kingdom", "specialty_id": spec, "grade": "senior_consultant",
+            "academic_rank": "associate_professor", "years_experience": "22", "qualifications": "MBBS, FRCA",
+            "primary_license": "GMC", "qatar_license_status": "eligible", "exam_status": "exempt",
+            "available_from": "2030-01-01", "visible_to_facilities": "1"})
+        self.assertEqual(r.status_code, 302)
+        row = self.db("SELECT grade, academic_rank FROM doctors")[0]
+        self.assertEqual((row["grade"], row["academic_rank"]), ("senior_consultant", "associate_professor"))
+        fac = self.signup_facility()
+        adm = self.admin()
+        fid = self.db("SELECT user_id FROM facilities")[0]["user_id"]
+        self.post(adm, f"/admin/facilities/{fid}", {"action": "verify"})
+        self.assertIn(b"Associate professor", fac.get("/facility/doctors?academic=associate_professor").data)
+        self.assertIn(b"Amal Nasser", fac.get("/facility/doctors?academic=any").data)
+        self.assertNotIn(b"Amal Nasser", fac.get("/facility/doctors?academic=professor").data)
+        # clearing it is allowed
+        self.post(doc, "/doctor/profile", {
+            "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "British",
+            "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant", "academic_rank": "",
+            "years_experience": "22", "qualifications": "MBBS", "primary_license": "GMC",
+            "qatar_license_status": "eligible", "exam_status": "exempt"})
+        self.assertEqual(self.db("SELECT academic_rank FROM doctors")[0]["academic_rank"], "")
+
+    def test_old_database_is_upgraded(self):
+        import sqlite3
+        path = self.app.config["DATABASE"]
+        conn = sqlite3.connect(path)
+        conn.execute("ALTER TABLE doctors DROP COLUMN academic_rank")
+        conn.close()
+        from locumdoc.db import ensure_db
+        ensure_db(self.app)
+        cols = [r[1] for r in sqlite3.connect(path).execute("PRAGMA table_info(doctors)")]
+        self.assertIn("academic_rank", cols)

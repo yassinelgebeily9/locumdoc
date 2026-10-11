@@ -70,11 +70,12 @@ def doctors():
 def _doctors_csv(rows):
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["Name", "Email", "Phone", "Specialty", "Grade", "Years", "Nationality", "Lives in",
+    w.writerow(["Name", "Email", "Phone", "Specialty", "Grade", "Academic title", "Years", "Nationality", "Lives in",
                 "Qatar licence", "Available from", "Available to", "Verified", "Has CV"])
     for d in rows:
         w.writerow([f"{d['title']} {d['first_name']} {d['last_name']}", d["email"], d["phone"], d["specialty"],
-                    refdata.label(refdata.GRADES, d["grade"]), d["years_experience"], d["nationality"],
+                    refdata.label(refdata.GRADES, d["grade"]), refdata.label(refdata.ACADEMIC_RANKS, d["academic_rank"], ""),
+                    d["years_experience"], d["nationality"],
                     d["current_country"], refdata.label(refdata.QATAR_LICENSE_STATUS, d["qatar_license_status"]),
                     d["available_from"], d["available_to"], "yes" if d["verified"] else "no",
                     "yes" if d["cv_count"] else "no"])

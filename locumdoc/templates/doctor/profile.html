@@ -32,7 +32,8 @@
         </select>
         {% endcall %}
         {{ m.input(form, v, 'subspecialty', _('Subspecialty or special interest'), optional=True) }}
-        {{ m.select(form, v, 'grade', _('Grade'), ref.GRADES) }}
+        {{ m.select(form, v, 'grade', _('Clinical grade'), ref.GRADES, help=_('Your current hospital grade.')) }}
+        {{ m.select(form, v, 'academic_rank', _('Academic title'), ref.ACADEMIC_RANKS, optional=True, placeholder=None, help=_('If you also hold a university teaching post.'), options_prefix=[('', _('None'))]) }}
         {{ m.input(form, v, 'years_experience', _('Years of experience since graduating'), type='number', attrs='min="0" max="60" inputmode="numeric"') }}
         {{ m.input(form, v, 'qualifications', _('Qualifications'), cls='full', help=_('Degrees, boards and fellowships, e.g. MBBS, MRCP (UK), CCT General Internal Medicine.')) }}
         {{ m.input(form, v, 'primary_license', _('Current medical licence'), cls='full', help=_('Where you are registered to practise today, e.g. GMC full registration with licence to practise.')) }}

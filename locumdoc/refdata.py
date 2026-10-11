@@ -42,13 +42,28 @@ SPECIALTIES = [
 ]
 
 GRADES = [
+    # Clinical grade, most senior first. Keys are stored in the database; never rename a key.
+    ("senior_consultant", "Senior consultant"),
     ("consultant", "Consultant"),
+    ("associate_consultant", "Associate consultant"),
     ("senior_specialist", "Senior specialist"),
     ("specialist", "Specialist"),
-    ("associate_specialist", "Associate / assistant specialist"),
+    ("associate_specialist", "Assistant specialist"),
     ("registrar", "Registrar / fellow"),
     ("gp", "General practitioner"),
     ("resident", "Resident / medical officer"),
+    ("intern", "Intern / house officer"),
+]
+
+ACADEMIC_RANKS = [
+    # University teaching title, separate from the clinical grade. Most senior first.
+    ("professor", "Professor"),
+    ("associate_professor", "Associate professor"),
+    ("assistant_professor", "Assistant professor"),
+    ("lecturer", "Lecturer"),
+    ("assistant_lecturer", "Assistant lecturer"),
+    ("teaching_assistant", "Teaching assistant / demonstrator"),
+    ("clinical_tutor", "Clinical tutor / instructor"),
 ]
 
 QATAR_LICENSE_STATUS = [

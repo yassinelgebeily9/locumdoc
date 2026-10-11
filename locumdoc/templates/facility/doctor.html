@@ -6,7 +6,7 @@
   <div class="profile-head">
     <div class="avatar lg">{{ m.initials(d.first_name, d.last_name) }}</div>
     <div><h1>{{ _(d.title) }} {{ d.first_name }} {{ d.last_name }}</h1>
-      <p>{{ _(d.specialty) }}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% if d.current_country %}{{ comma }}{{ _('in %(country)s', country=d.current_country) }}{% endif %}</p></div>
+      <p>{{ _(d.specialty) }}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% if d.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, d.academic_rank) }}{% endif %}{% if d.current_country %}{{ comma }}{{ _('in %(country)s', country=d.current_country) }}{% endif %}</p></div>
   </div>
 </div>
 <div class="wrap content grid-main">

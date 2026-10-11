@@ -5,7 +5,8 @@
     {% if d.bio %}<p dir="auto">{{ d.bio }}</p>{% endif %}
     <dl class="kv">
       <dt>{{ _('Specialty') }}</dt><dd>{{ _(d.specialty) if d.specialty else '—' }}{% if d.subspecialty %}{{ comma }}{{ d.subspecialty }}{% endif %}</dd>
-      <dt>{{ _('Grade') }}</dt><dd>{{ label(ref.GRADES, d.grade) }}</dd>
+      <dt>{{ _('Clinical grade') }}</dt><dd>{{ label(ref.GRADES, d.grade) }}</dd>
+      <dt>{{ _('Academic title') }}</dt><dd>{{ label(ref.ACADEMIC_RANKS, d.academic_rank) if d.academic_rank else _('None') }}</dd>
       <dt>{{ _('Experience') }}</dt><dd>{{ d.years_experience|years }}</dd>
       <dt>{{ _('Qualifications') }}</dt><dd dir="auto">{{ d.qualifications or '—' }}</dd>
       <dt>{{ _('Current licence') }}</dt><dd dir="auto">{{ d.primary_license or '—' }}</dd>

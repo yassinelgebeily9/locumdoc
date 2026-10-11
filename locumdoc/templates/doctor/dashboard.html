@@ -7,7 +7,7 @@
       <div class="avatar lg">{{ m.initials(d.first_name, d.last_name) }}</div>
       <div>
         <h1>{{ _(d.title) }} {{ d.first_name }} {{ d.last_name }}</h1>
-        <p>{{ _(d.specialty) if d.specialty else _('Specialty not set') }}{% if d.grade %}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% endif %}
+        <p>{{ _(d.specialty) if d.specialty else _('Specialty not set') }}{% if d.grade %}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% endif %}{% if d.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, d.academic_rank) }}{% endif %}
           {% if d.verified %} {{ m.verified_tag(_('Verified profile')) }}{% endif %}</p>
       </div>
     </div>

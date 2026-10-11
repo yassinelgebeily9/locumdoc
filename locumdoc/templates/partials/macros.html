@@ -46,11 +46,12 @@
 {% endcall %}
 {%- endmacro %}
 
-{% macro select(form, v, name, label_text, options, help=None, optional=False, cls='', placeholder=True) -%}
+{% macro select(form, v, name, label_text, options, help=None, optional=False, cls='', placeholder=True, options_prefix=[]) -%}
 {% call field_wrap(form, name, label_text, help, optional, cls) %}
 <select id="f-{{ name }}" name="{{ name }}" {% if not optional %}required{% endif %}
   {% if form and form.errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
   {% if placeholder %}<option value="">{{ _('Choose…') }}</option>{% endif %}
+  {% for k, l in options_prefix %}<option value="{{ k }}" {% if v and (v.get(name) or '')|string == k|string %}selected{% endif %}>{{ l }}</option>{% endfor %}
   {% for k, l in options %}<option value="{{ k }}" {% if v and v.get(name)|string == k|string %}selected{% endif %}>{{ _(l) }}</option>{% endfor %}
 </select>
 {% endcall %}

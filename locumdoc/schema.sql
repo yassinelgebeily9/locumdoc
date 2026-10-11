@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS doctors (
     specialty_id            INTEGER REFERENCES specialties(id),
     subspecialty            TEXT NOT NULL DEFAULT '',
     grade                   TEXT NOT NULL DEFAULT '',
+    academic_rank           TEXT NOT NULL DEFAULT '',   -- university title, see refdata.ACADEMIC_RANKS
     years_experience        INTEGER,
     qualifications          TEXT NOT NULL DEFAULT '',   -- e.g. MBBS, MRCP, CCT
     primary_license         TEXT NOT NULL DEFAULT '',   -- e.g. GMC full registration

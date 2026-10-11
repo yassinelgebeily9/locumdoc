@@ -65,6 +65,7 @@ def profile():
         form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label=_("your specialty"))
         form.text("subspecialty", max_len=120)
         form.choice("grade", refdata.GRADES, label=_("your grade"))
+        form.choice("academic_rank", refdata.ACADEMIC_RANKS, required=False)
         form.integer("years_experience", required=True, min_v=0, max_v=60, label=_("years of experience"))
         form.text("qualifications", required=True, max_len=300, label=_("your qualifications"))
         form.text("primary_license", required=True, max_len=200, label=_("your current licence"))
@@ -85,12 +86,12 @@ def profile():
             c = form.clean
             execute(
                 "UPDATE doctors SET title=?, first_name=?, last_name=?, phone=?, nationality=?, current_country=?,"
-                " specialty_id=?, subspecialty=?, grade=?, years_experience=?, qualifications=?, primary_license=?,"
+                " specialty_id=?, subspecialty=?, grade=?, academic_rank=?, years_experience=?, qualifications=?, primary_license=?,"
                 " qatar_license_status=?, exam_status=?, has_psv=?, good_standing=?, languages=?, available_from=?,"
                 " available_to=?, min_weeks=?, preferred_countries=?, bio=?, visible_to_facilities=?,"
                 " updated_at=datetime('now') WHERE user_id=?",
                 (c["title"], c["first_name"], c["last_name"], c["phone"], c["nationality"], c["current_country"],
-                 int(c["specialty_id"]), c["subspecialty"], c["grade"], c["years_experience"], c["qualifications"],
+                 int(c["specialty_id"]), c["subspecialty"], c["grade"], c["academic_rank"], c["years_experience"], c["qualifications"],
                  c["primary_license"], c["qatar_license_status"] or "none", c["exam_status"] or "unknown",
                  c["has_psv"], c["good_standing"], c["languages"], c["available_from"], c["available_to"],
                  c["min_weeks"], ",".join(prefs) or "QA", c["bio"], c["visible_to_facilities"], g.user["id"]),

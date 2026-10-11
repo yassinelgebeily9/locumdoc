@@ -16,7 +16,7 @@
           {% for s in specialties %}<option value="{{ s.id }}" {% if form.clean.get('specialty_id') == s.id|string %}selected{% endif %}>{{ _(s.name) }}</option>{% endfor %}
         </select>
         {% endcall %}
-        {{ m.select(form, form.clean, 'grade', _('Grade'), ref.GRADES, cls='full') }}
+        {{ m.select(form, form.clean, 'grade', _('Clinical grade'), ref.GRADES, cls='full') }}
         {{ m.input(form, form.clean, 'email', _('Email'), type='email', cls='full', attrs='autocomplete="email"') }}
         {{ m.input(form, form.clean, 'password', _('Password'), type='password', cls='full', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
         <div class="full">

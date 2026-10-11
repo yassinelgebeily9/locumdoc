@@ -1,29 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Account — LocumDoc{% endblock %}
+{% block title %}{{ _('Account') }} — LocumDoc{% endblock %}
 {% block main %}
 <div class="wrap page-head">
-  <h1>Account</h1>
-  <p>Signed in as {{ current_user.email }}.</p>
+  <h1>{{ _('Account') }}</h1>
+  <p>{{ _('Signed in as') }} <span class="ltr">{{ current_user.email }}</span></p>
 </div>
 <div class="wrap content grid-2">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
     <input type="hidden" name="action" value="password">
-    <h2>Change password</h2>
+    <h2>{{ _('Change password') }}</h2>
     <div class="stack">
-      {{ m.input(form, {}, 'current_password', 'Current password', type='password', attrs='autocomplete="current-password"') }}
-      {{ m.input(form, {}, 'new_password', 'New password', type='password', help='At least 10 characters.', attrs='autocomplete="new-password" minlength="10"') }}
+      {{ m.input(form, {}, 'current_password', _('Current password'), type='password', attrs='autocomplete="current-password"') }}
+      {{ m.input(form, {}, 'new_password', _('New password'), type='password', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
     </div>
-    <div class="form-actions"><button class="btn btn-primary" type="submit">Change password</button></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Change password') }}</button></div>
   </form>
 
   {% if current_user.role != 'admin' %}
-  <form class="panel panel-pad" method="post" action="{{ url_for('auth.delete_account') }}" data-confirm="Delete your account and every file? This can't be undone.">
+  <form class="panel panel-pad" method="post" action="{{ url_for('auth.delete_account') }}" data-confirm="{{ _("Delete your account and every file? This can't be undone.") }}">
     {{ m.csrf() }}
-    <h2>Delete account</h2>
-    <p class="muted">This permanently deletes your {{ 'profile, applications and every document you uploaded' if current_user.role == 'doctor' else 'facility, its jobs and its applicant lists' }}.</p>
-    {{ m.input(None, {}, 'confirm_password', 'Enter your password to confirm', type='password', attrs='autocomplete="current-password"') }}
-    <div class="form-actions"><button class="btn btn-danger" type="submit">Delete my account</button></div>
+    <h2>{{ _('Delete account') }}</h2>
+    <p class="muted">{{ _('This permanently deletes your profile, applications and every document you uploaded.') if current_user.role == 'doctor' else _('This permanently deletes your facility, its jobs and its applicant lists.') }}</p>
+    {{ m.input(None, {}, 'confirm_password', _('Enter your password to confirm'), type='password', attrs='autocomplete="current-password"') }}
+    <div class="form-actions"><button class="btn btn-danger" type="submit">{{ _('Delete my account') }}</button></div>
   </form>
   {% endif %}
 </div>

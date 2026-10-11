@@ -1,70 +1,70 @@
 {% extends "base.html" %}
-{% block title %}Your profile — LocumDoc{% endblock %}
+{% block title %}{{ _('Your profile') }} — LocumDoc{% endblock %}
 {% block main %}
 <div class="wrap page-head">
-  <h1>Your profile</h1>
-  <p>This is what facilities review when you apply, alongside your CV.</p>
+  <h1>{{ _('Your profile') }}</h1>
+  <p>{{ _('This is what facilities review when you apply, alongside your CV.') }}</p>
 </div>
 <div class="wrap content">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
     <fieldset class="fieldset">
-      <legend>Personal details</legend>
-      <p class="legend-help">Your phone number is shared only with facilities you apply to, or that you allow to find you.</p>
+      <legend>{{ _('Personal details') }}</legend>
+      <p class="legend-help">{{ _('Your phone number is shared only with facilities you apply to, or that you allow to find you.') }}</p>
       <div class="form-grid">
-        {{ m.select(form, v, 'title', 'Title', [('Dr','Dr'),('Prof','Prof'),('Mr','Mr'),('Ms','Ms')], placeholder=None) }}
+        {{ m.select(form, v, 'title', _('Title'), [('Dr','Dr'),('Prof','Prof'),('Mr','Mr'),('Ms','Ms')], placeholder=None) }}
         <div></div>
-        {{ m.input(form, v, 'first_name', 'First name') }}
-        {{ m.input(form, v, 'last_name', 'Last name') }}
-        {{ m.input(form, v, 'phone', 'Phone (with country code)', type='tel', attrs='autocomplete="tel"') }}
-        {{ m.input(form, v, 'nationality', 'Nationality') }}
-        {{ m.input(form, v, 'current_country', 'Country you live in now', attrs='autocomplete="country-name"') }}
-        {{ m.input(form, v, 'languages', 'Languages', optional=True, attrs='placeholder="English, Arabic"') }}
+        {{ m.input(form, v, 'first_name', _('First name')) }}
+        {{ m.input(form, v, 'last_name', _('Last name')) }}
+        {{ m.input(form, v, 'phone', _('Phone (with country code)'), type='tel', attrs='autocomplete="tel"') }}
+        {{ m.input(form, v, 'nationality', _('Nationality')) }}
+        {{ m.input(form, v, 'current_country', _('Country you live in now'), attrs='autocomplete="country-name"') }}
+        {{ m.input(form, v, 'languages', _('Languages'), optional=True, attrs='placeholder="' ~ _('English, Arabic') ~ '"') }}
       </div>
     </fieldset>
 
     <fieldset class="fieldset">
-      <legend>Specialty and experience</legend>
+      <legend>{{ _('Specialty and experience') }}</legend>
       <div class="form-grid">
-        {% call m.field_wrap(form, 'specialty_id', 'Specialty') %}
+        {% call m.field_wrap(form, 'specialty_id', _('Specialty')) %}
         <select id="f-specialty_id" name="specialty_id" required>
-          {% for s in specialties %}<option value="{{ s.id }}" {% if v.specialty_id|string == s.id|string %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+          {% for s in specialties %}<option value="{{ s.id }}" {% if v.specialty_id|string == s.id|string %}selected{% endif %}>{{ _(s.name) }}</option>{% endfor %}
         </select>
         {% endcall %}
-        {{ m.input(form, v, 'subspecialty', 'Subspecialty or special interest', optional=True) }}
-        {{ m.select(form, v, 'grade', 'Grade', ref.GRADES) }}
-        {{ m.input(form, v, 'years_experience', 'Years of experience since graduating', type='number', attrs='min="0" max="60" inputmode="numeric"') }}
-        {{ m.input(form, v, 'qualifications', 'Qualifications', cls='full', help='Degrees, boards and fellowships, e.g. MBBS, MRCP (UK), CCT General Internal Medicine.') }}
-        {{ m.input(form, v, 'primary_license', 'Current medical licence', cls='full', help='Where you are registered to practise today, e.g. GMC full registration with licence to practise.') }}
+        {{ m.input(form, v, 'subspecialty', _('Subspecialty or special interest'), optional=True) }}
+        {{ m.select(form, v, 'grade', _('Grade'), ref.GRADES) }}
+        {{ m.input(form, v, 'years_experience', _('Years of experience since graduating'), type='number', attrs='min="0" max="60" inputmode="numeric"') }}
+        {{ m.input(form, v, 'qualifications', _('Qualifications'), cls='full', help=_('Degrees, boards and fellowships, e.g. MBBS, MRCP (UK), CCT General Internal Medicine.')) }}
+        {{ m.input(form, v, 'primary_license', _('Current medical licence'), cls='full', help=_('Where you are registered to practise today, e.g. GMC full registration with licence to practise.')) }}
       </div>
     </fieldset>
 
     <fieldset class="fieldset">
-      <legend>Licensing in Qatar</legend>
-      <p class="legend-help">Facilities use this to plan realistic start dates. <a href="{{ url_for('public.country', slug='qatar') }}" target="_blank" rel="noopener">How DHP licensing works</a></p>
+      <legend>{{ _('Licensing in Qatar') }}</legend>
+      <p class="legend-help">{{ _('Facilities use this to plan realistic start dates.') }} <a href="{{ url_for('public.country', slug='qatar') }}" target="_blank" rel="noopener">{{ _('How DHP licensing works') }}</a></p>
       <div class="form-grid">
-        {{ m.select(form, v, 'qatar_license_status', 'DHP licensing status', ref.QATAR_LICENSE_STATUS, placeholder=None) }}
-        {{ m.select(form, v, 'exam_status', 'DHP qualifying exam', ref.EXAM_STATUS, placeholder=None) }}
+        {{ m.select(form, v, 'qatar_license_status', _('DHP licensing status'), ref.QATAR_LICENSE_STATUS, placeholder=None) }}
+        {{ m.select(form, v, 'exam_status', _('DHP qualifying exam'), ref.EXAM_STATUS, placeholder=None) }}
         <div class="full check-group two">
-          <label class="check"><input type="checkbox" name="has_psv" value="1" {% if v.has_psv %}checked{% endif %}> <span>I have a primary source verification (PSV) report, or it's in progress</span></label>
-          <label class="check"><input type="checkbox" name="good_standing" value="1" {% if v.good_standing %}checked{% endif %}> <span>I can provide a current certificate of good standing</span></label>
+          <label class="check"><input type="checkbox" name="has_psv" value="1" {% if v.has_psv %}checked{% endif %}> <span>{{ _("I have a primary source verification (PSV) report, or it's in progress") }}</span></label>
+          <label class="check"><input type="checkbox" name="good_standing" value="1" {% if v.good_standing %}checked{% endif %}> <span>{{ _('I can provide a current certificate of good standing') }}</span></label>
         </div>
       </div>
     </fieldset>
 
     <fieldset class="fieldset" id="availability">
-      <legend>Availability</legend>
-      <p class="legend-help">When you could start and how long you'd stay. Facilities search by start date.</p>
+      <legend>{{ _('Availability') }}</legend>
+      <p class="legend-help">{{ _("When you could start and how long you'd stay. Facilities search by start date.") }}</p>
       <div class="form-grid">
-        {{ m.input(form, v, 'available_from', 'Available from', type='date', optional=True) }}
-        {{ m.input(form, v, 'available_to', 'Available until', type='date', optional=True, help='Leave empty if open-ended.') }}
-        {{ m.input(form, v, 'min_weeks', 'Shortest placement you’d take (weeks)', type='number', optional=True, attrs='min="1" max="104" inputmode="numeric"') }}
+        {{ m.input(form, v, 'available_from', _('Available from'), type='date', optional=True) }}
+        {{ m.input(form, v, 'available_to', _('Available until'), type='date', optional=True, help=_('Leave empty if open-ended.')) }}
+        {{ m.input(form, v, 'min_weeks', _("Shortest placement you'd take (weeks)"), type='number', optional=True, attrs='min="1" max="104" inputmode="numeric"') }}
         <div class="field full">
-          <span class="label">Countries you'd work in</span>
+          <span class="label">{{ _("Countries you'd work in") }}</span>
           {% set prefs = (v.preferred_countries or 'QA').split(',') %}
           <div class="check-group">
             {% for c in countries %}
-            <label class="check"><input type="checkbox" name="preferred_countries" value="{{ c.code }}" {% if c.code in prefs %}checked{% endif %}> <span>{{ c.name }}{% if not c.active %} <span class="muted">(opening soon)</span>{% endif %}</span></label>
+            <label class="check"><input type="checkbox" name="preferred_countries" value="{{ c.code }}" {% if c.code in prefs %}checked{% endif %}> <span>{{ _(c.name) }}{% if not c.active %} <span class="muted">({{ _('opening soon') }})</span>{% endif %}</span></label>
             {% endfor %}
           </div>
         </div>
@@ -72,21 +72,21 @@
     </fieldset>
 
     <fieldset class="fieldset">
-      <legend>About you</legend>
+      <legend>{{ _('About you') }}</legend>
       <div class="form-grid">
-        {{ m.textarea(form, v, 'bio', 'Short summary', optional=True, cls='full', rows=5, help='A few lines facilities read first: your current role, procedures or services you cover, and what kind of placement you want.') }}
+        {{ m.textarea(form, v, 'bio', _('Short summary'), optional=True, cls='full', rows=5, help=_('A few lines facilities read first: your current role, procedures or services you cover, and what kind of placement you want.')) }}
       </div>
     </fieldset>
 
     <fieldset class="fieldset" id="visibility">
-      <legend>Visibility</legend>
+      <legend>{{ _('Visibility') }}</legend>
       <label class="check"><input type="checkbox" name="visible_to_facilities" value="1" {% if v.visible_to_facilities %}checked{% endif %}>
-        <span>Show my profile and documents to verified facilities searching the doctor directory, so they can invite me. If unticked, only facilities I apply to can see them.</span></label>
+        <span>{{ _('Show my profile and documents to verified facilities searching the doctor directory, so they can invite me. If unticked, only facilities I apply to can see them.') }}</span></label>
     </fieldset>
 
     <div class="form-actions">
-      <button class="btn btn-primary btn-lg" type="submit">Save profile</button>
-      <a class="btn btn-ghost" href="{{ url_for('doctor.dashboard') }}">Cancel</a>
+      <button class="btn btn-primary btn-lg" type="submit">{{ _('Save profile') }}</button>
+      <a class="btn btn-ghost" href="{{ url_for('doctor.dashboard') }}">{{ _('Cancel') }}</a>
     </div>
   </form>
 </div>

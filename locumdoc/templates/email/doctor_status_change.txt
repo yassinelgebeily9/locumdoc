@@ -2,7 +2,7 @@ Dear Dr {{ doctor.last_name }},
 
 {{ facility }} updated your application for {{ job_title }}.
 
-New status: {{ status }}
+New status: {{ label(ref.APPLICATION_STATUSES, status) }}
 
 See your applications: {{ site_url }}/doctor/applications
 

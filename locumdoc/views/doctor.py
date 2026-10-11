@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
 from .. import mail, refdata, storage
+from ..i18n import _
 from ..db import execute, get_db, query
 from ..security import login_required
 from . import Form
@@ -13,7 +14,7 @@ PROFILE_FIELDS = ("phone", "nationality", "current_country", "qualifications", "
 
 def get_doctor(uid):
     return query(
-        "SELECT d.*, u.email, s.name AS specialty FROM doctors d JOIN users u ON u.id = d.user_id"
+        "SELECT d.*, u.email, u.lang, s.name AS specialty FROM doctors d JOIN users u ON u.id = d.user_id"
         " LEFT JOIN specialties s ON s.id = d.specialty_id WHERE d.user_id = ?", (uid,), one=True)
 
 
@@ -22,9 +23,9 @@ def profile_readiness(uid):
     has_cv = query("SELECT 1 FROM documents WHERE user_id = ? AND kind = 'cv'", (uid,), one=True) is not None
     profile_done = all(d[f] for f in PROFILE_FIELDS) and d["years_experience"] is not None
     items = [
-        ("Complete your professional profile", profile_done, url_for("doctor.profile")),
-        ("Upload your CV", has_cv, url_for("doctor.documents")),
-        ("Add your availability", bool(d["available_from"]), url_for("doctor.profile") + "#availability"),
+        (_("Complete your professional profile"), profile_done, url_for("doctor.profile")),
+        (_("Upload your CV"), has_cv, url_for("doctor.documents")),
+        (_("Add your availability"), bool(d["available_from"]), url_for("doctor.profile") + "#availability"),
     ]
     return {"items": items, "ready": profile_done and has_cv, "done": sum(1 for _, ok, _ in items if ok)}
 
@@ -56,17 +57,17 @@ def profile():
     form = Form()
     if request.method == "POST":
         form.choice("title", [("Dr", "Dr"), ("Prof", "Prof"), ("Mr", "Mr"), ("Ms", "Ms")])
-        form.text("first_name", required=True, max_len=80, label="your first name")
-        form.text("last_name", required=True, max_len=80, label="your last name")
-        form.text("phone", required=True, max_len=40, label="a phone number")
-        form.text("nationality", required=True, max_len=80, label="your nationality")
-        form.text("current_country", required=True, max_len=80, label="where you live now")
-        form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label="your specialty")
+        form.text("first_name", required=True, max_len=80, label=_("your first name"))
+        form.text("last_name", required=True, max_len=80, label=_("your last name"))
+        form.text("phone", required=True, max_len=40, label=_("a phone number"))
+        form.text("nationality", required=True, max_len=80, label=_("your nationality"))
+        form.text("current_country", required=True, max_len=80, label=_("where you live now"))
+        form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label=_("your specialty"))
         form.text("subspecialty", max_len=120)
-        form.choice("grade", refdata.GRADES, label="your grade")
-        form.integer("years_experience", required=True, min_v=0, max_v=60, label="years of experience")
-        form.text("qualifications", required=True, max_len=300, label="your qualifications")
-        form.text("primary_license", required=True, max_len=200, label="your current licence")
+        form.choice("grade", refdata.GRADES, label=_("your grade"))
+        form.integer("years_experience", required=True, min_v=0, max_v=60, label=_("years of experience"))
+        form.text("qualifications", required=True, max_len=300, label=_("your qualifications"))
+        form.text("primary_license", required=True, max_len=200, label=_("your current licence"))
         form.choice("qatar_license_status", refdata.QATAR_LICENSE_STATUS)
         form.choice("exam_status", refdata.EXAM_STATUS)
         form.flag("has_psv")
@@ -75,7 +76,7 @@ def profile():
         start = form.date("available_from")
         end = form.date("available_to")
         if start and end and end < start:
-            form.errors["available_to"] = "The end date must be after the start date."
+            form.errors["available_to"] = _("The end date must be after the start date.")
         form.integer("min_weeks", min_v=1, max_v=104)
         prefs = [c for c in request.form.getlist("preferred_countries") if c in {x["code"] for x in countries}]
         form.text("bio", max_len=2000)
@@ -94,11 +95,11 @@ def profile():
                  c["has_psv"], c["good_standing"], c["languages"], c["available_from"], c["available_to"],
                  c["min_weeks"], ",".join(prefs) or "QA", c["bio"], c["visible_to_facilities"], g.user["id"]),
             )
-            flash("Profile saved.", "success")
+            flash(_("Profile saved."), "success")
             if not profile_readiness(g.user["id"])["ready"]:
                 return redirect(url_for(".documents"))
             return redirect(url_for(".dashboard"))
-        flash("Some details need attention. Check the highlighted fields.", "error")
+        flash(_("Some details need attention. Check the highlighted fields."), "error")
     values = dict(d)
     if request.method == "POST":
         values.update(form.clean)
@@ -113,11 +114,11 @@ def documents():
     if request.method == "POST":
         kind = request.form.get("kind", "")
         if kind not in dict(refdata.DOCUMENT_KINDS):
-            flash("Choose what kind of document this is.", "error")
+            flash(_("Choose what kind of document this is."), "error")
             return redirect(url_for(".documents"))
         count = query("SELECT COUNT(*) AS n FROM documents WHERE user_id = ?", (g.user["id"],), one=True)["n"]
         if count >= 20:
-            flash("You can store up to 20 documents. Delete one to add another.", "error")
+            flash(_("You can store up to 20 documents. Delete one to add another."), "error")
             return redirect(url_for(".documents"))
         try:
             name, original, mime, size = storage.save(request.files.get("file"))
@@ -127,7 +128,7 @@ def documents():
         execute("INSERT INTO documents (user_id, kind, original_name, storage_name, mime_type, size_bytes)"
                 " VALUES (?, ?, ?, ?, ?, ?)", (g.user["id"], kind, original, name, mime, size))
         execute("UPDATE doctors SET updated_at = datetime('now') WHERE user_id = ?", (g.user["id"],))
-        flash(f"{refdata.label(refdata.DOCUMENT_KINDS, kind)} uploaded.", "success")
+        flash(_("%(kind)s uploaded.", kind=refdata.label(refdata.DOCUMENT_KINDS, kind)), "success")
         return redirect(url_for(".documents"))
     docs = query("SELECT * FROM documents WHERE user_id = ? ORDER BY kind = 'cv' DESC, created_at DESC",
                  (g.user["id"],))
@@ -142,7 +143,7 @@ def delete_document(doc_id):
         abort(404)
     storage.delete(doc["storage_name"])
     execute("DELETE FROM documents WHERE id = ?", (doc_id,))
-    flash(f"{doc['original_name']} deleted.", "info")
+    flash(_("%(name)s deleted.", name=doc["original_name"]), "info")
     return redirect(url_for(".documents"))
 
 
@@ -170,20 +171,22 @@ def apply(job_id):
     if not job:
         abort(404)
     if not profile_readiness(g.user["id"])["ready"]:
-        flash("Complete your profile and upload your CV before applying.", "error")
+        flash(_("Complete your profile and upload your CV before applying."), "error")
         return redirect(url_for("public.job", job_id=job_id))
     if query("SELECT 1 FROM applications WHERE job_id = ? AND doctor_id = ?", (job_id, g.user["id"]), one=True):
-        flash("You've already applied for this job.", "info")
+        flash(_("You've already applied for this job."), "info")
         return redirect(url_for("public.job", job_id=job_id))
     note = (request.form.get("cover_note") or "").strip()[:3000]
     execute("INSERT INTO applications (job_id, doctor_id, cover_note) VALUES (?, ?, ?)", (job_id, g.user["id"], note))
     d = get_doctor(g.user["id"])
-    fac_email = query("SELECT email FROM users WHERE id = ?", (job["facility_id"],), one=True)["email"]
+    fac_user = query("SELECT email, lang FROM users WHERE id = ?", (job["facility_id"],), one=True)
     ctx = dict(job=job, doctor=d, note=note)
-    mail.send(fac_email, f"New applicant: {job['title']}", "facility_new_application", **ctx)
-    mail.notify_admin(f"Application: Dr {d['last_name']} for {job['title']}", "facility_new_application", **ctx)
-    mail.send(d["email"], f"Application sent: {job['title']}", "doctor_applied", **ctx)
-    flash("Application sent. The facility will see your profile and CV, and you'll get an email when your status changes.",
+    title = {"title": job["title"]}
+    mail.send(fac_user["email"], "New applicant: %(title)s", "facility_new_application", fac_user["lang"], title, **ctx)
+    mail.notify_admin("Application: Dr %(name)s for %(title)s", "facility_new_application",
+                      {"name": d["last_name"], "title": job["title"]}, **ctx)
+    mail.send(d["email"], "Application sent: %(title)s", "doctor_applied", d["lang"], title, **ctx)
+    flash(_("Application sent. The facility will see your profile and CV, and you'll get an email when your status changes."),
           "success")
     return redirect(url_for(".applications"))
 
@@ -195,10 +198,10 @@ def withdraw(app_id):
     if not a:
         abort(404)
     if a["status"] in ("placed", "withdrawn"):
-        flash("This application can no longer be withdrawn.", "error")
+        flash(_("This application can no longer be withdrawn."), "error")
     else:
         execute("UPDATE applications SET status = 'withdrawn', updated_at = datetime('now') WHERE id = ?", (app_id,))
-        flash("Application withdrawn.", "info")
+        flash(_("Application withdrawn."), "info")
     return redirect(url_for(".applications"))
 
 
@@ -214,19 +217,20 @@ def respond_invitation(inv_id):
     db = get_db()
     db.execute("UPDATE invitations SET status = ? WHERE id = ?", (answer, inv_id))
     db.commit()
-    fac = query("SELECT f.name, u.email FROM facilities f JOIN users u ON u.id = f.user_id WHERE f.user_id = ?",
+    fac = query("SELECT f.name, u.email, u.lang FROM facilities f JOIN users u ON u.id = f.user_id WHERE f.user_id = ?",
                 (inv["facility_id"],), one=True)
     d = get_doctor(g.user["id"])
-    mail.send(fac["email"], f"Dr {d['last_name']} {answer} your invitation", "facility_invite_answer",
+    subject = "Dr %(name)s accepted your invitation" if answer == "accepted" else "Dr %(name)s declined your invitation"
+    mail.send(fac["email"], subject, "facility_invite_answer", fac["lang"], {"name": d["last_name"]},
               doctor=d, answer=answer, facility=fac["name"])
     if answer == "accepted" and inv["job_id"]:
         if profile_readiness(g.user["id"])["ready"]:
             db.execute("INSERT OR IGNORE INTO applications (job_id, doctor_id, cover_note, status)"
                        " VALUES (?, ?, 'Accepted invitation', 'shortlisted')", (inv["job_id"], g.user["id"]))
             db.commit()
-            flash("Invitation accepted. You've been added to the shortlist for this job.", "success")
+            flash(_("Invitation accepted. You've been added to the shortlist for this job."), "success")
         else:
-            flash("Invitation accepted. Finish your profile and CV so the facility can review you.", "success")
+            flash(_("Invitation accepted. Finish your profile and CV so the facility can review you."), "success")
     else:
-        flash("Invitation " + answer + ".", "info")
+        flash(_("Invitation declined."), "info")
     return redirect(url_for(".applications"))

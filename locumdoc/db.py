@@ -48,7 +48,17 @@ def init_schema():
     db = get_db()
     with current_app.open_resource("schema.sql") as f:
         db.executescript(f.read().decode("utf8"))
+    migrate()
     seed_reference()
+
+
+def migrate():
+    """Small in-place upgrades for databases created by earlier versions."""
+    db = get_db()
+    cols = {r[1] for r in db.execute("PRAGMA table_info(users)")}
+    if "lang" not in cols:
+        db.execute("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'")
+    db.commit()
 
 
 def seed_reference():
@@ -69,10 +79,10 @@ def seed_reference():
     db.commit()
 
 
-def create_user(email, password, role):
+def create_user(email, password, role, lang="en"):
     return execute(
-        "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-        (email.strip().lower(), generate_password_hash(password), role),
+        "INSERT INTO users (email, password_hash, role, lang) VALUES (?, ?, ?, ?)",
+        (email.strip().lower(), generate_password_hash(password), role, lang),
     )
 
 

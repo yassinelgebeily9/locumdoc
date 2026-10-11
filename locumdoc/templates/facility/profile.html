@@ -1,30 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Facility profile — LocumDoc{% endblock %}
+{% block title %}{{ _('Facility profile') }} — LocumDoc{% endblock %}
 {% block main %}
 <div class="wrap page-head">
-  <h1>Facility profile</h1>
-  <p>Shown to doctors on every job you post.</p>
+  <h1>{{ _('Facility profile') }}</h1>
+  <p>{{ _('Shown to doctors on every job you post.') }}</p>
 </div>
 <div class="wrap content">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
     <div class="form-grid">
-      {{ m.input(form, v, 'name', 'Facility name', cls='full') }}
-      {{ m.select(form, v, 'facility_type', 'Type', ref.FACILITY_TYPES, placeholder=None) }}
-      {{ m.select(form, v, 'sector', 'Sector', ref.SECTORS, placeholder=None) }}
-      {% call m.field_wrap(form, 'city_id', 'City') %}
+      {{ m.input(form, v, 'name', _('Facility name'), cls='full') }}
+      {{ m.select(form, v, 'facility_type', _('Type'), ref.FACILITY_TYPES, placeholder=None) }}
+      {{ m.select(form, v, 'sector', _('Sector'), ref.SECTORS, placeholder=None) }}
+      {% call m.field_wrap(form, 'city_id', _('City')) %}
       <select id="f-city_id" name="city_id" required>
-        {% for c in cities %}<option value="{{ c.id }}" {% if v.city_id|string == c.id|string %}selected{% endif %}>{{ c.name }}, {{ c.country }}</option>{% endfor %}
+        {% for c in cities %}<option value="{{ c.id }}" {% if v.city_id|string == c.id|string %}selected{% endif %}>{{ _(c.name) }}{{ comma }}{{ _(c.country) }}</option>{% endfor %}
       </select>
       {% endcall %}
-      {{ m.input(form, v, 'website', 'Website', type='url', optional=True, attrs='placeholder="https://"') }}
-      {{ m.input(form, v, 'contact_name', 'Contact name') }}
-      {{ m.input(form, v, 'contact_role', 'Contact role', optional=True) }}
-      {{ m.input(form, v, 'phone', 'Phone', type='tel') }}
+      {{ m.input(form, v, 'website', _('Website'), type='url', optional=True, attrs='placeholder="https://"') }}
+      {{ m.input(form, v, 'contact_name', _('Contact name')) }}
+      {{ m.input(form, v, 'contact_role', _('Contact role'), optional=True) }}
+      {{ m.input(form, v, 'phone', _('Phone'), type='tel') }}
       <div></div>
-      {{ m.textarea(form, v, 'about', 'About the facility', optional=True, cls='full', help='Departments, bed numbers, patient population, what locums can expect.') }}
+      {{ m.textarea(form, v, 'about', _('About the facility'), optional=True, cls='full', help=_('Departments, bed numbers, patient population, what locums can expect.')) }}
     </div>
-    <div class="form-actions"><button class="btn btn-primary" type="submit">Save profile</button></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Save profile') }}</button></div>
   </form>
 </div>
 {% endblock %}

@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}Join LocumDoc{% endblock %}
+{% block title %}{{ _('Join LocumDoc') }}{% endblock %}
 {% block main %}
 <div class="wrap">
   <div class="auth-shell wide">
-    <h1>Join LocumDoc</h1>
-    <p>Choose the account that fits you. Both are free.</p>
+    <h1>{{ _('Join LocumDoc') }}</h1>
+    <p>{{ _('Choose the account that fits you. Both are free.') }}</p>
     <div class="choice-grid">
       <a class="choice" href="{{ url_for('auth.join_doctor') }}">
-        <h2>I'm a doctor</h2>
-        <p>Looking for locum work in Qatar, and later across the Gulf.</p>
+        <h2>{{ _("I'm a doctor") }}</h2>
+        <p>{{ _('Looking for locum work in Qatar, and later across the Gulf.') }}</p>
         <ul>
-          <li>One profile and CV for every application</li>
-          <li>Get invited by verified facilities</li>
-          <li>Track every application in one place</li>
+          <li>{{ _('One profile and CV for every application') }}</li>
+          <li>{{ _('Get invited by verified facilities') }}</li>
+          <li>{{ _('Track every application in one place') }}</li>
         </ul>
-        <span class="btn btn-primary">Create a doctor profile</span>
+        <span class="btn btn-primary">{{ _('Create a doctor profile') }}</span>
       </a>
       <a class="choice" href="{{ url_for('auth.join_facility') }}">
-        <h2>I'm hiring</h2>
-        <p>A hospital, clinic or medical centre that needs locum cover.</p>
+        <h2>{{ _("I'm hiring") }}</h2>
+        <p>{{ _('A hospital, clinic or medical centre that needs locum cover.') }}</p>
         <ul>
-          <li>Post locum jobs with dates and rates</li>
-          <li>Receive applicants with CVs attached</li>
-          <li>Search and invite doctors directly</li>
+          <li>{{ _('Post locum jobs with dates and rates') }}</li>
+          <li>{{ _('Receive applicants with CVs attached') }}</li>
+          <li>{{ _('Search and invite doctors directly') }}</li>
         </ul>
-        <span class="btn btn-ink">Register a facility</span>
+        <span class="btn btn-ink">{{ _('Register a facility') }}</span>
       </a>
     </div>
-    <p class="muted">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+    <p class="muted">{{ _('Already have an account?') }} <a href="{{ url_for('auth.login') }}">{{ _('Log in') }}</a></p>
   </div>
 </div>
 {% endblock %}

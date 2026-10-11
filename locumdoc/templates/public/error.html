@@ -6,8 +6,8 @@
   <h1>{{ title }}</h1>
   <p class="muted">{{ text }}</p>
   <div class="form-actions">
-    <a class="btn btn-primary" href="{{ url_for('public.home') }}">Go to the home page</a>
-    <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">Browse jobs</a>
+    <a class="btn btn-primary" href="{{ url_for('public.home') }}">{{ _('Go to the home page') }}</a>
+    <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse jobs') }}</a>
   </div>
 </div>
 {% endblock %}

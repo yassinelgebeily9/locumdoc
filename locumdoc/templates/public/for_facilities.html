@@ -1,27 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Locum doctors for hospitals and clinics in Qatar — LocumDoc{% endblock %}
+{% block title %}{{ _('Locum doctors for hospitals and clinics in Qatar — LocumDoc') }}{% endblock %}
 {% block main %}
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <div class="launch">{{ m.qatar_flag() }} For facilities in Qatar</div>
-      <h1>Cover the rota before the gap opens.</h1>
-      <p class="lede">Post locum jobs, receive applications with CVs attached, and search a directory of doctors who've told you their specialty, availability and DHP licensing status up front.</p>
+      <div class="launch">{{ m.qatar_flag() }} {{ _('For facilities in Qatar') }}</div>
+      <h1>{{ _('Cover the rota before the gap opens.') }}</h1>
+      <p class="lede">{{ _("Post locum jobs, receive applications with CVs attached, and search a directory of doctors who've told you their specialty, availability and DHP licensing status up front.") }}</p>
       <div class="hero-ctas">
-        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_facility') }}">Register your facility</a>
-        <a class="btn btn-outline btn-lg" href="{{ url_for('public.contact') }}">Talk to us first</a>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register your facility') }}</a>
+        <a class="btn btn-outline btn-lg" href="{{ url_for('public.contact') }}">{{ _('Talk to us first') }}</a>
       </div>
     </div>
     <div class="panel panel-pad">
-      <h2>What you see for every doctor</h2>
+      <h2>{{ _('What you see for every doctor') }}</h2>
       <dl class="kv">
-        <dt>Specialty and grade</dt><dd>Consultant, specialist, registrar, GP</dd>
-        <dt>Qualifications</dt><dd>Degrees, boards and fellowships</dd>
-        <dt>Current licence</dt><dd>Where they're registered today</dd>
-        <dt>DHP status</dt><dd>Not started, evaluating, eligible, temporary or full licence</dd>
-        <dt>Verification</dt><dd>Whether a PSV report and good standing certificate are ready</dd>
-        <dt>Availability</dt><dd>Start date, end date, minimum placement length</dd>
-        <dt>Documents</dt><dd>CV, licences, certificates</dd>
+        <dt>{{ _('Specialty and grade') }}</dt><dd>{{ _('Consultant, specialist, registrar, GP') }}</dd>
+        <dt>{{ _('Qualifications') }}</dt><dd>{{ _('Degrees, boards and fellowships') }}</dd>
+        <dt>{{ _('Current licence') }}</dt><dd>{{ _("Where they're registered today") }}</dd>
+        <dt>{{ _('DHP status') }}</dt><dd>{{ _('Not started, evaluating, eligible, temporary or full licence') }}</dd>
+        <dt>{{ _('Verification') }}</dt><dd>{{ _('Whether a PSV report and good standing certificate are ready') }}</dd>
+        <dt>{{ _('Availability') }}</dt><dd>{{ _('Start date, end date, minimum placement length') }}</dd>
+        <dt>{{ _('Documents') }}</dt><dd>{{ _('CV, licences, certificates') }}</dd>
       </dl>
     </div>
   </div>
@@ -29,22 +29,22 @@
 
 <section class="serrated">
   <div class="wrap">
-    <h2>From vacancy to placed doctor</h2>
+    <h2>{{ _('From vacancy to placed doctor') }}</h2>
     <div class="tracks">
       <div class="track">
-        <h3>Post and receive</h3>
+        <h3>{{ _('Post and receive') }}</h3>
         <ol class="steps">
-          <li><div><strong>Register and get verified</strong><span>We confirm your facility, usually within one working day. You can draft jobs meanwhile.</span></div></li>
-          <li><div><strong>Post a locum job</strong><span>Specialty, grade, dates, rate, and what's included. It's live as soon as you're verified.</span></div></li>
-          <li><div><strong>Applicants arrive with CVs</strong><span>You're emailed for each one. Every applicant's full profile and documents open in one click.</span></div></li>
+          <li><div><strong>{{ _('Register and get verified') }}</strong><span>{{ _('We confirm your facility, usually within one working day. You can draft jobs meanwhile.') }}</span></div></li>
+          <li><div><strong>{{ _('Post a locum job') }}</strong><span>{{ _("Specialty, grade, dates, rate, and what's included. It's live as soon as you're verified.") }}</span></div></li>
+          <li><div><strong>{{ _('Applicants arrive with CVs') }}</strong><span>{{ _("You're emailed for each one. Every applicant's full profile and documents open in one click.") }}</span></div></li>
         </ol>
       </div>
       <div class="track">
-        <h3>Search and invite</h3>
+        <h3>{{ _('Search and invite') }}</h3>
         <ol class="steps">
-          <li><div><strong>Filter the directory</strong><span>By specialty, grade, DHP licensing status and the date you need someone to start.</span></div></li>
-          <li><div><strong>Invite a doctor</strong><span>Send a message linked to one of your jobs. They accept or decline, and you're told either way.</span></div></li>
-          <li><div><strong>Move them through your pipeline</strong><span>Shortlisted, interview, offer made, placed. Doctors are emailed at each step, so nobody chases.</span></div></li>
+          <li><div><strong>{{ _('Filter the directory') }}</strong><span>{{ _('By specialty, grade, DHP licensing status and the date you need someone to start.') }}</span></div></li>
+          <li><div><strong>{{ _('Invite a doctor') }}</strong><span>{{ _("Send a message linked to one of your jobs. They accept or decline, and you're told either way.") }}</span></div></li>
+          <li><div><strong>{{ _('Move them through your pipeline') }}</strong><span>{{ _('Shortlisted, interview, offer made, placed. Doctors are emailed at each step, so nobody chases.') }}</span></div></li>
         </ol>
       </div>
     </div>
@@ -54,22 +54,22 @@
 <section class="section section-white">
   <div class="wrap licence-grid">
     <div class="intro">
-      <h2>Built around DHP licensing</h2>
-      <p>The longest part of bringing a locum to Qatar is the licence. LocumDoc asks doctors for the details that decide how quickly they can start, so you can shortlist people who are ready.</p>
+      <h2>{{ _('Built around DHP licensing') }}</h2>
+      <p>{{ _('The longest part of bringing a locum to Qatar is the licence. LocumDoc asks doctors for the details that decide how quickly they can start, so you can shortlist people who are ready.') }}</p>
     </div>
     <ol class="pathway">
-      <li><strong>Locum licence for government and semi-government roles</strong><span>Covers a permanent physician for up to six months, with a letter of intent and an undertaking from your medical director.</span></li>
-      <li><strong>Temporary licence</strong><span>Six months, non-renewable, while the full licence is processed.</span></li>
-      <li><strong>Visiting and short-notice</strong><span>For senior specialists on short visits. Each visit is limited to two weeks at one facility.</span></li>
+      <li><strong>{{ _('Locum licence for government and semi-government roles') }}</strong><span>{{ _('Covers a permanent physician for up to six months, with a letter of intent and an undertaking from your medical director.') }}</span></li>
+      <li><strong>{{ _('Temporary licence') }}</strong><span>{{ _('Six months, non-renewable, while the full licence is processed.') }}</span></li>
+      <li><strong>{{ _('Visiting and short-notice') }}</strong><span>{{ _('For senior specialists on short visits. Each visit is limited to two weeks at one facility.') }}</span></li>
     </ol>
   </div>
-  <div class="wrap"><p class="note">Summary of DHP's published guidelines for physicians. Always confirm current requirements with DHP.</p></div>
+  <div class="wrap"><p class="note">{{ _("Summary of DHP's published guidelines for physicians. Always confirm current requirements with DHP.") }}</p></div>
 </section>
 
 <section class="section-tight">
   <div class="wrap cta-strip">
-    <h2>Registering is free. Post your first job in minutes.</h2>
-    <a class="btn btn-ink btn-lg" href="{{ url_for('auth.join_facility') }}">Register your facility</a>
+    <h2>{{ _('Registering is free. Post your first job in minutes.') }}</h2>
+    <a class="btn btn-ink btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register your facility') }}</a>
   </div>
 </section>
 {% endblock %}

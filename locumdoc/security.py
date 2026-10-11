@@ -7,6 +7,7 @@ from functools import wraps
 from flask import abort, flash, g, redirect, request, session, url_for
 
 from .db import query
+from .i18n import _
 
 
 # ------------------------------------------------------------------ sessions
@@ -36,7 +37,7 @@ def login_required(*roles):
         @wraps(view)
         def wrapped(*args, **kwargs):
             if g.user is None:
-                flash("Log in to continue.", "info")
+                flash(_("Log in to continue."), "info")
                 return redirect(url_for("auth.login", next=request.full_path))
             if roles and g.user["role"] not in roles:
                 abort(403)
@@ -57,7 +58,7 @@ def check_csrf():
     if request.method in ("POST", "PUT", "PATCH", "DELETE"):
         sent = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token", "")
         if not sent or not hmac.compare_digest(sent, session.get("csrf", "")):
-            abort(400, description="Your session expired. Reload the page and try again.")
+            abort(400, description="Your session expired. Reload the page and try again.")  # translated in the error handler
 
 
 # ---------------------------------------------------------------- rate limit

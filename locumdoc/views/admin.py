@@ -4,6 +4,7 @@ import io
 from flask import Blueprint, Response, abort, flash, g, redirect, render_template, request, url_for
 
 from .. import mail, refdata
+from ..i18n import _
 from ..db import execute, query
 from ..security import login_required
 from . import page_args
@@ -84,7 +85,7 @@ def _doctors_csv(rows):
 @bp.route("/doctors/<int:doctor_id>", methods=["GET", "POST"])
 @login_required("admin")
 def doctor(doctor_id):
-    d = query(DOCTOR_SELECT.replace("SELECT d.*,", "SELECT d.*, u.created_at, u.last_login_at, u.is_active,", 1)
+    d = query(DOCTOR_SELECT.replace("SELECT d.*,", "SELECT d.*, u.created_at, u.last_login_at, u.is_active, u.lang,", 1)
               + " WHERE d.user_id = ?", (doctor_id,), one=True)
     if not d:
         abort(404)
@@ -93,15 +94,15 @@ def doctor(doctor_id):
         if action == "verify":
             execute("UPDATE doctors SET verified = 1 - verified WHERE user_id = ?", (doctor_id,))
             if not d["verified"]:
-                mail.send(d["email"], "Your LocumDoc profile is verified", "doctor_verified", doctor=d)
-            flash("Verification updated.", "success")
+                mail.send(d["email"], "Your LocumDoc profile is verified", "doctor_verified", d["lang"], doctor=d)
+            flash(_("Verification updated."), "success")
         elif action == "notes":
             execute("UPDATE doctors SET admin_notes = ? WHERE user_id = ?",
                     ((request.form.get("admin_notes") or "")[:5000], doctor_id))
-            flash("Notes saved.", "success")
+            flash(_("Notes saved."), "success")
         elif action == "suspend":
             execute("UPDATE users SET is_active = 1 - is_active WHERE id = ?", (doctor_id,))
-            flash("Account access updated.", "success")
+            flash(_("Account access updated."), "success")
         return redirect(url_for(".doctor", doctor_id=doctor_id))
     docs = query("SELECT * FROM documents WHERE user_id = ? ORDER BY created_at DESC", (doctor_id,))
     apps = query("SELECT a.*, j.title, f.name AS facility FROM applications a JOIN jobs j ON j.id = a.job_id"
@@ -130,7 +131,7 @@ def facilities():
 @bp.route("/facilities/<int:fac_id>", methods=["GET", "POST"])
 @login_required("admin")
 def facility(fac_id):
-    fac = query("SELECT f.*, u.email, u.created_at, u.last_login_at, u.is_active, ci.name AS city, co.name AS country"
+    fac = query("SELECT f.*, u.email, u.lang, u.created_at, u.last_login_at, u.is_active, ci.name AS city, co.name AS country"
                 " FROM facilities f JOIN users u ON u.id = f.user_id LEFT JOIN cities ci ON ci.id = f.city_id"
                 " LEFT JOIN countries co ON co.id = f.country_id WHERE f.user_id = ?", (fac_id,), one=True)
     if not fac:
@@ -140,17 +141,17 @@ def facility(fac_id):
         if action == "verify":
             execute("UPDATE facilities SET verified = 1 - verified WHERE user_id = ?", (fac_id,))
             if not fac["verified"]:
-                mail.send(fac["email"], "Your facility is verified on LocumDoc", "facility_verified", fac=fac)
+                mail.send(fac["email"], "Your facility is verified on LocumDoc", "facility_verified", fac["lang"], fac=fac)
                 flash(f"{fac['name']} verified. Its open jobs are now live.", "success")
             else:
                 flash(f"{fac['name']} unverified. Its jobs are hidden.", "info")
         elif action == "notes":
             execute("UPDATE facilities SET admin_notes = ? WHERE user_id = ?",
                     ((request.form.get("admin_notes") or "")[:5000], fac_id))
-            flash("Notes saved.", "success")
+            flash(_("Notes saved."), "success")
         elif action == "suspend":
             execute("UPDATE users SET is_active = 1 - is_active WHERE id = ?", (fac_id,))
-            flash("Account access updated.", "success")
+            flash(_("Account access updated."), "success")
         return redirect(url_for(".facility", fac_id=fac_id))
     jobs = query("SELECT j.*, s.name AS specialty, (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id)"
                  " AS applicants FROM jobs j JOIN specialties s ON s.id = j.specialty_id WHERE j.facility_id = ?"
@@ -183,7 +184,7 @@ def job_status(job_id):
     if status not in dict(refdata.JOB_STATUSES):
         abort(400)
     execute("UPDATE jobs SET status = ?, updated_at = datetime('now') WHERE id = ?", (status, job_id))
-    flash("Job status updated.", "success")
+    flash(_("Job status updated."), "success")
     return redirect(request.form.get("back") or url_for(".jobs"))
 
 
@@ -213,7 +214,7 @@ def countries():
         cid = request.form.get("country_id", type=int)
         if request.form.get("action") == "toggle":
             execute("UPDATE countries SET active = 1 - active WHERE id = ?", (cid,))
-            flash("Country availability updated.", "success")
+            flash(_("Country availability updated."), "success")
         elif request.form.get("action") == "add_city":
             name = (request.form.get("city") or "").strip()[:80]
             if name:

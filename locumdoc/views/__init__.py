@@ -4,6 +4,8 @@ from datetime import date
 
 from flask import request
 
+from ..i18n import _
+
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -18,25 +20,25 @@ class Form:
     def text(self, name, required=False, max_len=500, label=None):
         v = (self.data.get(name) or "").strip()
         if required and not v:
-            self.errors[name] = f"Enter {label or name.replace('_', ' ')}."
+            self.errors[name] = _("Enter %(label)s.", label=label or name.replace("_", " "))
         elif len(v) > max_len:
-            self.errors[name] = f"Keep this under {max_len} characters."
+            self.errors[name] = _("Keep this under %(n)s characters.", n=max_len)
         self.clean[name] = v
         return v
 
     def email(self, name="email"):
         v = (self.data.get(name) or "").strip().lower()
         if not EMAIL_RE.match(v):
-            self.errors[name] = "Enter a valid email address."
+            self.errors[name] = _("Enter a valid email address.")
         self.clean[name] = v
         return v
 
     def choice(self, name, options, required=True, label=None):
         v = (self.data.get(name) or "").strip()
-        keys = [str(k) for k, _ in options]
+        keys = [str(k) for k, _lbl in options]
         if v not in keys:
             if required or v:
-                self.errors[name] = f"Choose {label or name.replace('_', ' ')}."
+                self.errors[name] = _("Choose %(label)s.", label=label or name.replace("_", " "))
             v = ""
         self.clean[name] = v
         return v
@@ -45,17 +47,17 @@ class Form:
         raw = (self.data.get(name) or "").replace(",", "").strip()
         if not raw:
             if required:
-                self.errors[name] = f"Enter {label or name.replace('_', ' ')}."
+                self.errors[name] = _("Enter %(label)s.", label=label or name.replace("_", " "))
             self.clean[name] = None
             return None
         try:
             v = int(raw)
         except ValueError:
-            self.errors[name] = "Enter a whole number."
+            self.errors[name] = _("Enter a whole number.")
             self.clean[name] = None
             return None
         if (min_v is not None and v < min_v) or (max_v is not None and v > max_v):
-            self.errors[name] = f"Enter a number between {min_v} and {max_v}."
+            self.errors[name] = _("Enter a number between %(min)s and %(max)s.", min=min_v, max=max_v)
         self.clean[name] = v
         return v
 
@@ -63,13 +65,13 @@ class Form:
         raw = (self.data.get(name) or "").strip()
         if not raw:
             if required:
-                self.errors[name] = f"Choose {label or name.replace('_', ' ')}."
+                self.errors[name] = _("Choose %(label)s.", label=label or name.replace("_", " "))
             self.clean[name] = None
             return None
         try:
             v = date.fromisoformat(raw).isoformat()
         except ValueError:
-            self.errors[name] = "Enter a date as YYYY-MM-DD."
+            self.errors[name] = _("Enter a date as YYYY-MM-DD.")
             v = None
         self.clean[name] = v
         return v

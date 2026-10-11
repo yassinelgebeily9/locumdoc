@@ -1,27 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Contact LocumDoc{% endblock %}
+{% block title %}{{ _('Contact LocumDoc') }}{% endblock %}
 {% block main %}
 <div class="wrap page-head">
-  <h1>Talk to us</h1>
-  <p>Hiring in Qatar, a doctor with a question, or interested in another Gulf country? We reply within one working day.</p>
+  <h1>{{ _('Talk to us') }}</h1>
+  <p>{{ _('Hiring in Qatar, a doctor with a question, or interested in another Gulf country? We reply within one working day.') }}</p>
 </div>
 <div class="wrap content grid-main">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
     <div class="form-grid">
-      {{ m.input(form, form.clean, 'name', 'Your name') }}
-      {{ m.input(form, form.clean, 'email', 'Email', type='email') }}
-      {{ m.input(form, form.clean, 'organisation', 'Hospital, clinic or organisation', optional=True, cls='full') }}
-      {{ m.textarea(form, form.clean, 'message', 'Message', cls='full', rows=6) }}
+      {{ m.input(form, form.clean, 'name', _('Your name')) }}
+      {{ m.input(form, form.clean, 'email', _('Email'), type='email') }}
+      {{ m.input(form, form.clean, 'organisation', _('Hospital, clinic or organisation'), optional=True, cls='full') }}
+      {{ m.textarea(form, form.clean, 'message', _('Message'), cls='full', rows=6) }}
       <div class="visually-hidden" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
     </div>
-    <div class="form-actions"><button class="btn btn-primary" type="submit">Send message</button></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Send message') }}</button></div>
   </form>
   <aside class="panel panel-pad">
-    <h3>Email</h3>
-    <p><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
-    <h3>Facilities</h3>
-    <p class="muted">The fastest way to start is to <a href="{{ url_for('auth.join_facility') }}">register your facility</a>. We'll call to verify it.</p>
+    <h3>{{ _('Email') }}</h3>
+    <p><a class="ltr" href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+    <h3>{{ _('Facilities') }}</h3>
+    <p class="muted">{{ _("The fastest way to start is to register your facility. We'll call to verify it.") }} <a href="{{ url_for('auth.join_facility') }}">{{ _('Register a facility') }}</a></p>
   </aside>
 </div>
 {% endblock %}

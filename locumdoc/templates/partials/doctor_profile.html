@@ -1,41 +1,41 @@
 {# Expects: d (doctor row with email, specialty), docs #}
 <div class="panel">
-  <div class="panel-head"><h2>Professional profile</h2>{% if d.verified %}{{ m.verified_tag('Verified by LocumDoc') }}{% endif %}</div>
+  <div class="panel-head"><h2>{{ _('Professional profile') }}</h2>{% if d.verified %}{{ m.verified_tag(_('Verified by LocumDoc')) }}{% endif %}</div>
   <div class="panel-body">
-    {% if d.bio %}<p>{{ d.bio }}</p>{% endif %}
+    {% if d.bio %}<p dir="auto">{{ d.bio }}</p>{% endif %}
     <dl class="kv">
-      <dt>Specialty</dt><dd>{{ d.specialty or '—' }}{% if d.subspecialty %}, {{ d.subspecialty }}{% endif %}</dd>
-      <dt>Grade</dt><dd>{{ label(ref.GRADES, d.grade) }}</dd>
-      <dt>Experience</dt><dd>{{ d.years_experience if d.years_experience is not none else '—' }} years</dd>
-      <dt>Qualifications</dt><dd>{{ d.qualifications or '—' }}</dd>
-      <dt>Current licence</dt><dd>{{ d.primary_license or '—' }}</dd>
-      <dt>DHP status</dt><dd>{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</dd>
-      <dt>Qualifying exam</dt><dd>{{ label(ref.EXAM_STATUS, d.exam_status) }}</dd>
-      <dt>PSV report</dt><dd>{{ 'Yes, or in progress' if d.has_psv else 'Not yet' }}</dd>
-      <dt>Good standing</dt><dd>{{ 'Can provide' if d.good_standing else 'Not confirmed' }}</dd>
-      <dt>Available</dt><dd>{% if d.available_from %}{{ d.available_from|d }}{% if d.available_to %} to {{ d.available_to|d }}{% else %}, open-ended{% endif %}{% else %}Not given{% endif %}{% if d.min_weeks %}. Minimum {{ d.min_weeks }} weeks{% endif %}</dd>
-      <dt>Nationality</dt><dd>{{ d.nationality or '—' }}</dd>
-      <dt>Lives in</dt><dd>{{ d.current_country or '—' }}</dd>
-      <dt>Languages</dt><dd>{{ d.languages or '—' }}</dd>
-      <dt>Email</dt><dd><a href="mailto:{{ d.email }}">{{ d.email }}</a></dd>
-      <dt>Phone</dt><dd>{% if d.phone %}<a href="tel:{{ d.phone|replace(' ', '') }}">{{ d.phone }}</a>{% else %}—{% endif %}</dd>
+      <dt>{{ _('Specialty') }}</dt><dd>{{ _(d.specialty) if d.specialty else '—' }}{% if d.subspecialty %}{{ comma }}{{ d.subspecialty }}{% endif %}</dd>
+      <dt>{{ _('Grade') }}</dt><dd>{{ label(ref.GRADES, d.grade) }}</dd>
+      <dt>{{ _('Experience') }}</dt><dd>{{ d.years_experience|years }}</dd>
+      <dt>{{ _('Qualifications') }}</dt><dd dir="auto">{{ d.qualifications or '—' }}</dd>
+      <dt>{{ _('Current licence') }}</dt><dd dir="auto">{{ d.primary_license or '—' }}</dd>
+      <dt>{{ _('DHP status') }}</dt><dd>{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</dd>
+      <dt>{{ _('Qualifying exam') }}</dt><dd>{{ label(ref.EXAM_STATUS, d.exam_status) }}</dd>
+      <dt>{{ _('PSV report') }}</dt><dd>{{ _('Yes, or in progress') if d.has_psv else _('Not yet') }}</dd>
+      <dt>{{ _('Good standing') }}</dt><dd>{{ _('Can provide') if d.good_standing else _('Not confirmed') }}</dd>
+      <dt>{{ _('Available') }}</dt><dd>{% if d.available_from %}{% if d.available_to %}{{ _('%(start)s to %(end)s', start=d.available_from|d, end=d.available_to|d) }}{% else %}{{ _('From %(date)s, open-ended', date=d.available_from|d) }}{% endif %}{% else %}{{ _('Not given') }}{% endif %}{% if d.min_weeks %}. {{ _('Minimum %(length)s', length=weeks_n(d.min_weeks)) }}{% endif %}</dd>
+      <dt>{{ _('Nationality') }}</dt><dd dir="auto">{{ d.nationality or '—' }}</dd>
+      <dt>{{ _('Lives in') }}</dt><dd dir="auto">{{ d.current_country or '—' }}</dd>
+      <dt>{{ _('Languages') }}</dt><dd dir="auto">{{ d.languages or '—' }}</dd>
+      <dt>{{ _('Email') }}</dt><dd><a class="ltr" href="mailto:{{ d.email }}">{{ d.email }}</a></dd>
+      <dt>{{ _('Phone') }}</dt><dd>{% if d.phone %}<a class="ltr" href="tel:{{ d.phone|replace(' ', '') }}">{{ d.phone }}</a>{% else %}—{% endif %}</dd>
     </dl>
   </div>
 </div>
 <div class="panel">
-  <div class="panel-head"><h2>Documents</h2></div>
+  <div class="panel-head"><h2>{{ _('Documents') }}</h2></div>
   <div class="panel-body">
     {% if docs %}
     <ul class="doc-list">
       {% for doc in docs %}
       <li>
         <span class="doc-icon {{ 'cv' if doc.kind == 'cv' }}">{{ doc.original_name.rsplit('.', 1)[-1]|upper }}</span>
-        <span><a class="name" href="{{ url_for('files.download', doc_id=doc.id) }}" target="_blank" rel="noopener">{{ doc.original_name }}</a>
-          <span class="meta">{{ label(ref.DOCUMENT_KINDS, doc.kind) }}, {{ doc.size_bytes|filesize }}, added {{ doc.created_at|d }}</span></span>
-        <a class="btn btn-outline btn-sm" href="{{ url_for('files.download', doc_id=doc.id) }}" target="_blank" rel="noopener">Open</a>
+        <span><a class="name" dir="auto" href="{{ url_for('files.download', doc_id=doc.id) }}" target="_blank" rel="noopener">{{ doc.original_name }}</a>
+          <span class="meta">{{ label(ref.DOCUMENT_KINDS, doc.kind) }}{{ comma }}<span class="ltr">{{ doc.size_bytes|filesize }}</span>{{ comma }}{{ _('added %(date)s', date=doc.created_at|d) }}</span></span>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('files.download', doc_id=doc.id) }}" target="_blank" rel="noopener">{{ _('Open') }}</a>
       </li>
       {% endfor %}
     </ul>
-    {% else %}<p class="muted">No documents uploaded yet.</p>{% endif %}
+    {% else %}<p class="muted">{{ _('No documents uploaded yet.') }}</p>{% endif %}
   </div>
 </div>

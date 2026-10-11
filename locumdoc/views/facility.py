@@ -3,6 +3,7 @@ from datetime import date
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
 from .. import mail, refdata
+from ..i18n import _
 from ..db import execute, query
 from ..security import login_required
 from . import Form, page_args
@@ -66,14 +67,14 @@ def profile():
                    " WHERE co.active = 1 OR ci.id = ? ORDER BY co.sort_order, ci.name", (fac["city_id"] or 0,))
     form = Form()
     if request.method == "POST":
-        form.text("name", required=True, max_len=160, label="the facility name")
+        form.text("name", required=True, max_len=160, label=_("the facility name"))
         form.choice("facility_type", refdata.FACILITY_TYPES)
         form.choice("sector", refdata.SECTORS)
-        form.choice("city_id", [(c["id"], c["name"]) for c in cities], label="a city")
+        form.choice("city_id", [(c["id"], c["name"]) for c in cities], label=_("a city"))
         form.text("website", max_len=200)
-        form.text("contact_name", required=True, max_len=120, label="a contact name")
+        form.text("contact_name", required=True, max_len=120, label=_("a contact name"))
         form.text("contact_role", max_len=120)
-        form.text("phone", required=True, max_len=40, label="a phone number")
+        form.text("phone", required=True, max_len=40, label=_("a phone number"))
         form.text("about", max_len=2000)
         if form.ok:
             c = form.clean
@@ -82,7 +83,7 @@ def profile():
                     " contact_name=?, contact_role=?, phone=?, about=?, updated_at=datetime('now') WHERE user_id=?",
                     (c["name"], c["facility_type"], c["sector"], city["country_id"], city["id"], c["website"],
                      c["contact_name"], c["contact_role"], c["phone"], c["about"], g.user["id"]))
-            flash("Facility profile saved.", "success")
+            flash(_("Facility profile saved."), "success")
             return redirect(url_for(".dashboard"))
     v = dict(fac)
     if request.method == "POST":
@@ -98,21 +99,21 @@ def _job_form(fac, job=None):
                    " ON co.id = ci.country_id WHERE co.active = 1 ORDER BY co.sort_order, ci.name")
     form = Form()
     if request.method == "POST":
-        form.text("title", required=True, max_len=140, label="a job title")
-        form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label="a specialty")
-        form.choice("grade", refdata.GRADES, label="a grade")
-        form.choice("city_id", [(c["id"], c["name"]) for c in cities], label="a city")
-        s = form.date("start_date", required=True, label="a start date")
-        e = form.date("end_date", required=True, label="an end date")
+        form.text("title", required=True, max_len=140, label=_("a job title"))
+        form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label=_("a specialty"))
+        form.choice("grade", refdata.GRADES, label=_("a grade"))
+        form.choice("city_id", [(c["id"], c["name"]) for c in cities], label=_("a city"))
+        s = form.date("start_date", required=True, label=_("a start date"))
+        e = form.date("end_date", required=True, label=_("an end date"))
         if s and e and e <= s:
-            form.errors["end_date"] = "The end date must be after the start date."
+            form.errors["end_date"] = _("The end date must be after the start date.")
         if s and not job and s < date.today().isoformat():
-            form.errors["start_date"] = "The start date can't be in the past."
+            form.errors["start_date"] = _("The start date can't be in the past.")
         form.integer("rate_amount", min_v=1, max_v=10_000_000)
         form.choice("rate_period", refdata.RATE_PERIODS)
         for perk in ("accommodation", "flights", "transport", "licensing_support"):
             form.flag(perk)
-        form.text("description", required=True, max_len=5000, label="a description")
+        form.text("description", required=True, max_len=5000, label=_("a description"))
         form.text("requirements", max_len=3000)
         if form.ok:
             c = form.clean
@@ -125,18 +126,18 @@ def _job_form(fac, job=None):
                         " end_date=?, rate_amount=?, rate_currency=?, rate_period=?, accommodation=?, flights=?,"
                         " transport=?, licensing_support=?, description=?, requirements=?, updated_at=datetime('now')"
                         " WHERE id=?", vals + (job["id"],))
-                flash("Job updated.", "success")
+                flash(_("Job updated."), "success")
                 return redirect(url_for(".job", job_id=job["id"])), None
             jid = execute("INSERT INTO jobs (title, specialty_id, grade, country_id, city_id, start_date, end_date,"
                           " rate_amount, rate_currency, rate_period, accommodation, flights, transport,"
                           " licensing_support, description, requirements, facility_id)"
                           " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", vals + (g.user["id"],))
-            mail.notify_admin(f"New job: {c['title']}", "admin_new_job", title=c["title"], facility=fac["name"],
+            mail.notify_admin("New job: %(title)s", "admin_new_job", {"title": c["title"]}, title=c["title"], facility=fac["name"],
                               verified=fac["verified"], job_id=jid)
-            flash("Job published." if fac["verified"] else
-                  "Job saved. It goes live as soon as we've verified your facility.", "success")
+            flash(_("Job published.") if fac["verified"] else
+                  _("Job saved. It goes live as soon as we've verified your facility."), "success")
             return redirect(url_for(".job", job_id=jid)), None
-        flash("Some details need attention. Check the highlighted fields.", "error")
+        flash(_("Some details need attention. Check the highlighted fields."), "error")
     v = dict(job) if job else {"city_id": fac["city_id"], "rate_period": "month"}
     if request.method == "POST":
         v.update(form.clean)
@@ -205,14 +206,13 @@ def application_status(app_id):
         abort(400)
     if status != a["status"]:
         execute("UPDATE applications SET status = ?, updated_at = datetime('now') WHERE id = ?", (status, app_id))
-        d = query("SELECT d.first_name, d.last_name, u.email FROM doctors d JOIN users u ON u.id = d.user_id"
+        d = query("SELECT d.first_name, d.last_name, u.email, u.lang FROM doctors d JOIN users u ON u.id = d.user_id"
                   " WHERE d.user_id = ?", (a["doctor_id"],), one=True)
         fac = get_facility(g.user["id"])
-        mail.send(d["email"], f"Update on your application: {a['title']}", "doctor_status_change",
-                  doctor=d, job_title=a["title"], facility=fac["name"],
-                  status=refdata.label(refdata.APPLICATION_STATUSES, status))
-        flash(f"Dr {d['last_name']} moved to {refdata.label(refdata.APPLICATION_STATUSES, status).lower()}. "
-              "They've been emailed.", "success")
+        mail.send(d["email"], "Update on your application: %(title)s", "doctor_status_change", d["lang"],
+                  {"title": a["title"]}, doctor=d, job_title=a["title"], facility=fac["name"], status=status)
+        flash(_("Dr %(name)s moved to: %(status)s. They've been emailed.", name=d["last_name"],
+                status=refdata.label(refdata.APPLICATION_STATUSES, status)), "success")
     return redirect(request.form.get("back") or url_for(".job", job_id=a["job_id"]))
 
 
@@ -291,13 +291,13 @@ def invite(doctor_id):
     message = (request.form.get("message") or "").strip()[:2000]
     if query("SELECT 1 FROM invitations WHERE facility_id = ? AND doctor_id = ? AND IFNULL(job_id, 0) = ? AND status = 'sent'",
              (g.user["id"], doctor_id, int(job_id or 0)), one=True):
-        flash("You've already sent this doctor an invitation that's waiting for a reply.", "info")
+        flash(_("You've already sent this doctor an invitation that's waiting for a reply."), "info")
         return redirect(url_for(".doctor", doctor_id=doctor_id))
     execute("INSERT INTO invitations (facility_id, doctor_id, job_id, message) VALUES (?, ?, ?, ?)",
             (g.user["id"], doctor_id, job["id"] if job else None, message))
-    d = query("SELECT d.first_name, d.last_name, u.email FROM doctors d JOIN users u ON u.id = d.user_id"
+    d = query("SELECT d.first_name, d.last_name, u.email, u.lang FROM doctors d JOIN users u ON u.id = d.user_id"
               " WHERE d.user_id = ?", (doctor_id,), one=True)
-    mail.send(d["email"], f"{fac['name']} invited you to a locum role", "doctor_invited",
-              doctor=d, facility=fac["name"], job=job, message=message)
-    flash(f"Invitation sent to Dr {d['last_name']}.", "success")
+    mail.send(d["email"], "%(facility)s invited you to a locum role", "doctor_invited", d["lang"],
+              {"facility": fac["name"]}, doctor=d, facility=fac["name"], job=job, message=message)
+    flash(_("Invitation sent to Dr %(name)s.", name=d["last_name"]), "success")
     return redirect(url_for(".doctor", doctor_id=doctor_id))

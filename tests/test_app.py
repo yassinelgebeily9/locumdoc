@@ -13,6 +13,8 @@ PDF = b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
 
 class Base(unittest.TestCase):
     def setUp(self):
+        from locumdoc import security
+        security._attempts.clear()  # the rate limiter is per-process; reset it between tests
         self.tmp = tempfile.mkdtemp()
         self.app = create_app({
             "TESTING": True,
@@ -267,3 +269,85 @@ class FlowTests(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ArabicTests(Base):
+    def test_language_switch_and_rtl(self):
+        c = self.client()
+        r = c.get("/language/ar?next=/jobs")
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(r.headers["Location"].endswith("/jobs"))
+        page = c.get("/jobs").data.decode()
+        self.assertIn('lang="ar" dir="rtl"', page)
+        self.assertIn("الوظائف المؤقتة", page)
+        self.assertIn("English", page)  # switch back link
+        c.get("/language/en")
+        self.assertIn('lang="en" dir="ltr"', c.get("/").data.decode())
+        # unsafe redirect targets fall back to home
+        self.assertTrue(c.get("/language/ar?next=//evil.example").headers["Location"].endswith("/"))
+        self.assertEqual(c.get("/language/fr").status_code, 404)
+
+    def test_browser_language_detected(self):
+        r = self.client().get("/", headers={"Accept-Language": "ar-QA,ar;q=0.9,en;q=0.5"})
+        self.assertIn('dir="rtl"', r.data.decode())
+
+    def test_arabic_signup_gets_arabic_email_and_messages(self):
+        c = self.client()
+        c.set_cookie("lang", "ar")
+        spec = self.db("SELECT id FROM specialties WHERE name='Anaesthesia'")[0]["id"]
+        r = self.post(c, "/join/doctor", {"first_name": "", "last_name": "N", "email": "bad",
+                                          "password": "x", "specialty_id": spec, "grade": "consultant"})
+        page = r.data.decode()
+        self.assertIn("يُرجى إدخال اسمك الأول.", page)
+        self.assertIn("أدخل بريدًا إلكترونيًا صحيحًا.", page)
+        self.post(c, "/join/doctor", {"first_name": "Amal", "last_name": "N", "email": "amal@x.test",
+                                      "password": "long-password-1", "specialty_id": spec,
+                                      "grade": "consultant", "consent": "1"})
+        self.assertEqual(self.db("SELECT lang FROM users WHERE email='amal@x.test'")[0]["lang"], "ar")
+        welcome = [m for m in self.outbox() if m["To"] == "amal@x.test"][-1]
+        self.assertEqual(welcome["Subject"], "أهلًا بك في LocumDoc")
+        self.assertIn("أكمل ملفك المهني", welcome.get_content())
+        admin_mail = [m for m in self.outbox() if m["To"] == "ops@x.test"][-1]
+        self.assertEqual(admin_mail["Subject"], "New doctor sign-up")
+
+    def test_status_email_in_doctors_language(self):
+        doc = self.signup_doctor()
+        doc.get("/language/ar")  # saves the preference on the account
+        fac = self.signup_facility()
+        job_id = self.post_job(fac)
+        adm = self.admin()
+        fid = self.db("SELECT user_id FROM facilities")[0]["user_id"]
+        self.post(adm, f"/admin/facilities/{fid}", {"action": "verify"})
+        self.post(doc, f"/doctor/jobs/{job_id}/apply", {})
+        app_id = self.db("SELECT id FROM applications")[0]["id"]
+        self.post(fac, f"/facility/applications/{app_id}/status", {"status": "interview"})
+        mail = [m for m in self.outbox() if m["To"] == "doc@x.test"][-1]
+        self.assertTrue(mail["Subject"].startswith("تحديث على طلبك"))
+        self.assertIn("الحالة الجديدة: مقابلة", mail.get_content())
+        # facility is English, so its applicant email is English
+        fac_mail = [m for m in self.outbox() if m["To"] == "hr@x.test" and "applicant" in m["Subject"]][-1]
+        self.assertTrue(fac_mail["Subject"].startswith("New applicant"))
+
+    def test_arabic_pages_render(self):
+        doc = self.signup_doctor()
+        doc.set_cookie("lang", "ar")
+        for url in ["/", "/jobs", "/for-facilities", "/countries/qatar", "/countries/uae", "/about", "/privacy",
+                    "/terms", "/contact", "/doctor/", "/doctor/profile", "/doctor/documents", "/doctor/applications",
+                    "/account"]:
+            r = doc.get(url)
+            self.assertEqual(r.status_code, 200, url)
+            self.assertIn('dir="rtl"', r.data.decode(), url)
+        self.assertIn("إدارة الكوادر الصحية", doc.get("/countries/qatar").data.decode())
+
+    def test_admin_stays_english(self):
+        adm = self.admin()
+        adm.set_cookie("lang", "ar")
+        self.assertIn('dir="ltr"', adm.get("/admin/").data.decode())
+
+    def test_arabic_specialty_search(self):
+        fac = self.signup_facility()
+        self.post_job(fac)
+        adm = self.admin()
+        fid = self.db("SELECT user_id FROM facilities")[0]["user_id"]
+        self.post(adm, f"/admin/facilities/{fid}", {"action": "verify"})
+        self.assertIn(b"Locum anaesthetist", self.client().get("/jobs?q=تخدير").data)

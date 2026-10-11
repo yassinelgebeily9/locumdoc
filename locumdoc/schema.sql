@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash   TEXT NOT NULL,
     role            TEXT NOT NULL CHECK (role IN ('doctor', 'facility', 'admin')),
     is_active       INTEGER NOT NULL DEFAULT 1,
+    lang            TEXT NOT NULL DEFAULT 'en',     -- preferred language for pages and emails
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     last_login_at   TEXT
 );

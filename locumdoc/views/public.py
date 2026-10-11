@@ -2,7 +2,8 @@ from datetime import date
 
 from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, render_template, request, url_for)
 
-from .. import mail, refdata
+from .. import i18n, mail, refdata
+from ..i18n import _
 from ..db import execute, query
 from ..security import client_ip, rate_limited
 from . import Form, page_args
@@ -47,8 +48,12 @@ def jobs():
     where, args = [], []
     f = {k: request.args.get(k, "").strip() for k in ("q", "specialty", "city", "grade", "country")}
     if f["q"]:
-        where.append("(j.title LIKE ? OR s.name LIKE ? OR f.name LIKE ?)")
-        args += [f"%{f['q']}%"] * 3
+        # Also match Arabic specialty names, e.g. "تخدير" finds Anaesthesia jobs.
+        ar_ids = [r["id"] for r in query("SELECT id, name FROM specialties")
+                  if f["q"] in i18n.AR.get(r["name"], "")]
+        id_clause = (" OR s.id IN (" + ",".join("?" * len(ar_ids)) + ")") if ar_ids else ""
+        where.append("(j.title LIKE ? OR s.name LIKE ? OR f.name LIKE ?" + id_clause + ")")
+        args += [f"%{f['q']}%"] * 3 + ar_ids
     if f["specialty"]:
         where.append("s.slug = ?")
         args.append(f["specialty"])
@@ -111,45 +116,68 @@ def country(slug):
         abort(404)
     cities = query("SELECT name FROM cities WHERE country_id = ? ORDER BY name", (c["id"],))
     jobs = public_jobs("co.id = ?", (c["id"],), limit=4) if c["active"] else []
-    template = f"public/country_{slug}.html" if slug == "qatar" else "public/country_soon.html"
-    return render_template(template, country=c, cities=cities, jobs=jobs)
+    if slug == "qatar":
+        return render_localized("country_qatar.html", country=c, cities=cities, jobs=jobs)
+    return render_template("public/country_soon.html", country=c, cities=cities, jobs=jobs)
 
 
 @bp.route("/contact", methods=["GET", "POST"])
 def contact():
     form = Form()
     if request.method == "POST":
-        form.text("name", required=True, max_len=120, label="your name")
+        form.text("name", required=True, max_len=120, label=_("your name"))
         form.email()
         form.text("organisation", max_len=160)
-        form.text("message", required=True, max_len=4000, label="a message")
+        form.text("message", required=True, max_len=4000, label=_("a message"))
         if request.form.get("website"):  # honeypot
             return redirect(url_for(".contact"))
         if form.ok and rate_limited("contact:" + client_ip(), limit=5, window=3600):
-            form.errors["message"] = "Too many messages from this network. Email us directly instead."
+            form.errors["message"] = _("Too many messages from this network. Email us directly instead.")
         if form.ok:
             c = form.clean
             execute("INSERT INTO enquiries (name, email, organisation, message) VALUES (?, ?, ?, ?)",
                     (c["name"], c["email"], c["organisation"], c["message"]))
             mail.notify_admin("New enquiry from " + c["name"], "admin_enquiry", **c)
-            flash("Message sent. We reply within one working day.", "success")
+            flash(_("Message sent. We reply within one working day."), "success")
             return redirect(url_for(".contact"))
     return render_template("public/contact.html", form=form)
 
 
+def render_localized(name, **ctx):
+    """Long-form pages have a hand-written Arabic version in templates/public/ar/."""
+    names = [f"public/ar/{name}", f"public/{name}"] if g.lang == "ar" else [f"public/{name}"]
+    return render_template(names, **ctx)
+
+
 @bp.route("/about")
 def about():
-    return render_template("public/about.html")
+    return render_localized("about.html")
 
 
 @bp.route("/privacy")
 def privacy():
-    return render_template("public/privacy.html")
+    return render_localized("privacy.html")
 
 
 @bp.route("/terms")
 def terms():
-    return render_template("public/terms.html")
+    return render_localized("terms.html")
+
+
+@bp.route("/language/<code>")
+def set_language(code):
+    """Switch the interface language and remember it (cookie, plus the account if logged in)."""
+    if code not in i18n.LANGUAGES:
+        abort(404)
+    target = request.args.get("next", "")
+    if not target.startswith("/") or target.startswith("//"):
+        target = url_for(".home")
+    resp = redirect(target)
+    resp.set_cookie(i18n.COOKIE, code, max_age=365 * 24 * 3600, samesite="Lax", httponly=True,
+                    secure=current_app.config["SESSION_COOKIE_SECURE"])
+    if g.user:
+        execute("UPDATE users SET lang = ? WHERE id = ?", (code, g.user["id"]))
+    return resp
 
 
 @bp.route("/robots.txt")

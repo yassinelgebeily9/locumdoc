@@ -1,0 +1,16 @@
+متقدّم جديد لوظيفة: {{ job.title }}
+
+د. {{ doctor.first_name }} {{ doctor.last_name }}
+{{ _(doctor.specialty) if doctor.specialty else '' }}{% if doctor.years_experience is not none %}، الخبرة: {{ doctor.years_experience|years }}{% endif %}
+مكان الإقامة الحالي: {{ doctor.current_country or '—' }}
+
+{% if note %}رسالة المتقدّم:
+{{ note }}
+
+{% endif %}راجع الملف والسيرة الذاتية:
+{{ site_url }}/facility/doctors/{{ doctor.user_id }}
+
+جميع المتقدّمين لهذه الوظيفة:
+{{ site_url }}/facility/jobs/{{ job.id }}
+
+فريق LocumDoc

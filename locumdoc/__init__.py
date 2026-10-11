@@ -1,10 +1,10 @@
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from flask import Flask, g, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from . import db, refdata, security
+from . import db, i18n, refdata, security
 
 
 def _bool(v):
@@ -52,6 +52,7 @@ def create_app(test_config=None):
     @app.before_request
     def _before():
         security.load_user()
+        g.lang = i18n.detect(g.user)
         if not request.path.startswith("/static/"):
             security.check_csrf()
 
@@ -82,23 +83,22 @@ def create_app(test_config=None):
             "label": refdata.label,
             "today": date.today().isoformat(),
             "contact_email": app.config["CONTACT_EMAIL"],
+            "_": i18n.gettext,
+            "lang": i18n.current(),
+            "text_dir": i18n.direction(),
+            "languages": i18n.LANGUAGES,
+            "comma": "، " if i18n.current() == "ar" else ", ",
+            "weeks_n": i18n.weeks,
+            "currency_name": lambda code: i18n.CURRENCY_AR.get(code, code) if i18n.current() == "ar" else code,
         }
 
     @app.template_filter("d")
     def _fmt_date(value, fmt="%-d %b %Y"):
-        if not value:
-            return "—"
-        try:
-            dt = datetime.fromisoformat(str(value)[:19])
-        except ValueError:
-            return value
-        return dt.strftime(fmt)
+        return i18n.format_date(value, with_year="%Y" in fmt)
 
     @app.template_filter("money")
     def _money(amount, currency="QAR"):
-        if amount in (None, ""):
-            return "Rate on request"
-        return f"{currency} {int(amount):,}"
+        return i18n.format_money(amount, currency)
 
     @app.template_filter("weeks")
     def _weeks(row):
@@ -107,8 +107,11 @@ def create_app(test_config=None):
             e = date.fromisoformat(row["end_date"])
         except (TypeError, ValueError, KeyError):
             return ""
-        w = max(1, round((e - s).days / 7))
-        return f"{w} week" + ("s" if w != 1 else "")
+        return i18n.weeks(max(1, round((e - s).days / 7)))
+
+    @app.template_filter("years")
+    def _years(n):
+        return "—" if n in (None, "") else i18n.years(n)
 
     @app.template_filter("filesize")
     def _filesize(n):
@@ -126,13 +129,14 @@ def create_app(test_config=None):
     @app.errorhandler(404)
     @app.errorhandler(413)
     def _err(e):
+        _ = i18n.gettext
         messages = {
-            400: ("Request not accepted", getattr(e, "description", "") or "Reload the page and try again."),
-            403: ("No access", "This page belongs to a different type of account."),
-            404: ("Page not found", "The link may be out of date, or the job may have closed."),
-            413: ("File too large", f"Uploads can be up to {app.config['MAX_CONTENT_LENGTH'] // 1048576} MB."),
+            400: (_("Request not accepted"), _(getattr(e, "description", "") or "Reload the page and try again.")),
+            403: (_("No access"), _("This page belongs to a different type of account.")),
+            404: (_("Page not found"), _("The link may be out of date, or the job may have closed.")),
+            413: (_("File too large"), _("Uploads can be up to %(mb)s MB.", mb=app.config["MAX_CONTENT_LENGTH"] // 1048576)),
         }
-        title, text = messages.get(e.code, ("Something went wrong", ""))
+        title, text = messages.get(e.code, (_("Something went wrong"), ""))
         return render_template("public/error.html", code=e.code, title=title, text=text), e.code
 
     return app

@@ -1,57 +1,57 @@
 {% extends "base.html" %}
-{% block title %}{{ job.title }} — applicants — LocumDoc{% endblock %}
+{% block title %}{{ job.title }} — {{ _('Applicants') }} — LocumDoc{% endblock %}
 {% block main %}
 <div class="wrap page-head">
-  <div class="crumb"><a href="{{ url_for('facility.dashboard') }}">Jobs and applicants</a></div>
+  <div class="crumb"><a href="{{ url_for('facility.dashboard') }}">{{ _('Jobs & applicants') }}</a></div>
   <div class="row">
     <div>
       <h1>{{ job.title }}</h1>
-      <p>{{ job.specialty }}, {{ job.city }}. {{ job.start_date|d }} – {{ job.end_date|d }}.
-        {% if job.status == 'open' and not fac.verified %}<span class="pill pill-amber">Awaiting verification</span>{% else %}{{ m.pill(job.status, ref.JOB_STATUSES) }}{% endif %}</p>
+      <p>{{ _(job.specialty) }}{{ comma }}{{ _(job.city) }}. {{ job.start_date|d }} – {{ job.end_date|d }}.
+        {% if job.status == 'open' and not fac.verified %}<span class="pill pill-amber">{{ _('Awaiting verification') }}</span>{% else %}{{ m.pill(job.status, ref.JOB_STATUSES) }}{% endif %}</p>
     </div>
     <div class="hero-ctas">
-      <a class="btn btn-outline" href="{{ url_for('public.job', job_id=job.id) }}">View as doctors see it</a>
-      <a class="btn btn-outline" href="{{ url_for('facility.edit_job', job_id=job.id) }}">Edit</a>
+      <a class="btn btn-outline" href="{{ url_for('public.job', job_id=job.id) }}">{{ _('View as doctors see it') }}</a>
+      <a class="btn btn-outline" href="{{ url_for('facility.edit_job', job_id=job.id) }}">{{ _('Edit') }}</a>
       <form method="post" action="{{ url_for('facility.job_status', job_id=job.id) }}">
         {{ m.csrf() }}
         {% if job.status == 'open' %}
-          <input type="hidden" name="status" value="filled"><button class="btn btn-ink" type="submit">Mark as filled</button>
+          <input type="hidden" name="status" value="filled"><button class="btn btn-ink" type="submit">{{ _('Mark as filled') }}</button>
         {% else %}
-          <input type="hidden" name="status" value="open"><button class="btn btn-ink" type="submit">Reopen job</button>
+          <input type="hidden" name="status" value="open"><button class="btn btn-ink" type="submit">{{ _('Reopen job') }}</button>
         {% endif %}
       </form>
     </div>
   </div>
 </div>
 <div class="wrap content">
-  <nav class="tabs" aria-label="Filter applicants">
-    <a href="{{ url_for('facility.job', job_id=job.id) }}" aria-current="{{ 'true' if not status else 'false' }}">Active<span class="count">{{ counts.values()|sum - counts.get('withdrawn', 0) }}</span></a>
+  <nav class="tabs" aria-label="{{ _('Filter applicants') }}">
+    <a href="{{ url_for('facility.job', job_id=job.id) }}" aria-current="{{ 'true' if not status else 'false' }}">{{ _('Active') }}<span class="count">{{ counts.values()|sum - counts.get('withdrawn', 0) }}</span></a>
     {% for k, l in ref.APPLICATION_STATUSES %}
-      {% if counts.get(k) %}<a href="?status={{ k }}" aria-current="{{ 'true' if status == k else 'false' }}">{{ l }}<span class="count">{{ counts[k] }}</span></a>{% endif %}
+      {% if counts.get(k) %}<a href="?status={{ k }}" aria-current="{{ 'true' if status == k else 'false' }}">{{ _(l) }}<span class="count">{{ counts[k] }}</span></a>{% endif %}
     {% endfor %}
   </nav>
   <div class="panel">
     {% if apps %}
     <div class="table-wrap"><table class="data">
-      <thead><tr><th>Doctor</th><th class="hide-sm">Experience</th><th class="hide-sm">DHP status</th><th class="hide-sm">Available</th><th>Stage</th></tr></thead>
+      <thead><tr><th>{{ _('Doctor') }}</th><th class="hide-sm">{{ _('Experience') }}</th><th class="hide-sm">{{ _('DHP status') }}</th><th class="hide-sm">{{ _('Available') }}</th><th>{{ _('Stage') }}</th></tr></thead>
       <tbody>
       {% for a in apps %}
       <tr>
-        <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=a.doctor_id) }}">{{ a.dtitle }} {{ a.first_name }} {{ a.last_name }}</a>
-          <span class="sub">{{ label(ref.GRADES, a.grade) }}, lives in {{ a.current_country or '—' }}. Applied {{ a.created_at|d }}</span>
-          {% if a.cover_note %}<span class="sub">“{{ a.cover_note|truncate(140) }}”</span>{% endif %}</td>
-        <td class="hide-sm num">{{ a.years_experience if a.years_experience is not none else '—' }} yrs</td>
+        <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=a.doctor_id) }}">{{ _(a.dtitle) }} {{ a.first_name }} {{ a.last_name }}</a>
+          <span class="sub">{{ label(ref.GRADES, a.grade) }}{{ comma }}{{ _('lives in %(country)s', country=a.current_country or '—') }}. {{ _('Applied %(date)s', date=a.created_at|d) }}</span>
+          {% if a.cover_note %}<span class="sub" dir="auto">“{{ a.cover_note|truncate(140) }}”</span>{% endif %}</td>
+        <td class="hide-sm num">{{ a.years_experience|years }}</td>
         <td class="hide-sm">{{ m.pill(a.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</td>
         <td class="hide-sm num">{{ a.available_from|d }}</td>
         <td>
           {% if a.status == 'withdrawn' %}{{ m.pill('withdrawn', ref.APPLICATION_STATUSES) }}{% else %}
           <form class="inline-form" method="post" action="{{ url_for('facility.application_status', app_id=a.id) }}">
             {{ m.csrf() }}<input type="hidden" name="back" value="{{ request.full_path }}">
-            <label class="visually-hidden" for="st-{{ a.id }}">Stage for {{ a.last_name }}</label>
+            <label class="visually-hidden" for="st-{{ a.id }}">{{ _('Stage for %(name)s', name=a.last_name) }}</label>
             <select id="st-{{ a.id }}" name="status" data-autosubmit>
-              {% for k, l in ref.APPLICATION_STATUSES if k != 'withdrawn' %}<option value="{{ k }}" {% if a.status == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+              {% for k, l in ref.APPLICATION_STATUSES if k != 'withdrawn' %}<option value="{{ k }}" {% if a.status == k %}selected{% endif %}>{{ _(l) }}</option>{% endfor %}
             </select>
-            <button class="btn btn-outline btn-sm" type="submit" data-autosubmit-btn>Update</button>
+            <button class="btn btn-outline btn-sm" type="submit" data-autosubmit-btn>{{ _('Update') }}</button>
           </form>
           {% endif %}
         </td>
@@ -61,9 +61,9 @@
     </table></div>
     {% else %}
     <div class="empty">
-      <h3>{{ 'No applicants at this stage' if status else 'No applicants yet' }}</h3>
-      <p>{% if fac.verified %}You'll get an email for every new applicant. You can also search the directory and invite doctors to this job.{% else %}Applications open once your facility is verified.{% endif %}</p>
-      {% if fac.verified %}<a class="btn btn-outline" href="{{ url_for('facility.doctors', specialty=job.specialty_id) }}">Find {{ job.specialty }} doctors</a>{% endif %}
+      <h3>{{ _('No applicants at this stage') if status else _('No applicants yet') }}</h3>
+      <p>{% if fac.verified %}{{ _("You'll get an email for every new applicant. You can also search the directory and invite doctors to this job.") }}{% else %}{{ _('Applications open once your facility is verified.') }}{% endif %}</p>
+      {% if fac.verified %}<a class="btn btn-outline" href="{{ url_for('facility.doctors', specialty=job.specialty_id) }}">{{ _('Find %(specialty)s doctors', specialty=_(job.specialty)) }}</a>{% endif %}
     </div>
     {% endif %}
   </div>

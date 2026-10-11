@@ -107,8 +107,9 @@ JOB_STATUSES = [("open", "Open"), ("filled", "Filled"), ("closed", "Closed")]
 
 
 def label(options, key, default="—"):
-    """Return the human label for a stored option key."""
+    """Return the human label for a stored option key, in the current language."""
+    from .i18n import gettext
     for k, v in options:
         if k == key:
-            return v
+            return gettext(v)
     return default if not key else key

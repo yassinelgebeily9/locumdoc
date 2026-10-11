@@ -36,6 +36,18 @@ Run the tests:
 python -m unittest discover tests
 ```
 
+## Languages (English and Arabic)
+
+The whole doctor- and facility-facing site is available in English and Arabic, with a full right-to-left layout and the IBM Plex Sans Arabic font (self-hosted, SIL Open Font License). The admin panel stays in English.
+
+- **Switching:** the header shows "العربية" / "English". The choice is remembered in a cookie and on the user's account. First-time visitors get Arabic automatically if their browser prefers it.
+- **Emails** go out in each recipient's own language (`templates/email/ar/` holds the Arabic versions).
+- **Long pages** (About, Privacy, Terms, the Qatar licensing guide) have hand-written Arabic versions in `templates/public/ar/`. The Arabic privacy notice and terms say the English text prevails; have them reviewed along with the English ones.
+- **Short strings** are wrapped in `_("...")` in templates and Python, and translated in `locumdoc/translations/ar.py`. `tests/test_i18n.py` fails if any marked string is missing an Arabic translation, so new text can't slip through untranslated.
+- **What stays in the original language:** anything users type (job titles, descriptions, names, notes) is shown as entered.
+
+To add a third language later, add it to `LANGUAGES` in `locumdoc/i18n.py`, create `translations/<code>.py` and register it in `CATALOGS`.
+
 ## Put it live on locumdoc.me
 
 The app is one Docker container plus a persistent disk (for the SQLite database and uploaded files). Two easy routes:
@@ -88,7 +100,7 @@ In the admin panel go to **Countries**, add cities if needed, and click **Open**
 - Flask (Python), server-rendered HTML, no JavaScript framework. Pages work without JavaScript.
 - SQLite with WAL mode: comfortably handles thousands of users on one server. To move to PostgreSQL later, swap `db.py`'s connection for `psycopg` and adjust the few SQLite-specific functions (`datetime('now')`, `INSERT OR IGNORE`, `GROUP_CONCAT`).
 - Security: hashed passwords, CSRF tokens on every form, strict Content-Security-Policy, rate-limited login/sign-up/reset, private uploads stored under random names and served only to authorised users, file-type checks by content, session invalidated on password change.
-- Fonts are self-hosted (TeX Gyre Adventor and Inter), so no visitor data goes to Google Fonts.
+- Fonts are self-hosted (TeX Gyre Adventor, Inter and IBM Plex Sans Arabic), so no visitor data goes to Google Fonts.
 
 ```
 locumdoc/
@@ -98,7 +110,9 @@ locumdoc/
   refdata.py        countries, cities, specialties, option lists
   security.py       sessions, CSRF, role checks, rate limiting
   storage.py        private file uploads
-  mail.py           email sending
+  mail.py           email sending (in each recipient's language)
+  i18n.py           language detection, translation, Arabic dates and numbers
+  translations/     Arabic catalogue
   views/            public, auth, doctor, facility, admin, files
   templates/        HTML pages and email texts
   static/           CSS, fonts, logo, small JS

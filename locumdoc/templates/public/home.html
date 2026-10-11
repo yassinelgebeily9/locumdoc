@@ -7,25 +7,15 @@
       <div class="launch">{{ m.qatar_flag() }} {{ _('Now placing doctors in Qatar') }}</div>
       <h1>{{ _('Locum work in the Gulf, matched to your specialty.') }}</h1>
       <p class="lede">{{ _('Build one profile, upload your CV once, and apply to locum cover at verified hospitals and clinics. Facilities post the shifts they need and invite doctors directly.') }}</p>
-      <form class="hero-search" action="{{ url_for('public.jobs') }}" method="get" role="search" aria-label="{{ _('Search locum jobs') }}">
-        <div class="hs-field">
-          <label for="hs-q">{{ _('Specialty or job title') }}</label>
-          <input id="hs-q" type="search" name="q" placeholder="{{ _('e.g. Anaesthesia, ICU consultant') }}" autocomplete="off">
-        </div>
-        <div class="hs-field">
-          <label for="hs-city">{{ _('City') }}</label>
-          <select id="hs-city" name="city"><option value="">{{ _('All cities') }}</option>
-            {% for c in cities %}<option value="{{ c.name }}">{{ _(c.name) }}</option>{% endfor %}
-          </select>
-        </div>
-        <button class="btn btn-primary btn-lg" type="submit">{{ m.icon('search') }}{{ _('Search jobs') }}</button>
-      </form>
-      {% if popular %}
-      <div class="hero-popular"><span>{{ _('Popular:') }}</span>
-        {% for s in popular %}<a class="chip" href="{{ url_for('public.jobs', specialty=s.slug) }}">{{ _(s.name) }}</a>{% endfor %}
+      <div class="hero-ctas">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
+        <a class="btn btn-outline btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
       </div>
-      {% endif %}
-      <p class="hero-alt">{{ _('Hiring for a hospital or clinic?') }} <a href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a> · <a href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a></p>
+      <div class="hero-proof">
+        <div><strong>{{ _('%(n)s specialties', n=ref.SPECIALTIES|length) }}</strong>{{ _('From anaesthesia to vascular surgery') }}</div>
+        <div><strong>{{ _('Every facility checked') }}</strong>{{ _('Jobs go live only after we verify the employer') }}</div>
+        <div><strong>{{ _('Free for doctors') }}</strong>{{ _('No fees to apply, ever') }}</div>
+      </div>
     </div>
 
     <section class="board" aria-labelledby="board-title">
@@ -51,15 +41,6 @@
       {% endif %}
     </section>
   </div>
-</section>
-
-<section class="trust" aria-label="{{ _('Why LocumDoc') }}">
-  <ul class="wrap trust-grid">
-    <li><span class="ic">{{ m.icon('stethoscope') }}</span><div><strong>{{ _('%(n)s specialties', n=ref.SPECIALTIES|length) }}</strong><span>{{ _('From anaesthesia to vascular surgery') }}</span></div></li>
-    <li><span class="ic">{{ m.icon('shield') }}</span><div><strong>{{ _('Every facility checked') }}</strong><span>{{ _('Jobs go live only after we verify the employer') }}</span></div></li>
-    <li><span class="ic">{{ m.icon('licence') }}</span><div><strong>{{ _('Licensing built in') }}</strong><span>{{ _("Profiles show where each doctor stands with Qatar's DHP") }}</span></div></li>
-    <li><span class="ic">{{ m.icon('tag') }}</span><div><strong>{{ _('Free for doctors') }}</strong><span>{{ _('No fees to apply, ever') }}</span></div></li>
-  </ul>
 </section>
 
 <section class="serrated" aria-labelledby="how-title">
@@ -113,10 +94,9 @@
       <div><h2 id="spec-title">{{ _('Every specialty, every grade') }}</h2><p>{{ _('From GP clinics to consultant-led ICU cover.') }}</p></div>
       <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse all jobs') }}</a>
     </div>
-    <ul class="spec-cloud" id="spec-cloud" data-foldable>
-      {% for s in ref.SPECIALTIES %}<li><a class="chip" href="{{ url_for('public.jobs', q=s) }}">{{ _(s) }}</a></li>{% endfor %}
+    <ul class="spec-cloud">
+      {% for s in ref.SPECIALTIES %}<li><a href="{{ url_for('public.jobs', q=s) }}">{{ _(s) }}</a></li>{% endfor %}
     </ul>
-    <button class="btn btn-outline spec-more" type="button" aria-controls="spec-cloud" aria-expanded="true" hidden>{{ _('Show all %(n)s specialties', n=ref.SPECIALTIES|length) }}</button>
   </div>
 </section>
 
@@ -136,12 +116,12 @@
 </section>
 
 <section class="section-tight">
-  <div class="wrap"><div class="cta-strip">
+  <div class="wrap cta-strip">
     <h2>{{ _('Need locum cover in Qatar? Post your first job today.') }}</h2>
     <div class="hero-ctas">
       <a class="btn btn-ink btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register a facility') }}</a>
       <a class="btn btn-outline btn-lg" href="{{ url_for('public.contact') }}">{{ _('Talk to us') }}</a>
     </div>
-  </div></div>
+  </div>
 </section>
 {% endblock %}

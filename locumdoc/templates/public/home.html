@@ -1,26 +1,172 @@
 {% extends "base.html" %}
 {% block title %}{{ _('LocumDoc — Locum jobs for doctors in Qatar and the Gulf') }}{% endblock %}
+{% block body_class %}cine{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cine.css') }}?v=1">
+  <script src="{{ url_for('static', filename='js/cine.js') }}?v=1" defer></script>
+{% endblock %}
 {% block main %}
-<section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <div class="launch">{{ m.qatar_flag() }} {{ _('Now placing doctors in Qatar') }}</div>
-      <h1>{{ _('Locum work in the Gulf, matched to your specialty.') }}</h1>
-      <p class="lede">{{ _('Build one profile, upload your CV once, and apply to locum cover at verified hospitals and clinics. Facilities post the shifts they need and invite doctors directly.') }}</p>
-      <div class="hero-ctas">
-        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
-        <a class="btn btn-outline btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
-      </div>
-      <div class="hero-proof">
-        <div><strong>{{ _('%(n)s specialties', n=ref.SPECIALTIES|length) }}</strong>{{ _('From anaesthesia to vascular surgery') }}</div>
-        <div><strong>{{ _('Every facility checked') }}</strong>{{ _('Jobs go live only after we verify the employer') }}</div>
-        <div><strong>{{ _('Free for doctors') }}</strong>{{ _('No fees to apply, ever') }}</div>
+
+{# ---------------------------------------------------------------- opener #}
+<section class="cine-open" data-cine="open" aria-labelledby="cine-title">
+  <svg class="cine-edge" viewBox="0 0 120 1000" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M120 0H40l-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5-40 55.6 40 55.5H120z"/>
+  </svg>
+  <div class="wrap cine-open-inner">
+    <div class="launch cine-in d0">{{ m.qatar_flag() }} {{ _('Now placing doctors in Qatar') }}</div>
+    <h1 id="cine-title" class="cine-title">
+      <span class="ln"><span class="cine-in d1">{{ _('Hospitals need cover.') }}</span></span>
+      <span class="ln ln-2"><span class="cine-in d2">{{ _('Doctors want placements.') }}</span></span>
+    </h1>
+    <p class="cine-lede cine-in d3">{{ _('LocumDoc brings them together: locum work in the Gulf, matched to your specialty, at hospitals and clinics we have verified.') }}</p>
+    <div class="hero-ctas cine-in d4">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
+      <a class="btn btn-glass btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
+    </div>
+  </div>
+  <a class="cine-cue cine-in d5" href="#ch-doctors"><span>{{ _('See how it works') }}</span><svg viewBox="0 0 16 24" aria-hidden="true"><rect x="1" y="1" width="14" height="22" rx="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle class="dot" cx="8" cy="7" r="2" fill="currentColor"/></svg></a>
+</section>
+
+{# ---------------------------------------------------------------- chapter 1: doctors #}
+<section class="chapter ch-maroon" id="ch-doctors" aria-labelledby="ch1-title">
+  <div class="ch-track" data-cine="steps">
+    <div class="ch-pin">
+      <div class="wrap ch-grid">
+        <header class="ch-head">
+          <p class="ch-num"><span>01</span> {{ _('For doctors') }}</p>
+          <h2 id="ch1-title">{{ _('One profile. Every verified locum job.') }}</h2>
+          <p>{{ _('Build your profile once, keep your CV in one place, and apply in a single step.') }}</p>
+          <div class="ch-bar" aria-hidden="true"><i></i></div>
+        </header>
+        <ol class="ch-steps">
+          <li class="ch-step">
+            <h3><span class="n">1</span>{{ _('Create your profile') }}</h3>
+            <p>{{ _("Specialty, grade, qualifications, current licence and where you stand with Qatar's DHP.") }}</p>
+            <div class="ch-visual" aria-hidden="true">
+              <div class="vcard">
+                <div class="profile-head"><span class="avatar">AR</span><div><strong>{{ _('Dr A. Rahman') }}</strong><span class="muted small">{{ _('Critical Care / ICU') }} · {{ _('Consultant') }}</span></div></div>
+                <dl class="vfacts">
+                  <div><dt>{{ _('Academic title') }}</dt><dd>{{ _('Assistant professor') }}</dd></div>
+                  <div><dt>{{ _('DHP status') }}</dt><dd><span class="pill pill-eligible">{{ _('Evaluation passed, eligible for licence') }}</span></dd></div>
+                </dl>
+                <p class="vnote">{{ _('Example profile') }}</p>
+              </div>
+            </div>
+          </li>
+          <li class="ch-step">
+            <h3><span class="n">2</span>{{ _('Upload your CV and credentials') }}</h3>
+            <p>{{ _('Stored privately. Only verified facilities you apply to, or that you allow to search, can open them.') }}</p>
+            <div class="ch-visual" aria-hidden="true">
+              <div class="vcard">
+                <ul class="doc-list">
+                  <li><span class="doc-icon cv">CV</span><span><span class="name">CV.pdf</span><span class="meta">{{ _('CV') }}</span></span><span class="verified">{{ m.icon('check') }}</span></li>
+                  <li><span class="doc-icon">PDF</span><span><span class="name">licence.pdf</span><span class="meta">{{ _('Medical licence') }}</span></span><span class="verified">{{ m.icon('check') }}</span></li>
+                  <li><span class="doc-icon">PDF</span><span><span class="name">good-standing.pdf</span><span class="meta">{{ _('Certificate of good standing') }}</span></span><span class="verified">{{ m.icon('check') }}</span></li>
+                </ul>
+              </div>
+            </div>
+          </li>
+          <li class="ch-step">
+            <h3><span class="n">3</span>{{ _('Apply, or get invited') }}</h3>
+            <p>{{ _('Apply to open jobs in one step, accept invitations from facilities, and track every status change.') }}</p>
+            <div class="ch-visual" aria-hidden="true">
+              <div class="vcard">
+                <div class="flash flash-success">{{ _('Application sent') }}</div>
+                <div class="vjob"><div><strong>{{ _('ICU consultant, 3-month cover') }}</strong><span class="muted small">{{ _('Doha') }} · {{ weeks_n(13) }}</span></div><span class="pill pill-submitted">{{ _('Submitted') }}</span></div>
+              </div>
+            </div>
+          </li>
+        </ol>
       </div>
     </div>
+  </div>
+</section>
 
-    <section class="board" aria-labelledby="board-title">
+{# ---------------------------------------------------------------- chapter 2: hospitals #}
+<section class="chapter ch-ink" id="ch-facilities" aria-labelledby="ch2-title">
+  <div class="ch-track" data-cine="steps">
+    <div class="ch-pin">
+      <div class="wrap ch-grid">
+        <header class="ch-head">
+          <p class="ch-num"><span>02</span> {{ _('For hospitals and clinics') }}</p>
+          <h2 id="ch2-title">{{ _('Cover the rota before the gap opens.') }}</h2>
+          <p>{{ _('Post the cover you need, review applicants with CVs attached, or invite doctors directly.') }}</p>
+          <div class="ch-bar" aria-hidden="true"><i></i></div>
+        </header>
+        <ol class="ch-steps">
+          <li class="ch-step">
+            <h3><span class="n">1</span>{{ _('Register your facility') }}</h3>
+            <p>{{ _('We verify every employer before its jobs are shown, usually within one working day.') }}</p>
+            <div class="ch-visual" aria-hidden="true">
+              <div class="vcard">
+                <div class="profile-head"><span class="avatar sq">{{ m.icon('building') }}</span><div><strong>{{ _('Your hospital') }}</strong><span class="verified">{{ m.icon('check') }} {{ _('Verified by LocumDoc') }}</span></div></div>
+                <dl class="vfacts">
+                  <div><dt>{{ _('Type') }}</dt><dd>{{ _('Hospital') }}</dd></div>
+                  <div><dt>{{ _('City') }}</dt><dd>{{ _('Doha') }}</dd></div>
+                </dl>
+              </div>
+            </div>
+          </li>
+          <li class="ch-step">
+            <h3><span class="n">2</span>{{ _('Post the cover you need') }}</h3>
+            <p>{{ _("Specialty, grade, dates, rate and what's included: accommodation, flights, licensing support.") }}</p>
+            <div class="ch-visual" aria-hidden="true">
+              <div class="vcard">
+                <div class="vjob"><div><strong>{{ _('Emergency medicine specialist, night rota') }}</strong><span class="muted small">{{ _('Doha') }} · {{ weeks_n(8) }}</span></div></div>
+                <div class="perks"><span class="perk">{{ _('Accommodation') }}</span><span class="perk">{{ _('Return flights') }}</span><span class="perk">{{ _('DHP licensing support') }}</span></div>
+              </div>
+            </div>
+          </li>
+          <li class="ch-step">
+            <h3><span class="n">3</span>{{ _('Review, shortlist, or search') }}</h3>
+            <p>{{ _('See applicants with CVs attached, move them through your pipeline, or invite doctors from the directory.') }}</p>
+            <div class="ch-visual" aria-hidden="true">
+              <div class="vcard">
+                <div class="vrow"><span class="avatar">AR</span><div><strong>{{ _('Dr A. Rahman') }}</strong><span class="muted small">{{ _('Consultant') }}</span></div><span class="pill pill-shortlisted">{{ _('Shortlisted') }}</span></div>
+                <div class="vrow"><span class="avatar">LN</span><div><strong>{{ _('Dr L. Nasser') }}</strong><span class="muted small">{{ _('Specialist') }}</span></div><span class="pill pill-interview">{{ _('Interview') }}</span></div>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- chapter 3: licensing #}
+<section class="chapter ch-paper" id="ch-licensing" aria-labelledby="ch3-title">
+  <div class="wrap licence-grid">
+    <div class="intro reveal">
+      <p class="ch-num dark"><span>03</span> {{ _('Licensing in Qatar') }}</p>
+      <h2 id="ch3-title">{{ _('Licensing in Qatar, in plain terms') }}</h2>
+      <p>{{ _('Doctors practise in Qatar under a licence from the Department of Healthcare Professions (DHP) at the Ministry of Public Health. Your profile records where you are in this process, so facilities can plan start dates realistically.') }}</p>
+      <p>{{ _('Many placements come with licensing support from the facility.') }}</p>
+      <a class="btn btn-outline" href="{{ url_for('public.country', slug='qatar') }}">{{ _('Read the full Qatar guide') }}</a>
+    </div>
+    <ol class="pathway cine-path" data-cine="path">
+      <li class="reveal"><strong>{{ _('Primary source verification') }}</strong><span>{{ _('A DHP-approved verification company confirms your degree, licences and experience with the issuing bodies.') }}</span></li>
+      <li class="reveal"><strong>{{ _('DHP evaluation') }}</strong><span>{{ _("DHP reviews your file against its qualification categories. Category 1 and 2 specialty qualifications don't need the qualifying exam.") }}</span></li>
+      <li class="reveal"><strong>{{ _('Qualifying exam, if required') }}</strong><span>{{ _('Needed for some qualifications. Recognised exams such as PLAB 1 or USMLE Step 2 can exempt general practitioners.') }}</span></li>
+      <li class="reveal"><strong>{{ _('Licence for the role') }}</strong><span>{{ _('Locum licences cover a permanent physician for up to six months. Temporary licences last six months while a full licence is processed.') }}</span></li>
+    </ol>
+  </div>
+  <div class="wrap"><p class="note">{{ _("Summary based on DHP's published guidelines for physicians. Requirements change; DHP's current rules always apply.") }}</p></div>
+</section>
+
+{# ---------------------------------------------------------------- chapter 4: open jobs #}
+<section class="chapter ch-ink ch-jobs" id="ch-jobs" aria-labelledby="ch4-title">
+  <div class="wrap jobs-grid">
+    <div class="reveal">
+      <p class="ch-num"><span>04</span> {{ _('Open now') }}</p>
+      <h2 id="ch4-title">{{ _('Every specialty, every grade') }}</h2>
+      <p class="ch-sub">{{ _('From GP clinics to consultant-led ICU cover.') }}</p>
+      <ul class="spec-cols">
+        {% for s in ref.SPECIALTIES %}<li><a href="{{ url_for('public.jobs', q=s) }}">{{ _(s) }}</a></li>{% endfor %}
+      </ul>
+    </div>
+    <section class="board reveal" aria-labelledby="board-title">
       <div class="board-head">
-        <h2 id="board-title">{{ _('Open locum jobs in Qatar') }}{% if stats.open_jobs %} ({{ stats.open_jobs }}){% endif %}</h2>
+        <h3 id="board-title">{{ _('Open locum jobs in Qatar') }}{% if stats.open_jobs %} ({{ stats.open_jobs }}){% endif %}</h3>
         <a href="{{ url_for('public.jobs') }}">{{ _('See all jobs') }}</a>
       </div>
       {% if jobs %}
@@ -43,84 +189,22 @@
   </div>
 </section>
 
-<section class="serrated" aria-labelledby="how-title">
-  <div class="wrap">
-    <h2 id="how-title">{{ _('How LocumDoc works') }}</h2>
-    <p>{{ _('Two sides, one platform. Doctors show what they can cover and when. Facilities show what they need.') }}</p>
-    <div class="tracks">
-      <div class="track">
-        <h3>{{ _('For doctors') }}</h3>
-        <ol class="steps">
-          <li><div><strong>{{ _('Create your profile') }}</strong><span>{{ _("Specialty, grade, qualifications, current licence and where you stand with Qatar's DHP.") }}</span></div></li>
-          <li><div><strong>{{ _('Upload your CV and credentials') }}</strong><span>{{ _('Stored privately. Only verified facilities you apply to, or that you allow to search, can open them.') }}</span></div></li>
-          <li><div><strong>{{ _('Apply, or get invited') }}</strong><span>{{ _('Apply to open jobs in one step, accept invitations from facilities, and track every status change.') }}</span></div></li>
-        </ol>
-        <a class="btn btn-light" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
-      </div>
-      <div class="track">
-        <h3>{{ _('For hospitals and clinics') }}</h3>
-        <ol class="steps">
-          <li><div><strong>{{ _('Register your facility') }}</strong><span>{{ _('We verify every employer before its jobs are shown, usually within one working day.') }}</span></div></li>
-          <li><div><strong>{{ _('Post the cover you need') }}</strong><span>{{ _("Specialty, grade, dates, rate and what's included: accommodation, flights, licensing support.") }}</span></div></li>
-          <li><div><strong>{{ _('Review, shortlist, or search') }}</strong><span>{{ _('See applicants with CVs attached, move them through your pipeline, or invite doctors from the directory.') }}</span></div></li>
-        </ol>
-        <a class="btn btn-outline" href="{{ url_for('public.for_facilities') }}">{{ _('How it works for facilities') }}</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section-white" aria-labelledby="lic-title">
-  <div class="wrap licence-grid">
-    <div class="intro">
-      <h2 id="lic-title">{{ _('Licensing in Qatar, in plain terms') }}</h2>
-      <p>{{ _('Doctors practise in Qatar under a licence from the Department of Healthcare Professions (DHP) at the Ministry of Public Health. Your profile records where you are in this process, so facilities can plan start dates realistically.') }}</p>
-      <p>{{ _('Many placements come with licensing support from the facility.') }}</p>
-      <a class="btn btn-outline" href="{{ url_for('public.country', slug='qatar') }}">{{ _('Read the full Qatar guide') }}</a>
-    </div>
-    <ol class="pathway">
-      <li><strong>{{ _('Primary source verification') }}</strong><span>{{ _('A DHP-approved verification company confirms your degree, licences and experience with the issuing bodies.') }}</span></li>
-      <li><strong>{{ _('DHP evaluation') }}</strong><span>{{ _("DHP reviews your file against its qualification categories. Category 1 and 2 specialty qualifications don't need the qualifying exam.") }}</span></li>
-      <li><strong>{{ _('Qualifying exam, if required') }}</strong><span>{{ _('Needed for some qualifications. Recognised exams such as PLAB 1 or USMLE Step 2 can exempt general practitioners.') }}</span></li>
-      <li><strong>{{ _('Licence for the role') }}</strong><span>{{ _('Locum licences cover a permanent physician for up to six months. Temporary licences last six months while a full licence is processed.') }}</span></li>
-    </ol>
-  </div>
-  <div class="wrap"><p class="note">{{ _("Summary based on DHP's published guidelines for physicians. Requirements change; DHP's current rules always apply.") }}</p></div>
-</section>
-
-<section class="section" aria-labelledby="spec-title">
-  <div class="wrap">
-    <div class="section-head">
-      <div><h2 id="spec-title">{{ _('Every specialty, every grade') }}</h2><p>{{ _('From GP clinics to consultant-led ICU cover.') }}</p></div>
-      <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse all jobs') }}</a>
-    </div>
-    <ul class="spec-cloud">
-      {% for s in ref.SPECIALTIES %}<li><a href="{{ url_for('public.jobs', q=s) }}">{{ _(s) }}</a></li>{% endfor %}
-    </ul>
-  </div>
-</section>
-
-<section class="section-tight section-white" aria-labelledby="ctry-title">
-  <div class="wrap">
-    <div class="section-head">
-      <div><h2 id="ctry-title">{{ _('Qatar first, the Gulf next') }}</h2><p>{{ _("Mark the countries you'd consider on your profile and you'll hear first when each one opens.") }}</p></div>
-    </div>
-    <div class="countries-row">
+{# ---------------------------------------------------------------- finale #}
+<section class="chapter ch-maroon ch-finale" aria-labelledby="fin-title">
+  <div class="wrap fin-inner">
+    <div class="fin-mark reveal" aria-hidden="true">{{ m.mark() }}</div>
+    <h2 id="fin-title" class="reveal">{{ _('Qatar first, the Gulf next') }}</h2>
+    <p class="reveal">{{ _("Mark the countries you'd consider on your profile and you'll hear first when each one opens.") }}</p>
+    <div class="countries-row reveal">
       {% for c in countries %}
       <a class="country-cell{% if c.active %} live{% endif %}" href="{{ url_for('public.country', slug=c.slug) }}">
         <strong>{{ _(c.name) }}</strong><span>{{ _('Placing now') if c.active else _('Opening soon') }}</span>
       </a>
       {% endfor %}
     </div>
-  </div>
-</section>
-
-<section class="section-tight">
-  <div class="wrap cta-strip">
-    <h2>{{ _('Need locum cover in Qatar? Post your first job today.') }}</h2>
-    <div class="hero-ctas">
-      <a class="btn btn-ink btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register a facility') }}</a>
-      <a class="btn btn-outline btn-lg" href="{{ url_for('public.contact') }}">{{ _('Talk to us') }}</a>
+    <div class="hero-ctas fin-ctas reveal">
+      <a class="btn btn-light btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
+      <a class="btn btn-glass btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register a facility') }}</a>
     </div>
   </div>
 </section>

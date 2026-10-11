@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=3">
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 <div class="page">
 <a class="skip" href="#main">{{ _('Skip to content') }}</a>
 <header class="site-header">

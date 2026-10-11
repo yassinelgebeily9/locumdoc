@@ -788,4 +788,23 @@ AR = {
     "Muscat": "مسقط",
     "Salalah": "صلالة",
     "Manama": "المنامة",
+    # ------------------------------------------------------------------ home page scroll story
+    "Hospitals need cover.": "المستشفيات تحتاج إلى تغطية.",
+    "Doctors want placements.": "والأطباء يبحثون عن فرص.",
+    "LocumDoc brings them together: locum work in the Gulf, matched to your specialty, at hospitals and clinics we have verified.":
+        "LocumDoc يجمع الطرفين: عمل مؤقت في الخليج يناسب تخصصك، في مستشفيات وعيادات تحقّقنا منها.",
+    "See how it works": "اكتشف كيف تعمل المنصة",
+    "One profile. Every verified locum job.": "ملف واحد. كل الوظائف المؤقتة الموثّقة.",
+    "Build your profile once, keep your CV in one place, and apply in a single step.":
+        "أنشئ ملفك مرة واحدة، واحتفظ بسيرتك الذاتية في مكان واحد، وتقدّم بخطوة واحدة.",
+    "Dr A. Rahman": "د. أ. رحمن",
+    "Dr L. Nasser": "د. ل. ناصر",
+    "Example profile": "ملف توضيحي",
+    "Application sent": "تم إرسال الطلب",
+    "ICU consultant, 3-month cover": "استشاري عناية مركّزة، تغطية لمدة 3 أشهر",
+    "Emergency medicine specialist, night rota": "أخصائي طب طوارئ، مناوبات ليلية",
+    "Post the cover you need, review applicants with CVs attached, or invite doctors directly.":
+        "انشر التغطية التي تحتاجها، وراجع المتقدّمين مع سيرهم الذاتية، أو ادعُ الأطباء مباشرة.",
+    "Your hospital": "مستشفاك",
+    "Open now": "متاح الآن",
 }

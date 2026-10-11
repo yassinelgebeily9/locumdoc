@@ -1,0 +1,7 @@
+New {{ kind }} account on LocumDoc
+
+{{ name }}
+{{ email }}
+
+{% if kind == 'facility' %}This facility needs verifying before its jobs go live:
+{{ site_url }}/admin/facilities?verified=0{% else %}Review doctors: {{ site_url }}/admin/doctors{% endif %}

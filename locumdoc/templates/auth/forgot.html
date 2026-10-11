@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Reset your password — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap">
+  <div class="auth-shell">
+    <h1>Reset your password</h1>
+    <p>Enter the email you registered with and we'll send you a link to choose a new password.</p>
+    <form class="panel panel-pad" method="post" novalidate>
+      {{ m.csrf() }}
+      {{ m.input(form, form.clean, 'email', 'Email', type='email', attrs='autocomplete="email" autofocus') }}
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Send reset link</button><a href="{{ url_for('auth.login') }}">Back to log in</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

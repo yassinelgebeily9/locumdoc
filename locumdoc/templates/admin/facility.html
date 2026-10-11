@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ fac.name }} — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="crumb"><a href="{{ url_for('admin.facilities') }}">Facilities</a></div>
+  <div class="row">
+    <div><h1>{{ fac.name }}</h1>
+      <p>Registered {{ fac.created_at|d }}. Last login {{ fac.last_login_at|d }}.
+        {% if fac.verified %}{{ m.verified_tag() }}{% else %}<span class="pill pill-amber">Waiting for verification</span>{% endif %}
+        {% if not fac.is_active %}<span class="pill pill-red">Suspended</span>{% endif %}</p></div>
+    <div class="hero-ctas">
+      <form method="post">{{ m.csrf() }}<input type="hidden" name="action" value="verify">
+        <button class="btn {{ 'btn-outline' if fac.verified else 'btn-primary' }}" type="submit">{{ 'Remove verification' if fac.verified else 'Verify facility' }}</button></form>
+      <form method="post" data-confirm="{{ 'Restore' if not fac.is_active else 'Suspend' }} this account?">{{ m.csrf() }}<input type="hidden" name="action" value="suspend">
+        <button class="btn btn-danger" type="submit">{{ 'Restore access' if not fac.is_active else 'Suspend' }}</button></form>
+    </div>
+  </div>
+</div>
+<div class="wrap content grid-main">
+  <div class="stack">
+    <div class="panel">
+      <div class="panel-head"><h2>Details to check</h2></div>
+      <div class="panel-body">
+        <dl class="kv">
+          <dt>Type</dt><dd>{{ label(ref.FACILITY_TYPES, fac.facility_type) }}, {{ label(ref.SECTORS, fac.sector)|lower }}</dd>
+          <dt>Location</dt><dd>{{ fac.city }}, {{ fac.country }}</dd>
+          <dt>Website</dt><dd>{% if fac.website %}<a href="{{ fac.website }}" rel="noopener nofollow" target="_blank">{{ fac.website }}</a>{% else %}—{% endif %}</dd>
+          <dt>Contact</dt><dd>{{ fac.contact_name }}{% if fac.contact_role %}, {{ fac.contact_role }}{% endif %}</dd>
+          <dt>Email</dt><dd><a href="mailto:{{ fac.email }}">{{ fac.email }}</a></dd>
+          <dt>Phone</dt><dd><a href="tel:{{ fac.phone|replace(' ', '') }}">{{ fac.phone }}</a></dd>
+          <dt>About</dt><dd>{{ fac.about or '—' }}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Jobs</h2></div>
+      {% if jobs %}
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Job</th><th class="hide-sm">Dates</th><th>Applicants</th><th>Status</th></tr></thead>
+        <tbody>{% for j in jobs %}
+          <tr><td><a class="row-link" href="{{ url_for('public.job', job_id=j.id) }}">{{ j.title }}</a><span class="sub">{{ j.specialty }}</span></td>
+            <td class="hide-sm num">{{ j.start_date|d }} – {{ j.end_date|d }}</td><td class="num">{{ j.applicants }}</td><td>{{ m.pill(j.status, ref.JOB_STATUSES) }}</td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+      {% else %}<div class="empty"><p>No jobs posted yet.</p></div>{% endif %}
+    </div>
+  </div>
+  <aside>
+    <form class="panel panel-pad" method="post">
+      {{ m.csrf() }}<input type="hidden" name="action" value="notes">
+      <h3>Verification notes</h3>
+      <p class="muted small">How you verified this facility, who you spoke to. Only admins see this.</p>
+      <div class="field"><label class="visually-hidden" for="admin_notes">Notes</label><textarea id="admin_notes" name="admin_notes" rows="7">{{ fac.admin_notes }}</textarea></div>
+      <div class="form-actions"><button class="btn btn-outline btn-sm" type="submit">Save notes</button></div>
+    </form>
+  </aside>
+</div>
+{% endblock %}

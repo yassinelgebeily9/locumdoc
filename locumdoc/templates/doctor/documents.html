@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}CV and documents — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <h1>CV and documents</h1>
+  <p>Stored privately. Facilities can open them only when you apply, or if you appear in the directory.</p>
+</div>
+<div class="wrap content grid-main">
+  <div class="stack">
+    <form class="panel panel-pad" method="post" enctype="multipart/form-data">
+      {{ m.csrf() }}
+      <h2>Upload a document</h2>
+      {% if not docs|selectattr('kind', 'equalto', 'cv')|list %}
+      <div class="callout"><p>Start with your CV. You need one to apply for jobs.</p></div>
+      {% endif %}
+      <div class="form-grid">
+        <div class="field">
+          <label for="kind">Document type</label>
+          <select id="kind" name="kind" required>
+            {% for k, l in ref.DOCUMENT_KINDS %}<option value="{{ k }}">{{ l }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="file">File</label>
+          <input id="file" type="file" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+          <span class="help">PDF, Word, JPG or PNG, up to 10 MB.</span>
+        </div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Upload</button></div>
+    </form>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Your documents</h2><span class="muted small">{{ docs|length }} of 20</span></div>
+      {% if docs %}
+      <div class="panel-body">
+        <ul class="doc-list">
+          {% for d in docs %}
+          <li>
+            <span class="doc-icon {{ 'cv' if d.kind == 'cv' }}">{{ d.original_name.rsplit('.', 1)[-1]|upper }}</span>
+            <span><a class="name" href="{{ url_for('files.download', doc_id=d.id) }}" target="_blank" rel="noopener">{{ d.original_name }}</a>
+              <span class="meta">{{ label(ref.DOCUMENT_KINDS, d.kind) }}, {{ d.size_bytes|filesize }}, added {{ d.created_at|d }}</span></span>
+            <form method="post" action="{{ url_for('doctor.delete_document', doc_id=d.id) }}" data-confirm="Delete {{ d.original_name }}?">
+              {{ m.csrf() }}<button class="btn btn-ghost btn-sm" type="submit">Delete</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% else %}
+      <div class="empty"><h3>No documents yet</h3><p>Upload your CV above. You can add licences and certificates any time.</p></div>
+      {% endif %}
+    </div>
+  </div>
+  <aside class="stack">
+    <div class="panel panel-pad">
+      <h3>Useful for Qatar</h3>
+      <ul class="checklist">
+        {% set kinds = docs|map(attribute='kind')|list %}
+        {% for k, l in [('cv','CV'),('license','Current medical licence'),('degree','Degree and specialty certificates'),('psv','Primary source verification report'),('good_standing','Certificate of good standing')] %}
+        <li class="{{ 'done' if k in kinds }}"><span class="tick"></span><span>{{ l }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="muted small">Only the CV is required to apply. The rest helps facilities start your DHP licensing sooner.</p>
+    </div>
+    {% if readiness.ready %}
+    <a class="btn btn-primary" href="{{ url_for('public.jobs') }}">Find locum jobs</a>
+    {% else %}
+    <a class="btn btn-outline" href="{{ url_for('doctor.profile') }}">Finish your profile</a>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Applications — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Applications</h1><p>{{ total }} {{ 'application' if total == 1 else 'applications' }}{% if status %} at this stage{% endif %}.</p></div>
+<div class="wrap content">
+  <nav class="tabs" aria-label="Filter applications">
+    <a href="{{ url_for('admin.applications') }}" aria-current="{{ 'true' if not status else 'false' }}">All</a>
+    {% for k, l in ref.APPLICATION_STATUSES %}<a href="?status={{ k }}" aria-current="{{ 'true' if status == k else 'false' }}">{{ l }}</a>{% endfor %}
+  </nav>
+  <div class="panel">
+    {% if rows %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Doctor</th><th>Job</th><th class="hide-sm">Applied</th><th class="hide-sm">Updated</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for a in rows %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('admin.doctor', doctor_id=a.doctor_id) }}">Dr {{ a.first_name }} {{ a.last_name }}</a></td>
+        <td><a href="{{ url_for('public.job', job_id=a.job_id) }}">{{ a.title }}</a><span class="sub">{{ a.facility }}</span></td>
+        <td class="hide-sm num">{{ a.created_at|d }}</td><td class="hide-sm num">{{ a.updated_at|d }}</td>
+        <td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {{ m.pager(page, per, total, {'status': status}) }}
+    {% else %}<div class="empty"><h3>No applications here</h3></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

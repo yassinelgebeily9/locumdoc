@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Find doctors — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <h1>Find doctors</h1>
+  <p>Doctors who've chosen to be visible to verified facilities. Invite anyone who fits to one of your jobs.</p>
+</div>
+<div class="wrap content">
+  {% if not fac.verified %}
+  <div class="panel panel-pad">
+    <h2>The directory opens once you're verified</h2>
+    <p class="muted">We're checking {{ fac.name }}, usually within one working day. Doctors' profiles are only shown to verified facilities, which is why they trust LocumDoc with their CVs.</p>
+    <a class="btn btn-outline" href="{{ url_for('facility.new_job') }}">Draft a job meanwhile</a>
+  </div>
+  {% else %}
+  <form class="filters" method="get">
+    <div class="field"><label for="q">Name or keyword</label><input id="q" type="search" name="q" value="{{ f.q }}" placeholder="Name, subspecialty, qualification"></div>
+    <div class="field"><label for="specialty">Specialty</label>
+      <select id="specialty" name="specialty"><option value="">All specialties</option>
+        {% for s in specialties %}<option value="{{ s.id }}" {% if f.specialty == s.id|string %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="licence">DHP status</label>
+      <select id="licence" name="licence"><option value="">Any</option>
+        <option value="any_progress" {% if f.licence == 'any_progress' %}selected{% endif %}>Started or licensed</option>
+        {% for k, l in ref.QATAR_LICENSE_STATUS %}<option value="{{ k }}" {% if f.licence == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="available">Available on</label><input id="available" type="date" name="available" value="{{ f.available }}"></div>
+    <button class="btn btn-ink" type="submit">Search</button>
+  </form>
+  <div class="panel">
+    <div class="panel-head"><h2>{{ total }} {{ 'doctor' if total == 1 else 'doctors' }}</h2>
+      <form method="get" class="inline-form">
+        {% for k in ('q','specialty','licence','available') %}<input type="hidden" name="{{ k }}" value="{{ f[k] }}">{% endfor %}
+        <label class="visually-hidden" for="grade">Grade</label>
+        <select id="grade" name="grade" data-autosubmit><option value="">All grades</option>
+          {% for k, l in ref.GRADES %}<option value="{{ k }}" {% if f.grade == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+        </select><button class="btn btn-outline btn-sm" data-autosubmit-btn>Apply</button>
+      </form>
+    </div>
+    {% if rows %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Doctor</th><th class="hide-sm">Experience</th><th class="hide-sm">DHP status</th><th>Available</th></tr></thead>
+      <tbody>
+      {% for d in rows %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=d.user_id) }}">{{ d.title }} {{ d.first_name }} {{ d.last_name }}</a>
+          {% if d.verified %} {{ m.verified_tag() }}{% endif %}
+          <span class="sub">{{ d.specialty }}, {{ label(ref.GRADES, d.grade)|lower }}{% if d.current_country %}, in {{ d.current_country }}{% endif %}</span></td>
+        <td class="hide-sm num">{{ d.years_experience if d.years_experience is not none else '—' }} yrs<span class="sub">{{ d.qualifications|truncate(40) }}</span></td>
+        <td class="hide-sm">{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</td>
+        <td class="num">{% if d.available_from %}{{ d.available_from|d }}{% if d.available_to %}<span class="sub">until {{ d.available_to|d }}</span>{% endif %}{% else %}<span class="muted">Not given</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {{ m.pager(page, per, total, f) }}
+    {% else %}
+    <div class="empty"><h3>No doctors match these filters</h3><p>Try removing the start date or licensing filter. New doctors join every week.</p><a class="btn btn-outline" href="{{ url_for('facility.doctors') }}">Clear filters</a></div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

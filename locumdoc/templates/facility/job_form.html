@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit job' if job else 'Post a locum job' }} — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  {% if job %}<div class="crumb"><a href="{{ url_for('facility.job', job_id=job.id) }}">{{ job.title }}</a></div>{% endif %}
+  <h1>{{ 'Edit job' if job else 'Post a locum job' }}</h1>
+  <p>{% if fac.verified %}Jobs go live as soon as you publish.{% else %}Your job will go live once we've verified {{ fac.name }}.{% endif %}</p>
+</div>
+<div class="wrap content">
+  <form class="panel panel-pad" method="post" novalidate>
+    {{ m.csrf() }}
+    <fieldset class="fieldset">
+      <legend>The role</legend>
+      <div class="form-grid">
+        {{ m.input(form, v, 'title', 'Job title', cls='full', help='Be specific, e.g. "Locum consultant anaesthetist, cardiac theatres".') }}
+        {% call m.field_wrap(form, 'specialty_id', 'Specialty') %}
+        <select id="f-specialty_id" name="specialty_id" required>
+          <option value="">Choose…</option>
+          {% for s in specialties %}<option value="{{ s.id }}" {% if v.specialty_id|string == s.id|string %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+        {% endcall %}
+        {{ m.select(form, v, 'grade', 'Grade', ref.GRADES) }}
+        {% call m.field_wrap(form, 'city_id', 'City') %}
+        <select id="f-city_id" name="city_id" required>
+          {% for c in cities %}<option value="{{ c.id }}" {% if v.city_id|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select>
+        {% endcall %}
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend>Dates and pay</legend>
+      <div class="form-grid">
+        {{ m.input(form, v, 'start_date', 'Start date', type='date', attrs=('min="' ~ today ~ '"') if not job else '') }}
+        {{ m.input(form, v, 'end_date', 'End date', type='date') }}
+        {{ m.input(form, v, 'rate_amount', 'Rate (' ~ (fac.currency or 'QAR') ~ ')', type='number', optional=True, help='Leave empty to show "Rate on request".', attrs='min="1" inputmode="numeric"') }}
+        {{ m.select(form, v, 'rate_period', 'Paid', ref.RATE_PERIODS, placeholder=None) }}
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend>What's included</legend>
+      <div class="check-group">
+        <label class="check"><input type="checkbox" name="accommodation" value="1" {% if v.accommodation %}checked{% endif %}> <span>Accommodation</span></label>
+        <label class="check"><input type="checkbox" name="flights" value="1" {% if v.flights %}checked{% endif %}> <span>Return flights</span></label>
+        <label class="check"><input type="checkbox" name="transport" value="1" {% if v.transport %}checked{% endif %}> <span>Local transport</span></label>
+        <label class="check"><input type="checkbox" name="licensing_support" value="1" {% if v.licensing_support %}checked{% endif %}> <span>DHP licensing support</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend>Details</legend>
+      <div class="form-grid">
+        {{ m.textarea(form, v, 'description', 'About the role', cls='full', rows=7, help='The department, rota pattern, on-call, case mix and who the locum reports to.') }}
+        {{ m.textarea(form, v, 'requirements', 'Requirements', optional=True, cls='full', rows=4, help='Qualifications, experience, DHP licensing status, languages.') }}
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button class="btn btn-primary btn-lg" type="submit">{{ 'Save changes' if job else ('Publish job' if fac.verified else 'Save job') }}</button>
+      <a class="btn btn-ghost" href="{{ url_for('facility.job', job_id=job.id) if job else url_for('facility.dashboard') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

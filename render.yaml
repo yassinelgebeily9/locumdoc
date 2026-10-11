@@ -1,0 +1,39 @@
+# One-click deploy on Render (render.com): New > Blueprint > point at this repo.
+# A persistent disk keeps the database and uploaded CVs across deploys.
+services:
+  - type: web
+    name: locumdoc
+    runtime: docker
+    plan: starter            # persistent disks need a paid instance
+    healthCheckPath: /robots.txt
+    disk:
+      name: locumdoc-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SITE_URL
+        value: https://locumdoc.me
+      - key: SECURE_COOKIES
+        value: "1"
+      - key: DATA_DIR
+        value: /data
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NOTIFY_EMAIL
+        sync: false
+      - key: MAIL_FROM
+        value: LocumDoc <hello@locumdoc.me>
+      - key: CONTACT_EMAIL
+        value: hello@locumdoc.me
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false

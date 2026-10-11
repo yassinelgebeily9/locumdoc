@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Privacy notice — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Privacy notice</h1><p>Last updated {{ today|d }}</p></div>
+<div class="wrap content">
+  <div class="panel panel-pad prose legal-doc">
+    <p>This notice explains what personal data LocumDoc ("we") collects through locumdoc.me, why, and the choices you have. We process data in line with the EU General Data Protection Regulation (GDPR) and Qatar's Personal Data Privacy Protection Law (Law No. 13 of 2016).</p>
+
+    <h2>What we collect</h2>
+    <ul>
+      <li><strong>Doctors:</strong> name, contact details, nationality, country of residence, specialty, grade, qualifications, licence details, licensing status, availability, languages, and the documents you upload (CV, licences, certificates, passport if you choose to add it).</li>
+      <li><strong>Facilities:</strong> organisation details and the name, role, email and phone of the account holder.</li>
+      <li><strong>Everyone:</strong> login details (your password is stored only as a secure hash), and basic technical logs such as IP address and time of requests, kept for security.</li>
+    </ul>
+
+    <h2>Why we use it</h2>
+    <ul>
+      <li>To run your account and match doctors with locum jobs (performance of a contract).</li>
+      <li>To share a doctor's profile and documents with facilities the doctor applies to, and, if the doctor allows it, with verified facilities searching the directory (consent, which you can withdraw in your profile at any time).</li>
+      <li>To verify facilities and keep the platform safe (legitimate interest).</li>
+      <li>To send emails about your account, applications and invitations. We don't send marketing without asking.</li>
+    </ul>
+
+    <h2>Who can see your data</h2>
+    <p>Doctor documents are never public. Facilities see a doctor's profile and documents only when that doctor has applied to one of their jobs, or when the doctor has chosen to appear in the directory and the facility has been verified. Our administrators can see all accounts to verify and support them. We use hosting and email providers who process data on our behalf under written agreements.</p>
+
+    <h2>International transfers</h2>
+    <p>Because placements are in the Gulf, profiles you share with facilities are transferred to those facilities in Qatar (and, later, other Gulf countries). We only make this transfer when you apply or allow directory visibility.</p>
+
+    <h2>How long we keep it</h2>
+    <p>We keep your data while your account is open. When you delete your account, your profile and every uploaded file are deleted immediately. Records of applications already shared with a facility may be retained by that facility under its own obligations.</p>
+
+    <h2>Your rights</h2>
+    <p>You can access, correct, download or delete your data, object to processing, or withdraw consent. Most of this you can do yourself from your profile and account pages. For anything else, email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. You can also complain to your local data protection authority.</p>
+
+    <h2>Cookies</h2>
+    <p>We use one essential cookie to keep you logged in and protect forms from forgery. We don't use advertising or analytics cookies, and fonts are served from our own server.</p>
+
+    <h2>Contact</h2>
+    <p>LocumDoc, <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+  </div>
+</div>
+{% endblock %}

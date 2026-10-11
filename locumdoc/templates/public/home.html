@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}LocumDoc — Locum jobs for doctors in Qatar and the Gulf{% endblock %}
+{% block main %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="launch">{{ m.qatar_flag() }} Now placing doctors in Qatar</div>
+      <h1>Locum work in the Gulf, matched to your specialty.</h1>
+      <p class="lede">Build one profile, upload your CV once, and apply to locum cover at verified hospitals and clinics. Facilities post the shifts they need and invite doctors directly.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">Create a doctor profile</a>
+        <a class="btn btn-outline btn-lg" href="{{ url_for('auth.join_facility') }}">Post a locum job</a>
+      </div>
+      <div class="hero-proof">
+        <div><strong>{{ ref.SPECIALTIES|length }} specialties</strong>From anaesthesia to vascular surgery</div>
+        <div><strong>Every facility checked</strong>Jobs go live only after we verify the employer</div>
+        <div><strong>Free for doctors</strong>No fees to apply, ever</div>
+      </div>
+    </div>
+
+    <section class="board" aria-labelledby="board-title">
+      <div class="board-head">
+        <h2 id="board-title">Open locum jobs in Qatar{% if stats.open_jobs %} ({{ stats.open_jobs }}){% endif %}</h2>
+        <a href="{{ url_for('public.jobs') }}">See all jobs</a>
+      </div>
+      {% if jobs %}
+      <div class="board-cols" aria-hidden="true"><span>Role</span><span>Starts</span><span>Rate</span></div>
+      {% for j in jobs %}
+      <a class="board-row" href="{{ url_for('public.job', job_id=j.id) }}">
+        <span><span class="t">{{ j.title }}</span><span class="s">{{ j.specialty }}, {{ j.city }}, {{ j|weeks }}</span></span>
+        <span class="d">{{ j.start_date|d('%-d %b') }}</span>
+        <span class="r">{{ j.rate_amount|money(j.rate_currency) }}{% if j.rate_amount %}<small>{{ label(ref.RATE_PERIODS, j.rate_period) }}</small>{% endif %}</span>
+      </a>
+      {% endfor %}
+      <div class="board-foot">New jobs are posted by facilities directly. Create a profile to get matched.</div>
+      {% else %}
+      <div class="board-empty">
+        <p>The first Qatar placements are being posted now. Create your profile today and verified facilities can invite you before jobs are even advertised.</p>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('auth.join_doctor') }}">Create a doctor profile</a>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</section>
+
+<section class="serrated" aria-labelledby="how-title">
+  <div class="wrap">
+    <h2 id="how-title">How LocumDoc works</h2>
+    <p>Two sides, one platform. Doctors show what they can cover and when. Facilities show what they need.</p>
+    <div class="tracks">
+      <div class="track">
+        <h3>For doctors</h3>
+        <ol class="steps">
+          <li><div><strong>Create your profile</strong><span>Specialty, grade, qualifications, current licence and where you stand with Qatar's DHP.</span></div></li>
+          <li><div><strong>Upload your CV and credentials</strong><span>Stored privately. Only verified facilities you apply to, or that you allow to search, can open them.</span></div></li>
+          <li><div><strong>Apply, or get invited</strong><span>Apply to open jobs in one step, accept invitations from facilities, and track every status change.</span></div></li>
+        </ol>
+        <a class="btn btn-light" href="{{ url_for('auth.join_doctor') }}">Create a doctor profile</a>
+      </div>
+      <div class="track">
+        <h3>For hospitals and clinics</h3>
+        <ol class="steps">
+          <li><div><strong>Register your facility</strong><span>We verify every employer before its jobs are shown, usually within one working day.</span></div></li>
+          <li><div><strong>Post the cover you need</strong><span>Specialty, grade, dates, rate and what's included: accommodation, flights, licensing support.</span></div></li>
+          <li><div><strong>Review, shortlist, or search</strong><span>See applicants with CVs attached, move them through your pipeline, or invite doctors from the directory.</span></div></li>
+        </ol>
+        <a class="btn btn-outline" href="{{ url_for('public.for_facilities') }}">How it works for facilities</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-white" aria-labelledby="lic-title">
+  <div class="wrap licence-grid">
+    <div class="intro">
+      <h2 id="lic-title">Licensing in Qatar, in plain terms</h2>
+      <p>Doctors practise in Qatar under a licence from the Department of Healthcare Professions (DHP) at the Ministry of Public Health. Your profile records where you are in this process, so facilities can plan start dates realistically.</p>
+      <p>Many placements come with licensing support from the facility.</p>
+      <a class="btn btn-outline" href="{{ url_for('public.country', slug='qatar') }}">Read the full Qatar guide</a>
+    </div>
+    <ol class="pathway">
+      <li><strong>Primary source verification</strong><span>A DHP-approved verification company confirms your degree, licences and experience with the issuing bodies.</span></li>
+      <li><strong>DHP evaluation</strong><span>DHP reviews your file against its qualification categories. Category 1 and 2 specialty qualifications don't need the qualifying exam.</span></li>
+      <li><strong>Qualifying exam, if required</strong><span>Needed for some qualifications. Recognised exams such as PLAB 1 or USMLE Step 2 can exempt general practitioners.</span></li>
+      <li><strong>Licence for the role</strong><span>Locum licences cover a permanent physician for up to six months. Temporary licences last six months while a full licence is processed.</span></li>
+    </ol>
+  </div>
+  <div class="wrap"><p class="note">Summary based on DHP's published guidelines for physicians. Requirements change; DHP's current rules always apply.</p></div>
+</section>
+
+<section class="section" aria-labelledby="spec-title">
+  <div class="wrap">
+    <div class="section-head">
+      <div><h2 id="spec-title">Every specialty, every grade</h2><p>From GP clinics to consultant-led ICU cover.</p></div>
+      <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">Browse all jobs</a>
+    </div>
+    <ul class="spec-cloud">
+      {% for s in ref.SPECIALTIES %}<li><a href="{{ url_for('public.jobs', q=s) }}">{{ s }}</a></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="section-tight section-white" aria-labelledby="ctry-title">
+  <div class="wrap">
+    <div class="section-head">
+      <div><h2 id="ctry-title">Qatar first, the Gulf next</h2><p>Mark the countries you'd consider on your profile and you'll hear first when each one opens.</p></div>
+    </div>
+    <div class="countries-row">
+      {% for c in countries %}
+      <a class="country-cell{% if c.active %} live{% endif %}" href="{{ url_for('public.country', slug=c.slug) }}">
+        <strong>{{ c.name }}</strong><span>{{ 'Placing now' if c.active else 'Opening soon' }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap cta-strip">
+    <h2>Need locum cover in Qatar? Post your first job today.</h2>
+    <div class="hero-ctas">
+      <a class="btn btn-ink btn-lg" href="{{ url_for('auth.join_facility') }}">Register a facility</a>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('public.contact') }}">Talk to us</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

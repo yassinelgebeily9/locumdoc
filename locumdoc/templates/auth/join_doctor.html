@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Create a doctor profile — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap">
+  <div class="auth-shell">
+    <h1>Create a doctor profile</h1>
+    <p>Start with the basics. You'll add qualifications, licensing and your CV next.</p>
+    <form class="panel panel-pad" method="post" novalidate>
+      {{ m.csrf() }}
+      <div class="form-grid">
+        {{ m.input(form, form.clean, 'first_name', 'First name', attrs='autocomplete="given-name"') }}
+        {{ m.input(form, form.clean, 'last_name', 'Last name', attrs='autocomplete="family-name"') }}
+        {% call m.field_wrap(form, 'specialty_id', 'Specialty', cls='full') %}
+        <select id="f-specialty_id" name="specialty_id" required>
+          <option value="">Choose…</option>
+          {% for s in specialties %}<option value="{{ s.id }}" {% if form.clean.get('specialty_id') == s.id|string %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+        {% endcall %}
+        {{ m.select(form, form.clean, 'grade', 'Grade', ref.GRADES, cls='full') }}
+        {{ m.input(form, form.clean, 'email', 'Email', type='email', cls='full', attrs='autocomplete="email"') }}
+        {{ m.input(form, form.clean, 'password', 'Password', type='password', cls='full', help='At least 10 characters.', attrs='autocomplete="new-password" minlength="10"') }}
+        <div class="full">
+          <label class="check"><input type="checkbox" name="visible" value="1" checked> <span>Let verified hospitals and clinics find my profile and invite me to jobs. You can change this any time.</span></label>
+        </div>
+        <div class="full">{% include "partials/consent.html" %}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit">Create profile</button></div>
+    </form>
+    <p class="muted">Hiring instead? <a href="{{ url_for('auth.join_facility') }}">Register a facility</a>. Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

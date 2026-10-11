@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }} {{ d.first_name }} {{ d.last_name }} — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="crumb"><a href="{{ url_for('facility.doctors') }}">Find doctors</a></div>
+  <div class="profile-head">
+    <div class="avatar lg">{{ m.initials(d.first_name, d.last_name) }}</div>
+    <div><h1>{{ d.title }} {{ d.first_name }} {{ d.last_name }}</h1>
+      <p>{{ d.specialty }}, {{ label(ref.GRADES, d.grade)|lower }}{% if d.current_country %}, in {{ d.current_country }}{% endif %}</p></div>
+  </div>
+</div>
+<div class="wrap content grid-main">
+  <div class="stack">{% include "partials/doctor_profile.html" %}</div>
+  <aside class="stack">
+    {% if apps %}
+    <div class="panel">
+      <div class="panel-head"><h3>Applied to your jobs</h3></div>
+      <div class="panel-body">
+        {% for a in apps %}
+        <form class="stack" method="post" action="{{ url_for('facility.application_status', app_id=a.id) }}">
+          {{ m.csrf() }}<input type="hidden" name="back" value="{{ request.path }}">
+          <div><a href="{{ url_for('facility.job', job_id=a.job_id) }}"><strong>{{ a.title }}</strong></a><span class="sub muted small"> applied {{ a.created_at|d }}</span></div>
+          {% if a.cover_note %}<p class="muted small">“{{ a.cover_note }}”</p>{% endif %}
+          {% if a.status == 'withdrawn' %}{{ m.pill('withdrawn', ref.APPLICATION_STATUSES) }}{% else %}
+          <div class="inline-form">
+            <label class="visually-hidden" for="st-{{ a.id }}">Stage</label>
+            <select id="st-{{ a.id }}" name="status">
+              {% for k, l in ref.APPLICATION_STATUSES if k != 'withdrawn' %}<option value="{{ k }}" {% if a.status == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-ink btn-sm" type="submit">Update</button>
+          </div>
+          {% endif %}
+        </form>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if fac.verified %}
+    <form class="panel panel-pad" method="post" action="{{ url_for('facility.invite', doctor_id=d.user_id) }}">
+      {{ m.csrf() }}
+      <h3>Invite to a job</h3>
+      {% if open_jobs %}
+      <div class="stack">
+        <div class="field"><label for="job_id">Job</label>
+          <select id="job_id" name="job_id">
+            {% for j in open_jobs %}<option value="{{ j.id }}">{{ j.title }}</option>{% endfor %}
+            <option value="">No specific job, general introduction</option>
+          </select></div>
+        <div class="field"><label for="message">Message <span class="opt">(optional)</span></label>
+          <textarea id="message" name="message" rows="4" maxlength="2000" placeholder="Why you think they'd be a good fit, and any dates you have in mind"></textarea></div>
+        <button class="btn btn-primary" type="submit">Send invitation</button>
+      </div>
+      {% else %}
+      <p class="muted">Post an open job first, then invite doctors to it.</p>
+      <a class="btn btn-outline" href="{{ url_for('facility.new_job') }}">Post a job</a>
+      {% endif %}
+      {% if invites %}
+      <ul class="checklist">
+        {% for i in invites %}<li><span class="pill pill-{{ i.status }}">{{ i.status|capitalize }}</span> <span class="small">{{ i.title or 'General introduction' }}, {{ i.created_at|d }}</span></li>{% endfor %}
+      </ul>
+      {% endif %}
+    </form>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

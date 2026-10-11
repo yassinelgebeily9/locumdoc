@@ -1,0 +1,6 @@
+{{ doctor.title }} {{ doctor.first_name }} {{ doctor.last_name }} {{ answer }} your invitation.
+
+{% if answer == 'accepted' %}View their profile and CV:
+{{ site_url }}/facility/doctors/{{ doctor.user_id }}{% endif %}
+
+LocumDoc

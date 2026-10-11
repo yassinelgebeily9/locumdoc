@@ -1,0 +1,12 @@
+Dear {{ contact_name }},
+
+Thanks for registering {{ facility }} on LocumDoc.
+
+We verify every facility before its jobs go live, usually within one working day. We may call the number you gave us to confirm the details.
+
+While you wait, you can draft your first locum job: {{ site_url }}/facility/jobs/new
+
+Once verified you can also search the doctor directory and invite doctors directly.
+
+LocumDoc
+{{ site_url }}

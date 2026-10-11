@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Terms of use — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Terms of use</h1><p>Last updated {{ today|d }}</p></div>
+<div class="wrap content">
+  <div class="panel panel-pad prose legal-doc">
+    <p>These terms apply to everyone who uses locumdoc.me. By creating an account you agree to them.</p>
+
+    <h2>What LocumDoc does</h2>
+    <p>LocumDoc is a platform that lets doctors and healthcare facilities find each other for locum work. We are not the employer of any doctor and we don't issue medical licences. Contracts for a placement are between the doctor and the facility. Licensing decisions are made by each country's health authority, such as the Department of Healthcare Professions in Qatar.</p>
+
+    <h2>Doctors</h2>
+    <ul>
+      <li>The information and documents you provide must be accurate, current and your own.</li>
+      <li>You're responsible for holding, or obtaining, the licence required for any role you accept.</li>
+      <li>Applying is free.</li>
+    </ul>
+
+    <h2>Facilities</h2>
+    <ul>
+      <li>You must be authorised to recruit for the facility you register.</li>
+      <li>Jobs must describe real vacancies, with honest dates, rates and terms.</li>
+      <li>You may use doctors' data only to assess and recruit them for your facility, and must not pass it to third parties or keep it longer than you need.</li>
+      <li>We may verify your facility and refuse or remove any account or job at our discretion.</li>
+    </ul>
+
+    <h2>Acceptable use</h2>
+    <p>Don't misuse the platform: no false information, scraping, attempts to access accounts or data that aren't yours, or contacting users for purposes other than locum recruitment.</p>
+
+    <h2>Liability</h2>
+    <p>We work to keep information accurate and the service available, but we can't guarantee either. We verify facilities and can mark doctor profiles as verified, but facilities remain responsible for their own credential checks before engaging a doctor. To the extent the law allows, we aren't liable for indirect losses arising from use of the platform or from any placement.</p>
+
+    <h2>Changes and termination</h2>
+    <p>We may update these terms and will tell registered users about material changes by email. You can close your account at any time from your account page.</p>
+
+    <h2>Contact</h2>
+    <p><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+  </div>
+</div>
+{% endblock %}

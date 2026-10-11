@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Doctors — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="row">
+    <div><h1>Doctors</h1><p>{{ total }} {{ 'doctor' if total == 1 else 'doctors' }}.</p></div>
+    <a class="btn btn-outline" href="?{{ f|urlencode }}&export=csv">Download CSV</a>
+  </div>
+</div>
+<div class="wrap content">
+  <form class="filters" method="get">
+    <div class="field"><label for="q">Name or email</label><input id="q" type="search" name="q" value="{{ f.q }}"></div>
+    <div class="field"><label for="specialty">Specialty</label>
+      <select id="specialty" name="specialty"><option value="">All</option>
+        {% for s in specialties %}<option value="{{ s.id }}" {% if f.specialty == s.id|string %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="verified">Verification</label>
+      <select id="verified" name="verified"><option value="">All</option>
+        <option value="0" {% if f.verified == '0' %}selected{% endif %}>Not verified</option>
+        <option value="1" {% if f.verified == '1' %}selected{% endif %}>Verified</option>
+      </select></div>
+    <div></div>
+    <button class="btn btn-ink" type="submit">Filter</button>
+  </form>
+  <div class="panel">
+    {% if rows %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Doctor</th><th class="hide-sm">Specialty</th><th class="hide-sm">DHP</th><th>CV</th><th class="hide-sm">Joined</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for d in rows %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('admin.doctor', doctor_id=d.user_id) }}">{{ d.title }} {{ d.first_name }} {{ d.last_name }}</a><span class="sub">{{ d.email }}</span></td>
+        <td class="hide-sm">{{ d.specialty }}<span class="sub">{{ label(ref.GRADES, d.grade) }}</span></td>
+        <td class="hide-sm">{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</td>
+        <td>{{ 'Yes' if d.cv_count else '—' }}</td>
+        <td class="hide-sm num">{{ d.created_at|d }}</td>
+        <td>{% if d.verified %}{{ m.verified_tag() }}{% else %}<span class="pill">Not verified</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {{ m.pager(page, per, total, f) }}
+    {% else %}<div class="empty"><h3>No doctors match</h3></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

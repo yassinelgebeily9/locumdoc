@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Countries — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Countries</h1><p>Open a country to let facilities there register and post jobs. Doctors already see every country as a preference.</p></div>
+<div class="wrap content">
+  <div class="panel">
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Country</th><th class="hide-sm">Licensing body</th><th>Cities</th><th class="hide-sm">Open jobs</th><th class="actions">Status</th></tr></thead>
+      <tbody>
+      {% for c in rows %}
+      <tr>
+        <td><strong>{{ c.name }}</strong><span class="sub">{{ c.currency }}</span></td>
+        <td class="hide-sm">{{ c.licensing_body }}</td>
+        <td>{{ c.city_list or '—' }}
+          <form class="inline-form" method="post">{{ m.csrf() }}<input type="hidden" name="action" value="add_city"><input type="hidden" name="country_id" value="{{ c.id }}">
+            <label class="visually-hidden" for="city-{{ c.id }}">Add city</label><input id="city-{{ c.id }}" type="text" name="city" placeholder="Add a city" maxlength="80"><button class="btn btn-outline btn-sm" type="submit">Add</button></form></td>
+        <td class="hide-sm num">{{ c.open_jobs }}</td>
+        <td class="actions">
+          <form method="post" data-confirm="{{ 'Close' if c.active else 'Open' }} {{ c.name }}?">{{ m.csrf() }}<input type="hidden" name="action" value="toggle"><input type="hidden" name="country_id" value="{{ c.id }}">
+            <button class="btn {{ 'btn-outline' if c.active else 'btn-primary' }} btn-sm" type="submit">{{ 'Close' if c.active else 'Open' }}</button></form>
+          <div class="small {{ 'verified' if c.active else 'muted' }}">{{ 'Live' if c.active else 'Not open yet' }}</div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+</div>
+{% endblock %}

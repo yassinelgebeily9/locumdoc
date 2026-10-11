@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Working as a locum doctor in Qatar — LocumDoc{% endblock %}
+{% block description %}How DHP licensing works for locum doctors in Qatar: verification, evaluation, the qualifying exam, locum and temporary licences, and the documents you'll need.{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="launch">{{ m.qatar_flag() }} Qatar</div>
+  <h1>Working as a locum doctor in Qatar</h1>
+  <p>What to expect from licensing, documents and placements, based on the published guidelines of the Department of Healthcare Professions.</p>
+</div>
+<div class="wrap content grid-main">
+  <article class="panel panel-pad prose">
+    <h2>Who licenses doctors</h2>
+    <p>All physicians in Qatar are licensed by the {{ country.licensing_body }}. Facilities can't employ a doctor, even for a short locum, until DHP has issued the right licence for the role.</p>
+
+    <h2>The pathway</h2>
+    <ol class="pathway">
+      <li><strong>Primary source verification (PSV)</strong><span>A DHP-approved verification company checks your degree, specialty certificates, licences and work experience directly with the bodies that issued them. Start this early; it is usually the slowest step.</span></li>
+      <li><strong>Registration and evaluation</strong><span>You apply online with your documents. DHP aims to review a complete file in about 25 working days, and a preliminary evaluation stays valid for six months. You may be invited to an interview.</span></li>
+      <li><strong>Qualifying exam, where required</strong><span>Specialists with category 1 or 2 qualifications don't sit the exam; category 3 qualifications do. General practitioners can be exempted by exams such as IFOM CSE (score 60+), USMLE Step 2, PLAB 1, MCCQE 1 or the AMC MCQ.</span></li>
+      <li><strong>Licensing</strong><span>Once eligible, the licence application is reviewed in about 15 working days. It's linked to the facility you'll work at.</span></li>
+    </ol>
+
+    <h2>Licence types for short placements</h2>
+    <ul>
+      <li><strong>Locum:</strong> covers a permanent physician in a government or semi-government facility for up to six months. The facility provides a letter of intent and an undertaking from its medical director.</li>
+      <li><strong>Temporary:</strong> valid for six months and not renewable, reviewed in about five working days. You must apply for the full licence within that period.</li>
+      <li><strong>Non-resident:</strong> for repeated visits under a named supervising physician, with at least five years of post-degree practice.</li>
+      <li><strong>Visitor or short notice:</strong> for specialists with ten or more years' experience. Each visit is limited to two weeks at one facility.</li>
+    </ul>
+
+    <h2>Documents to have ready</h2>
+    <ul>
+      <li>Passport, and your Qatar ID if you have one</li>
+      <li>Recent photo and a CV in DHP's template</li>
+      <li>Degree and specialty certificates with official transcripts</li>
+      <li>Experience certificates covering the last five years</li>
+      <li>Every medical licence held during that experience</li>
+      <li>Your PSV report and a certificate of good standing</li>
+      <li>For licensing: medical report, recognised CPR certificate, and police clearance</li>
+    </ul>
+    <p>You can upload all of these to your LocumDoc profile. Facilities only see them when you apply, or if you choose to appear in the doctor directory.</p>
+
+    <h2>Cities with placements</h2>
+    <p>{% for c in cities %}{{ c.name }}{{ ', ' if not loop.last }}{% endfor %}.</p>
+
+    <p class="note">This guide summarises DHP's published guidelines for physicians and isn't legal advice. Rules change. Always check the current requirements with DHP before you apply.</p>
+  </article>
+  <aside class="stack">
+    <div class="panel panel-pad">
+      <h3>Ready to start?</h3>
+      <p class="muted">Tell facilities where you are in the DHP process. Doctors who've started PSV are usually placed fastest.</p>
+      <a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}">Create a doctor profile</a>
+    </div>
+    {% if jobs %}
+    <div class="panel">
+      <div class="panel-head"><h3>Open in Qatar</h3><a href="{{ url_for('public.jobs', country='qatar') }}">All jobs</a></div>
+      <ul class="job-list">
+        {% for s in jobs %}<li class="job-item"><div><h3><a href="{{ url_for('public.job', job_id=s.id) }}">{{ s.title }}</a></h3><div class="muted small">{{ s.city }}, from {{ s.start_date|d }}</div></div></li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

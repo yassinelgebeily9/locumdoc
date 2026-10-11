@@ -1,0 +1,114 @@
+{% import "partials/macros.html" as m with context %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LocumDoc{% endblock %}</title>
+  <meta name="description" content="{% block description %}Locum work for doctors of every specialty in the Gulf, starting with Qatar. One profile, one CV upload, verified hospitals and clinics.{% endblock %}">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#7a1631">
+  <link rel="icon" href="{{ url_for('static', filename='img/mark.svg') }}" type="image/svg+xml">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/adventor-700.woff') }}" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=1">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="page">
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    {{ m.brand(url_for('public.home')) }}
+    <button class="menu-toggle btn btn-ghost" type="button" aria-expanded="false" aria-label="Menu">{{ m.icon('menu') }}</button>
+    {% set ep = request.endpoint or '' %}
+    <nav class="nav" aria-label="Main">
+      {% if not current_user %}
+        <a href="{{ url_for('public.jobs') }}" {% if ep.startswith('public.job') %}aria-current="page"{% endif %}>Find locum jobs</a>
+        <a href="{{ url_for('public.for_facilities') }}" {% if ep == 'public.for_facilities' %}aria-current="page"{% endif %}>For hospitals &amp; clinics</a>
+        <a href="{{ url_for('public.country', slug='qatar') }}" {% if ep == 'public.country' %}aria-current="page"{% endif %}>Working in Qatar</a>
+      {% elif current_user.role == 'doctor' %}
+        <a href="{{ url_for('doctor.dashboard') }}" {% if ep == 'doctor.dashboard' %}aria-current="page"{% endif %}>Overview</a>
+        <a href="{{ url_for('public.jobs') }}" {% if ep.startswith('public.job') %}aria-current="page"{% endif %}>Find jobs</a>
+        <a href="{{ url_for('doctor.applications') }}" {% if ep == 'doctor.applications' %}aria-current="page"{% endif %}>Applications</a>
+        <a href="{{ url_for('doctor.profile') }}" {% if ep == 'doctor.profile' %}aria-current="page"{% endif %}>Profile</a>
+        <a href="{{ url_for('doctor.documents') }}" {% if ep == 'doctor.documents' %}aria-current="page"{% endif %}>CV &amp; documents</a>
+      {% elif current_user.role == 'facility' %}
+        <a href="{{ url_for('facility.dashboard') }}" {% if ep == 'facility.dashboard' %}aria-current="page"{% endif %}>Jobs &amp; applicants</a>
+        <a href="{{ url_for('facility.doctors') }}" {% if ep.startswith('facility.doctor') %}aria-current="page"{% endif %}>Find doctors</a>
+        <a href="{{ url_for('facility.new_job') }}" {% if ep == 'facility.new_job' %}aria-current="page"{% endif %}>Post a job</a>
+        <a href="{{ url_for('facility.profile') }}" {% if ep == 'facility.profile' %}aria-current="page"{% endif %}>Facility profile</a>
+      {% elif current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" {% if ep == 'admin.dashboard' %}aria-current="page"{% endif %}>Overview</a>
+        <a href="{{ url_for('admin.facilities') }}" {% if ep.startswith('admin.facilit') %}aria-current="page"{% endif %}>Facilities</a>
+        <a href="{{ url_for('admin.doctors') }}" {% if ep.startswith('admin.doctor') %}aria-current="page"{% endif %}>Doctors</a>
+        <a href="{{ url_for('admin.jobs') }}" {% if ep == 'admin.jobs' %}aria-current="page"{% endif %}>Jobs</a>
+        <a href="{{ url_for('admin.applications') }}" {% if ep == 'admin.applications' %}aria-current="page"{% endif %}>Applications</a>
+        <a href="{{ url_for('admin.countries') }}" {% if ep == 'admin.countries' %}aria-current="page"{% endif %}>Countries</a>
+      {% endif %}
+    </nav>
+    <div class="header-actions">
+      {% if current_user %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.account') }}">Account</a>
+        <form method="post" action="{{ url_for('auth.logout') }}">{{ m.csrf() }}<button class="btn btn-outline btn-sm" type="submit">Log out</button></form>
+      {% else %}
+        <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
+        <a class="btn btn-primary" href="{{ url_for('auth.join') }}">Join free</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="wrap flashes" role="status">
+    {% for cat, msg in messages %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main id="main">{% block main %}{% endblock %}</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        {{ m.brand(url_for('public.home')) }}
+        <p>Locum placements for doctors of every specialty across the Gulf. Now placing in Qatar.</p>
+        <p><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+      </div>
+      <div>
+        <h4>Doctors</h4>
+        <ul>
+          <li><a href="{{ url_for('public.jobs') }}">Find locum jobs</a></li>
+          <li><a href="{{ url_for('auth.join_doctor') }}">Create a profile</a></li>
+          <li><a href="{{ url_for('public.country', slug='qatar') }}">Licensing in Qatar</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Hospitals &amp; clinics</h4>
+        <ul>
+          <li><a href="{{ url_for('public.for_facilities') }}">How it works</a></li>
+          <li><a href="{{ url_for('auth.join_facility') }}">Register a facility</a></li>
+          <li><a href="{{ url_for('public.contact') }}">Talk to us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>LocumDoc</h4>
+        <ul>
+          <li><a href="{{ url_for('public.about') }}">About</a></li>
+          <li><a href="{{ url_for('public.privacy') }}">Privacy</a></li>
+          <li><a href="{{ url_for('public.terms') }}">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="legal">
+      <span>© {{ today[:4] }} LocumDoc. locumdoc.me</span>
+      <span>LocumDoc connects doctors and facilities. Licensing decisions rest with each country's health authority.</span>
+    </div>
+  </div>
+</footer>
+</div>
+<script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
+</body>
+</html>

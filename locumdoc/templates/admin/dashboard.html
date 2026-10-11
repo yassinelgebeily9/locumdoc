@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Overview</h1><p>Everything happening on LocumDoc.</p></div>
+<div class="wrap content">
+  <div class="stats">
+    <a class="stat {{ 'attention' if counts.facilities_pending }}" href="{{ url_for('admin.facilities', verified=0) }}"><b>{{ counts.facilities_pending }}</b><span>Facilities to verify</span></a>
+    <a class="stat" href="{{ url_for('admin.doctors') }}"><b>{{ counts.doctors }}</b><span>Doctors ({{ counts.doctors_unverified }} unverified)</span></a>
+    <a class="stat" href="{{ url_for('admin.facilities') }}"><b>{{ counts.facilities }}</b><span>Facilities</span></a>
+    <a class="stat" href="{{ url_for('admin.jobs') }}"><b>{{ counts.open_jobs }}</b><span>Open jobs</span></a>
+    <a class="stat" href="{{ url_for('admin.applications') }}"><b>{{ counts.applications }}</b><span>Applications ({{ counts.apps_week }} this week)</span></a>
+    <a class="stat" href="{{ url_for('admin.applications', status='placed') }}"><b>{{ counts.placed }}</b><span>Placed</span></a>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><h2>Facilities waiting for verification</h2><a href="{{ url_for('admin.facilities', verified=0) }}">All</a></div>
+      {% if pending %}
+      <div class="table-wrap"><table class="data">
+        <tbody>
+        {% for f in pending %}
+        <tr><td><a class="row-link" href="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ f.name }}</a><span class="sub">{{ f.city }}, {{ f.contact_name }}, {{ f.phone }}</span></td>
+          <td class="actions"><form method="post" action="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ m.csrf() }}<input type="hidden" name="action" value="verify"><button class="btn btn-primary btn-sm" type="submit">Verify</button></form></td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% else %}<div class="empty"><p>No facilities waiting. New registrations appear here and are emailed to you.</p></div>{% endif %}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Newest doctors</h2><a href="{{ url_for('admin.doctors') }}">All</a></div>
+      {% if recent_doctors %}
+      <div class="table-wrap"><table class="data"><tbody>
+        {% for d in recent_doctors %}
+        <tr><td><a class="row-link" href="{{ url_for('admin.doctor', doctor_id=d.user_id) }}">{{ d.title }} {{ d.first_name }} {{ d.last_name }}</a><span class="sub">{{ d.specialty }}, joined {{ d.created_at|d }}</span></td>
+          <td class="actions">{% if d.verified %}{{ m.verified_tag() }}{% elif not d.cv_count %}<span class="pill">No CV</span>{% else %}<span class="pill pill-amber">To review</span>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody></table></div>
+      {% else %}<div class="empty"><p>No doctors yet.</p></div>{% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Latest applications</h2><a href="{{ url_for('admin.applications') }}">All</a></div>
+    {% if recent_apps %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Doctor</th><th>Job</th><th class="hide-sm">Applied</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for a in recent_apps %}
+      <tr><td><a class="row-link" href="{{ url_for('admin.doctor', doctor_id=a.doctor_id) }}">Dr {{ a.first_name }} {{ a.last_name }}</a></td>
+        <td>{{ a.title }}<span class="sub">{{ a.facility }}</span></td><td class="hide-sm num">{{ a.created_at|d }}</td>
+        <td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<div class="empty"><p>No applications yet.</p></div>{% endif %}
+  </div>
+
+  {% if enquiries %}
+  <div class="panel">
+    <div class="panel-head"><h2>Contact form</h2><a href="{{ url_for('admin.enquiries') }}">All</a></div>
+    <div class="table-wrap"><table class="data"><tbody>
+      {% for e in enquiries %}
+      <tr><td><strong>{{ e.name }}</strong><span class="sub"><a href="mailto:{{ e.email }}">{{ e.email }}</a>{% if e.organisation %}, {{ e.organisation }}{% endif %}</span></td>
+        <td>{{ e.message|truncate(160) }}</td><td class="num hide-sm">{{ e.created_at|d }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

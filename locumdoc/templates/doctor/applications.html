@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Applications — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="row">
+    <div><h1>Applications</h1><p>Every job you've applied for, and invitations from facilities.</p></div>
+    <a class="btn btn-primary" href="{{ url_for('public.jobs') }}">Find more jobs</a>
+  </div>
+</div>
+<div class="wrap content stack">
+  <div class="panel" id="invitations">
+    <div class="panel-head"><h2>Invitations</h2></div>
+    {% if invites %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Facility</th><th>Message</th><th class="hide-sm">Received</th><th class="actions">Reply</th></tr></thead>
+      <tbody>
+      {% for i in invites %}
+      <tr>
+        <td><strong>{{ i.facility }}</strong>{% if i.job_title %}<span class="sub"><a href="{{ url_for('public.job', job_id=i.job_id) }}">{{ i.job_title }}</a></span>{% endif %}</td>
+        <td>{{ i.message or '—' }}</td>
+        <td class="hide-sm num">{{ i.created_at|d }}</td>
+        <td class="actions">
+          {% if i.status == 'sent' %}
+          <form method="post" action="{{ url_for('doctor.respond_invitation', inv_id=i.id) }}">{{ m.csrf() }}<input type="hidden" name="answer" value="accepted"><button class="btn btn-primary btn-sm" type="submit">Accept</button></form>
+          <form method="post" action="{{ url_for('doctor.respond_invitation', inv_id=i.id) }}">{{ m.csrf() }}<input type="hidden" name="answer" value="declined"><button class="btn btn-ghost btn-sm" type="submit">Decline</button></form>
+          {% else %}<span class="pill pill-{{ i.status }}">{{ i.status|capitalize }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="empty"><h3>No invitations yet</h3><p>Verified facilities can invite you when your profile is visible in the directory and your availability is up to date.</p></div>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Applications</h2></div>
+    {% if apps %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Job</th><th class="hide-sm">Dates</th><th class="hide-sm">Rate</th><th>Status</th><th class="actions"></th></tr></thead>
+      <tbody>
+      {% for a in apps %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('public.job', job_id=a.job_id) }}">{{ a.title }}</a><span class="sub">{{ a.facility }}, {{ a.city }}. Applied {{ a.created_at|d }}</span></td>
+        <td class="hide-sm num">{{ a.start_date|d('%-d %b') }} – {{ a.end_date|d }}</td>
+        <td class="hide-sm num">{{ a.rate_amount|money(a.rate_currency) }}{% if a.rate_amount %} <span class="sub">{{ label(ref.RATE_PERIODS, a.rate_period) }}</span>{% endif %}</td>
+        <td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td>
+        <td class="actions">
+          {% if a.status not in ('placed', 'withdrawn', 'declined') %}
+          <form method="post" action="{{ url_for('doctor.withdraw', app_id=a.id) }}" data-confirm="Withdraw your application for {{ a.title }}?">{{ m.csrf() }}<button class="btn btn-ghost btn-sm" type="submit">Withdraw</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="empty"><h3>No applications yet</h3><p>Find a job that fits and apply with your profile and CV in one step.</p><a class="btn btn-outline" href="{{ url_for('public.jobs') }}">Browse open jobs</a></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

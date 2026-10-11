@@ -1,0 +1,11 @@
+Dear Dr {{ doctor.last_name }},
+
+{{ facility }} found your profile on LocumDoc and would like you to consider {% if job %}their locum role: {{ job.title }}{% else %}working with them{% endif %}.
+{% if message %}
+Their message:
+{{ message }}
+{% endif %}
+Accept or decline here:
+{{ site_url }}/doctor/applications
+
+LocumDoc

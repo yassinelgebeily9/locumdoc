@@ -1,0 +1,7 @@
+New enquiry from the LocumDoc contact form
+
+Name: {{ name }}
+Email: {{ email }}
+Organisation: {{ organisation or '—' }}
+
+{{ message }}

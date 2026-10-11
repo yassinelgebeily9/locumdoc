@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ d.first_name }} {{ d.last_name }} — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="crumb"><a href="{{ url_for('admin.doctors') }}">Doctors</a></div>
+  <div class="row">
+    <div class="profile-head">
+      <div class="avatar lg">{{ m.initials(d.first_name, d.last_name) }}</div>
+      <div><h1>{{ d.title }} {{ d.first_name }} {{ d.last_name }}</h1>
+        <p>Joined {{ d.created_at|d }}. Last login {{ d.last_login_at|d }}.{% if not d.is_active %} <span class="pill pill-red">Suspended</span>{% endif %}
+          {% if not d.visible_to_facilities %} <span class="pill">Hidden from directory</span>{% endif %}</p></div>
+    </div>
+    <div class="hero-ctas">
+      <form method="post">{{ m.csrf() }}<input type="hidden" name="action" value="verify">
+        <button class="btn {{ 'btn-outline' if d.verified else 'btn-primary' }}" type="submit">{{ 'Remove verification' if d.verified else 'Mark as verified' }}</button></form>
+      <form method="post" data-confirm="{{ 'Restore' if not d.is_active else 'Suspend' }} this account?">{{ m.csrf() }}<input type="hidden" name="action" value="suspend">
+        <button class="btn btn-danger" type="submit">{{ 'Restore access' if not d.is_active else 'Suspend' }}</button></form>
+    </div>
+  </div>
+</div>
+<div class="wrap content grid-main">
+  <div class="stack">{% include "partials/doctor_profile.html" %}</div>
+  <aside class="stack">
+    <form class="panel panel-pad" method="post">
+      {{ m.csrf() }}<input type="hidden" name="action" value="notes">
+      <h3>Internal notes</h3>
+      <div class="field"><label class="visually-hidden" for="admin_notes">Notes</label>
+        <textarea id="admin_notes" name="admin_notes" rows="6" placeholder="Only admins see this">{{ d.admin_notes }}</textarea></div>
+      <div class="form-actions"><button class="btn btn-outline btn-sm" type="submit">Save notes</button></div>
+    </form>
+    <div class="panel">
+      <div class="panel-head"><h3>Applications</h3></div>
+      {% if apps %}
+      <div class="table-wrap"><table class="data"><tbody>
+        {% for a in apps %}<tr><td>{{ a.title }}<span class="sub">{{ a.facility }}, {{ a.created_at|d }}</span></td><td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% else %}<div class="empty"><p>None yet.</p></div>{% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

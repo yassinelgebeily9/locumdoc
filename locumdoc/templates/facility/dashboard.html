@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Jobs and applicants — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="row">
+    <div>
+      <h1>{{ fac.name }}</h1>
+      <p>{{ label(ref.FACILITY_TYPES, fac.facility_type) }}, {{ fac.city }}
+        {% if fac.verified %} {{ m.verified_tag('Verified facility') }}{% endif %}</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('facility.new_job') }}">Post a locum job</a>
+  </div>
+</div>
+<div class="wrap content">
+  {% if not fac.verified %}
+  <div class="callout amber">
+    <p><strong>Verification in progress.</strong> We're checking {{ fac.name }}, usually within one working day, and may call {{ fac.phone }}.</p>
+    <p>You can post jobs now. They go live, and the doctor directory opens, as soon as you're verified.</p>
+  </div>
+  {% endif %}
+
+  {% set open_jobs = jobs|selectattr('status', 'equalto', 'open')|list %}
+  <div class="stats">
+    <div class="stat"><b>{{ open_jobs|length }}</b><span>Open jobs</span></div>
+    <div class="stat {{ 'attention' if jobs|sum(attribute='new_count') }}"><b>{{ jobs|sum(attribute='new_count') }}</b><span>New applicants to review</span></div>
+    <div class="stat"><b>{{ jobs|sum(attribute='applicants') }}</b><span>Applicants in total</span></div>
+    <a class="stat" href="{{ url_for('facility.doctors') }}"><b>Search</b><span>Find and invite doctors</span></a>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Your jobs</h2><a href="{{ url_for('facility.new_job') }}">Post a job</a></div>
+    {% if jobs %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Job</th><th class="hide-sm">Dates</th><th>Applicants</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for j in jobs %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('facility.job', job_id=j.id) }}">{{ j.title }}</a><span class="sub">{{ j.specialty }}, {{ label(ref.GRADES, j.grade)|lower }}</span></td>
+        <td class="hide-sm num">{{ j.start_date|d('%-d %b') }} – {{ j.end_date|d }}</td>
+        <td class="num">{{ j.applicants }}{% if j.new_count %} <span class="badge">{{ j.new_count }} new</span>{% endif %}</td>
+        <td>{% if j.status == 'open' and not fac.verified %}<span class="pill pill-amber">Awaiting verification</span>{% else %}{{ m.pill(j.status, ref.JOB_STATUSES) }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="empty">
+      <h3>Post your first locum job</h3>
+      <p>Add the specialty, dates and rate. Doctors apply with their profile and CV, and you're emailed for each one.</p>
+      <a class="btn btn-primary" href="{{ url_for('facility.new_job') }}">Post a locum job</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if recent %}
+  <div class="panel">
+    <div class="panel-head"><h2>Latest applicants</h2></div>
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Doctor</th><th>Job</th><th class="hide-sm">Applied</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for a in recent %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=a.doctor_id) }}">Dr {{ a.first_name }} {{ a.last_name }}</a><span class="sub">{{ a.specialty }}, {{ label(ref.GRADES, a.grade)|lower }}</span></td>
+        <td><a href="{{ url_for('facility.job', job_id=a.job_id) }}">{{ a.title }}</a></td>
+        <td class="hide-sm num">{{ a.created_at|d }}</td>
+        <td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

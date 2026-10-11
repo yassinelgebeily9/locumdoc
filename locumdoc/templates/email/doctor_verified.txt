@@ -1,0 +1,7 @@
+Dear Dr {{ doctor.last_name }},
+
+We've checked your profile and documents. Your LocumDoc profile now shows as verified, which puts you at the top of facility searches.
+
+Browse open jobs: {{ site_url }}/jobs
+
+LocumDoc

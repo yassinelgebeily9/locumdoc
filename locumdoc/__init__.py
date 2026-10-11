@@ -1,0 +1,138 @@
+import os
+from datetime import date, datetime, timedelta
+
+from flask import Flask, g, render_template, request
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+from . import db, refdata, security
+
+
+def _bool(v):
+    return str(v).lower() in ("1", "true", "yes", "on")
+
+
+def create_app(test_config=None):
+    app = Flask(__name__, instance_relative_config=True)
+    data_dir = os.environ.get("DATA_DIR", app.instance_path)
+    app.config.update(
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-only-change-me"),
+        DATABASE=os.environ.get("DATABASE_PATH", os.path.join(data_dir, "locumdoc.sqlite3")),
+        UPLOAD_DIR=os.environ.get("UPLOAD_DIR", os.path.join(data_dir, "uploads")),
+        MAX_CONTENT_LENGTH=int(os.environ.get("MAX_UPLOAD_MB", "10")) * 1024 * 1024,
+        SITE_URL=os.environ.get("SITE_URL", "http://localhost:5000").rstrip("/"),
+        MAIL_FROM=os.environ.get("MAIL_FROM", "LocumDoc <hello@locumdoc.me>"),
+        ADMIN_NOTIFY_EMAIL=os.environ.get("ADMIN_NOTIFY_EMAIL", ""),
+        CONTACT_EMAIL=os.environ.get("CONTACT_EMAIL", "hello@locumdoc.me"),
+        SMTP_HOST=os.environ.get("SMTP_HOST", ""),
+        SMTP_PORT=int(os.environ.get("SMTP_PORT", "587")),
+        SMTP_USER=os.environ.get("SMTP_USER", ""),
+        SMTP_PASSWORD=os.environ.get("SMTP_PASSWORD", ""),
+        SMTP_SSL=_bool(os.environ.get("SMTP_SSL", "0")),
+        ADMIN_EMAIL=os.environ.get("ADMIN_EMAIL", ""),
+        ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD", ""),
+        SEED_DEMO=_bool(os.environ.get("SEED_DEMO", "0")),
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=_bool(os.environ.get("SECURE_COOKIES", "0")),
+        PERMANENT_SESSION_LIFETIME=timedelta(days=14),
+    )
+    if test_config:
+        app.config.update(test_config)
+
+    if app.config["SECRET_KEY"] == "dev-only-change-me" and not app.debug and not app.config.get("TESTING"):
+        app.logger.warning("SECRET_KEY is not set. Set it before going live.")
+
+    os.makedirs(app.config["UPLOAD_DIR"], exist_ok=True)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+    app.teardown_appcontext(db.close_db)
+    db.register_cli(app)
+    db.ensure_db(app)
+
+    @app.before_request
+    def _before():
+        security.load_user()
+        if not request.path.startswith("/static/"):
+            security.check_csrf()
+
+    @app.after_request
+    def _headers(resp):
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        resp.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
+            "font-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'",
+        )
+        if app.config["SESSION_COOKIE_SECURE"]:
+            resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        if g.get("user") is not None:
+            resp.headers.setdefault("Cache-Control", "private, no-store")
+        return resp
+
+    # ------------------------------------------------------------ templates
+    @app.context_processor
+    def _ctx():
+        return {
+            "csrf_token": security.csrf_token,
+            "current_user": g.get("user"),
+            "ref": refdata,
+            "label": refdata.label,
+            "today": date.today().isoformat(),
+            "contact_email": app.config["CONTACT_EMAIL"],
+        }
+
+    @app.template_filter("d")
+    def _fmt_date(value, fmt="%-d %b %Y"):
+        if not value:
+            return "—"
+        try:
+            dt = datetime.fromisoformat(str(value)[:19])
+        except ValueError:
+            return value
+        return dt.strftime(fmt)
+
+    @app.template_filter("money")
+    def _money(amount, currency="QAR"):
+        if amount in (None, ""):
+            return "Rate on request"
+        return f"{currency} {int(amount):,}"
+
+    @app.template_filter("weeks")
+    def _weeks(row):
+        try:
+            s = date.fromisoformat(row["start_date"])
+            e = date.fromisoformat(row["end_date"])
+        except (TypeError, ValueError, KeyError):
+            return ""
+        w = max(1, round((e - s).days / 7))
+        return f"{w} week" + ("s" if w != 1 else "")
+
+    @app.template_filter("filesize")
+    def _filesize(n):
+        n = int(n or 0)
+        return f"{n / 1024 / 1024:.1f} MB" if n >= 1024 * 1024 else f"{max(1, n // 1024)} KB"
+
+    # ------------------------------------------------------------ blueprints
+    from .views import admin, auth, doctor, facility, files, public
+
+    for bp in (public.bp, auth.bp, doctor.bp, facility.bp, admin.bp, files.bp):
+        app.register_blueprint(bp)
+
+    @app.errorhandler(400)
+    @app.errorhandler(403)
+    @app.errorhandler(404)
+    @app.errorhandler(413)
+    def _err(e):
+        messages = {
+            400: ("Request not accepted", getattr(e, "description", "") or "Reload the page and try again."),
+            403: ("No access", "This page belongs to a different type of account."),
+            404: ("Page not found", "The link may be out of date, or the job may have closed."),
+            413: ("File too large", f"Uploads can be up to {app.config['MAX_CONTENT_LENGTH'] // 1048576} MB."),
+        }
+        title, text = messages.get(e.code, ("Something went wrong", ""))
+        return render_template("public/error.html", code=e.code, title=title, text=text), e.code
+
+    return app

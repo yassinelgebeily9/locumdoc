@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Locum jobs for doctors in Qatar — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="row">
+    <div>
+      <h1>Locum jobs</h1>
+      <p>{{ total }} open {{ 'job' if total == 1 else 'jobs' }} at verified facilities{% if f.q or f.specialty or f.city or f.grade %} matching your filters{% endif %}.</p>
+    </div>
+    {% if not current_user %}<a class="btn btn-outline" href="{{ url_for('auth.join_doctor') }}">Create a profile to apply</a>{% endif %}
+  </div>
+</div>
+<div class="wrap content">
+  <form class="filters" method="get" role="search">
+    <div class="field"><label for="q">Search</label><input id="q" type="search" name="q" value="{{ f.q }}" placeholder="Job title, specialty or facility"></div>
+    <div class="field"><label for="specialty">Specialty</label>
+      <select id="specialty" name="specialty"><option value="">All specialties</option>
+        {% for s in specialties %}<option value="{{ s.slug }}" {% if f.specialty == s.slug %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="city">City</label>
+      <select id="city" name="city"><option value="">All cities</option>
+        {% for c in cities %}<option {% if f.city == c.name %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="grade">Grade</label>
+      <select id="grade" name="grade"><option value="">All grades</option>
+        {% for k, l in ref.GRADES %}<option value="{{ k }}" {% if f.grade == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select></div>
+    <button class="btn btn-ink" type="submit">Show jobs</button>
+  </form>
+
+  <div class="panel">
+    {% if jobs %}
+      <ul class="job-list">{% for j in jobs %}{{ m.job_item(j, j.id in applied) }}{% endfor %}</ul>
+      {{ m.pager(page, per, total, f) }}
+    {% else %}
+      <div class="empty">
+        <h3>No open jobs match these filters</h3>
+        <p>Try fewer filters, or create a profile so facilities with matching cover can invite you directly.</p>
+        <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">Clear filters</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+New job posted: {{ title }}
+Facility: {{ facility }} ({{ 'verified' if verified else 'NOT verified yet, job hidden until you verify' }})
+
+{{ site_url }}/jobs/{{ job_id }}

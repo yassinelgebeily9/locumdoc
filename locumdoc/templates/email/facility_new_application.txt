@@ -1,0 +1,16 @@
+New applicant for {{ job.title }}
+
+{{ doctor.title }} {{ doctor.first_name }} {{ doctor.last_name }}
+{{ doctor.specialty or '' }}{% if doctor.years_experience is not none %}, {{ doctor.years_experience }} years' experience{% endif %}
+Currently in {{ doctor.current_country or '—' }}
+
+{% if note %}Their note:
+{{ note }}
+
+{% endif %}Review the profile and CV:
+{{ site_url }}/facility/doctors/{{ doctor.user_id }}
+
+All applicants for this job:
+{{ site_url }}/facility/jobs/{{ job.id }}
+
+LocumDoc

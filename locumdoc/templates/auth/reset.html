@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Choose a new password — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap">
+  <div class="auth-shell">
+    <h1>Choose a new password</h1>
+    <form class="panel panel-pad" method="post" novalidate>
+      {{ m.csrf() }}
+      {{ m.input(form, {}, 'password', 'New password', type='password', help='At least 10 characters.', attrs='autocomplete="new-password" minlength="10" autofocus') }}
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save new password</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

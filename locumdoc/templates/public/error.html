@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap error-page">
+  <div class="code">{{ code }}</div>
+  <h1>{{ title }}</h1>
+  <p class="muted">{{ text }}</p>
+  <div class="form-actions">
+    <a class="btn btn-primary" href="{{ url_for('public.home') }}">Go to the home page</a>
+    <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">Browse jobs</a>
+  </div>
+</div>
+{% endblock %}

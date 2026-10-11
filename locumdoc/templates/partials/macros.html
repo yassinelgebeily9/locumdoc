@@ -1,0 +1,120 @@
+{% macro mark() -%}
+<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="4" width="30" height="27" rx="7" fill="#7a1631"/><rect x="8" y="1" width="3.5" height="7" rx="1.75" fill="#e4d4b7"/><rect x="20.5" y="1" width="3.5" height="7" rx="1.75" fill="#e4d4b7"/><path d="M13.5 10.5h5v5h5v5h-5v5h-5v-5h-5v-5h5z" fill="#fff"/></svg>
+{%- endmacro %}
+
+{% macro brand(href='/') -%}
+<a class="brand" href="{{ href }}" aria-label="LocumDoc home">{{ mark() }}<span>locum<b>doc</b></span></a>
+{%- endmacro %}
+
+{% macro qatar_flag() -%}
+<svg class="flag" viewBox="0 0 28 11" preserveAspectRatio="none" aria-hidden="true"><rect width="28" height="11" fill="#7a1631"/><path d="M0 0h8l2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111H0z" fill="#fff"/></svg>
+{%- endmacro %}
+
+{% macro icon(name) -%}
+{%- if name == 'pin' -%}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 14s5-4.3 5-8A5 5 0 0 0 3 6c0 3.7 5 8 5 8Z"/><circle cx="8" cy="6" r="1.8"/></svg>
+{%- elif name == 'cal' -%}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5.5 1.5v3M10.5 1.5v3"/></svg>
+{%- elif name == 'clock' -%}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>
+{%- elif name == 'building' -%}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 14V3.5L9 2v12M9 6h4v8M1.5 14h13M5.5 6h1M5.5 9h1M5.5 12h1"/></svg>
+{%- elif name == 'check' -%}<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M5 8.2 7 10.2 11 6" fill="none" stroke="#fff" stroke-width="1.6"/></svg>
+{%- elif name == 'menu' -%}<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro verified_tag(text='Verified') -%}
+<span class="verified">{{ icon('check') }}{{ text }}</span>
+{%- endmacro %}
+
+{% macro pill(key, options) -%}
+<span class="pill pill-{{ key }}">{{ label(options, key) }}</span>
+{%- endmacro %}
+
+{# ---------- form fields ---------- #}
+{% macro field_wrap(form, name, label_text, help=None, optional=False, cls='') -%}
+<div class="field {{ cls }}{% if form and form.errors.get(name) %} has-error{% endif %}">
+  <label for="f-{{ name }}">{{ label_text }}{% if optional %} <span class="opt">(optional)</span>{% endif %}</label>
+  {{ caller() }}
+  {% if form and form.errors.get(name) %}<span class="error" id="e-{{ name }}">{{ form.errors[name] }}</span>
+  {% elif help %}<span class="help" id="h-{{ name }}">{{ help }}</span>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro input(form, v, name, label_text, type='text', help=None, optional=False, cls='', attrs='') -%}
+{% call field_wrap(form, name, label_text, help, optional, cls) %}
+<input type="{{ type }}" id="f-{{ name }}" name="{{ name }}" value="{{ v.get(name) if v and v.get(name) is not none else '' }}"
+  {% if not optional %}required{% endif %} {{ attrs|safe }}
+  {% if form and form.errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% elif help %}aria-describedby="h-{{ name }}"{% endif %}>
+{% endcall %}
+{%- endmacro %}
+
+{% macro select(form, v, name, label_text, options, help=None, optional=False, cls='', placeholder='Choose…') -%}
+{% call field_wrap(form, name, label_text, help, optional, cls) %}
+<select id="f-{{ name }}" name="{{ name }}" {% if not optional %}required{% endif %}
+  {% if form and form.errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  {% if placeholder %}<option value="">{{ placeholder }}</option>{% endif %}
+  {% for k, l in options %}<option value="{{ k }}" {% if v and v.get(name)|string == k|string %}selected{% endif %}>{{ l }}</option>{% endfor %}
+</select>
+{% endcall %}
+{%- endmacro %}
+
+{% macro textarea(form, v, name, label_text, help=None, optional=False, cls='', rows=5) -%}
+{% call field_wrap(form, name, label_text, help, optional, cls) %}
+<textarea id="f-{{ name }}" name="{{ name }}" rows="{{ rows }}" {% if not optional %}required{% endif %}
+  {% if form and form.errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>{{ v.get(name) or '' if v else '' }}</textarea>
+{% endcall %}
+{%- endmacro %}
+
+{% macro checkbox(v, name, label_text, form=None) -%}
+<div class="field{% if form and form.errors.get(name) %} has-error{% endif %}">
+  <label class="check"><input type="checkbox" name="{{ name }}" value="1" {% if v and v.get(name) %}checked{% endif %}> <span>{{ label_text }}</span></label>
+  {% if form and form.errors.get(name) %}<span class="error">{{ form.errors[name] }}</span>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro csrf() -%}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{%- endmacro %}
+
+{# ---------- jobs ---------- #}
+{% macro perks(job) -%}
+{% if job.accommodation or job.flights or job.transport or job.licensing_support %}
+<div class="perks">
+  {% if job.accommodation %}<span class="perk">Accommodation</span>{% endif %}
+  {% if job.flights %}<span class="perk">Return flights</span>{% endif %}
+  {% if job.transport %}<span class="perk">Transport</span>{% endif %}
+  {% if job.licensing_support %}<span class="perk">DHP licensing support</span>{% endif %}
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro job_item(job, applied=False) -%}
+<li class="job-item">
+  <div>
+    <h3><a href="{{ url_for('public.job', job_id=job.id) }}">{{ job.title }}</a></h3>
+    <div class="muted small">{{ job.facility }}</div>
+    <div class="facts">
+      <span>{{ icon('building') }}{{ job.specialty }}</span>
+      <span>{{ icon('pin') }}{{ job.city or job.country }}</span>
+      <span>{{ icon('cal') }}From {{ job.start_date|d }}</span>
+      <span>{{ icon('clock') }}{{ job|weeks }}</span>
+    </div>
+    {{ perks(job) }}
+  </div>
+  <div class="rate">
+    <b>{{ job.rate_amount|money(job.rate_currency) }}</b>
+    {% if job.rate_amount %}<span>{{ label(ref.RATE_PERIODS, job.rate_period) }}</span>{% endif %}
+    {% if applied %}<div><span class="pill pill-submitted">Applied</span></div>{% endif %}
+  </div>
+</li>
+{%- endmacro %}
+
+{% macro pager(page, per, total, args) -%}
+{% if total > per %}
+<div class="pager">
+  <span>{{ (page - 1) * per + 1 }}–{{ [page * per, total]|min }} of {{ total }}</span>
+  <span>
+    {% if page > 1 %}<a class="btn btn-outline btn-sm" href="?{{ args|urlencode }}&page={{ page - 1 }}">Previous</a>{% endif %}
+    {% if page * per < total %}<a class="btn btn-outline btn-sm" href="?{{ args|urlencode }}&page={{ page + 1 }}">Next</a>{% endif %}
+  </span>
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro initials(first, last) -%}{{ (first or '?')[0]|upper }}{{ (last or '')[0]|upper }}{%- endmacro %}

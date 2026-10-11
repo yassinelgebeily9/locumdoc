@@ -1,0 +1,8 @@
+Dear {{ fac.contact_name }},
+
+{{ fac.name }} is now verified on LocumDoc. Your open jobs are live, and you can search the doctor directory and invite doctors directly.
+
+Post a job: {{ site_url }}/facility/jobs/new
+Search doctors: {{ site_url }}/facility/doctors
+
+LocumDoc

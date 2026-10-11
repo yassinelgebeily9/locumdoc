@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Overview — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head">
+  <div class="row">
+    <div class="profile-head">
+      <div class="avatar lg">{{ m.initials(d.first_name, d.last_name) }}</div>
+      <div>
+        <h1>{{ d.title }} {{ d.first_name }} {{ d.last_name }}</h1>
+        <p>{{ d.specialty or 'Specialty not set' }}{% if d.grade %}, {{ label(ref.GRADES, d.grade)|lower }}{% endif %}
+          {% if d.verified %} {{ m.verified_tag('Verified profile') }}{% endif %}</p>
+      </div>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('public.jobs') }}">Find locum jobs</a>
+  </div>
+</div>
+<div class="wrap content grid-main">
+  <div class="stack">
+    {% for inv in invites %}
+    <div class="callout">
+      <p><strong>{{ inv.facility }}</strong> invited you{% if inv.job_title %} to apply for {{ inv.job_title }}{% endif %}.</p>
+      {% if inv.message %}<p class="muted">“{{ inv.message }}”</p>{% endif %}
+      <p><a href="{{ url_for('doctor.applications') }}#invitations">Reply to the invitation</a></p>
+    </div>
+    {% endfor %}
+
+    <div class="panel">
+      <div class="panel-head"><h2>Your applications</h2><a href="{{ url_for('doctor.applications') }}">See all</a></div>
+      {% if apps %}
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Job</th><th class="hide-sm">Starts</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for a in apps %}
+          <tr><td><a class="row-link" href="{{ url_for('public.job', job_id=a.job_id) }}">{{ a.title }}</a><span class="sub">{{ a.facility }}, {{ a.city }}</span></td>
+            <td class="hide-sm num">{{ a.start_date|d }}</td><td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+      {% else %}
+      <div class="empty"><h3>No applications yet</h3><p>When you apply for a job, its status appears here and you're emailed at every step.</p>
+        <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">Browse open jobs</a></div>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Open jobs in {{ d.specialty or 'your specialty' }}</h2><a href="{{ url_for('public.jobs') }}">All jobs</a></div>
+      {% if matches %}
+        <ul class="job-list">{% for j in matches %}{{ m.job_item(j) }}{% endfor %}</ul>
+      {% else %}
+        <div class="empty"><h3>Nothing open in your specialty right now</h3><p>Keep your availability current. Verified facilities search by specialty and start date, and can invite you directly.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="stack">
+    <div class="panel panel-pad">
+      <h3>{{ 'Your profile is ready' if readiness.ready else 'Get ready to apply' }}</h3>
+      <div class="progress"><span class="w{{ readiness.done }}"></span></div>
+      <ul class="checklist">
+        {% for text, ok, href in readiness['items'] %}
+        <li class="{{ 'done' if ok }}"><span class="tick"></span><a href="{{ href }}">{{ text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="panel panel-pad">
+      <h3>Visibility</h3>
+      {% if d.visible_to_facilities %}
+        <p class="muted">Verified facilities can find you in the doctor directory and invite you.</p>
+      {% else %}
+        <p class="muted">You're hidden from the directory. Only facilities you apply to can see your profile.</p>
+      {% endif %}
+      <a href="{{ url_for('doctor.profile') }}#visibility">Change visibility</a>
+    </div>
+    <div class="panel panel-pad">
+      <h3>DHP licensing</h3>
+      <p>{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</p>
+      <p class="muted small">Keep this current. Facilities filter by licensing status when planning start dates.</p>
+      <a href="{{ url_for('public.country', slug='qatar') }}">How licensing works in Qatar</a>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+Dear Dr {{ first_name }},
+
+Welcome to LocumDoc. Your account is ready.
+
+Two things make your profile visible to hospitals and clinics in Qatar:
+
+1. Complete your professional profile: {{ site_url }}/doctor/profile
+2. Upload your CV: {{ site_url }}/doctor/documents
+
+Once both are done you can apply for any open locum job in one step, and verified facilities can invite you directly.
+
+Browse open jobs: {{ site_url }}/jobs
+
+LocumDoc
+{{ site_url }}

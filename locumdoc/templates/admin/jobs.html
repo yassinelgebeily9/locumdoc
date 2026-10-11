@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Jobs — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Jobs</h1><p>Every job on the platform. Jobs from unverified facilities are hidden from doctors.</p></div>
+<div class="wrap content">
+  <nav class="tabs" aria-label="Filter jobs">
+    {% for k, l in ref.JOB_STATUSES %}<a href="?status={{ k }}" aria-current="{{ 'true' if status == k else 'false' }}">{{ l }}</a>{% endfor %}
+    <a href="?status=all" aria-current="{{ 'true' if status == 'all' else 'false' }}">All</a>
+  </nav>
+  <div class="panel">
+    {% if rows %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Job</th><th class="hide-sm">Facility</th><th class="hide-sm">Dates</th><th>Applicants</th><th class="actions">Status</th></tr></thead>
+      <tbody>
+      {% for j in rows %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('public.job', job_id=j.id) }}">{{ j.title }}</a><span class="sub">{{ j.specialty }}, {{ j.city }}</span></td>
+        <td class="hide-sm"><a href="{{ url_for('admin.facility', fac_id=j.facility_id) }}">{{ j.facility }}</a>{% if not j.verified %}<span class="sub">Not verified, job hidden</span>{% endif %}</td>
+        <td class="hide-sm num">{{ j.start_date|d }} – {{ j.end_date|d }}</td>
+        <td class="num">{{ j.applicants }}</td>
+        <td class="actions">
+          <form class="inline-form" method="post" action="{{ url_for('admin.job_status', job_id=j.id) }}">
+            {{ m.csrf() }}<input type="hidden" name="back" value="{{ request.full_path }}">
+            <label class="visually-hidden" for="js-{{ j.id }}">Status</label>
+            <select id="js-{{ j.id }}" name="status" data-autosubmit>{% for k, l in ref.JOB_STATUSES %}<option value="{{ k }}" {% if j.status == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+            <button class="btn btn-outline btn-sm" data-autosubmit-btn>Save</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<div class="empty"><h3>No jobs here</h3></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

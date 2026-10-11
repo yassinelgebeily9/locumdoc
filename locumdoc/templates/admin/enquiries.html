@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Contact form — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Contact form</h1><p>Messages sent through the contact page.</p></div>
+<div class="wrap content">
+  <div class="panel">
+    {% if rows %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>From</th><th>Message</th><th class="hide-sm">Received</th></tr></thead>
+      <tbody>{% for e in rows %}
+        <tr><td><strong>{{ e.name }}</strong><span class="sub"><a href="mailto:{{ e.email }}">{{ e.email }}</a></span>{% if e.organisation %}<span class="sub">{{ e.organisation }}</span>{% endif %}</td>
+          <td class="prose"><p class="preline">{{ e.message }}</p></td><td class="hide-sm num">{{ e.created_at|d }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><h3>No messages yet</h3></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

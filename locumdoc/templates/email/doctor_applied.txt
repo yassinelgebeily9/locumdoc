@@ -1,0 +1,8 @@
+Dear Dr {{ doctor.last_name }},
+
+Your application for {{ job.title }} at {{ job.facility }} has been sent.
+
+The facility can now see your profile and CV. We'll email you when your status changes. You can follow it here:
+{{ site_url }}/doctor/applications
+
+LocumDoc

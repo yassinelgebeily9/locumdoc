@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Facilities — Admin — LocumDoc{% endblock %}
+{% block main %}
+<div class="wrap page-head"><h1>Facilities</h1><p>Verify each facility before its jobs go live.</p></div>
+<div class="wrap content">
+  <nav class="tabs" aria-label="Filter facilities">
+    <a href="{{ url_for('admin.facilities') }}" aria-current="{{ 'true' if not status else 'false' }}">All</a>
+    <a href="?verified=0" aria-current="{{ 'true' if status == '0' else 'false' }}">Waiting for verification</a>
+    <a href="?verified=1" aria-current="{{ 'true' if status == '1' else 'false' }}">Verified</a>
+  </nav>
+  <div class="panel">
+    {% if rows %}
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Facility</th><th class="hide-sm">Contact</th><th class="hide-sm">Jobs</th><th class="hide-sm">Registered</th><th class="actions">Status</th></tr></thead>
+      <tbody>
+      {% for f in rows %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ f.name }}</a><span class="sub">{{ label(ref.FACILITY_TYPES, f.facility_type) }}, {{ label(ref.SECTORS, f.sector)|lower }}, {{ f.city }}</span></td>
+        <td class="hide-sm">{{ f.contact_name }}<span class="sub">{{ f.email }}, {{ f.phone }}</span></td>
+        <td class="hide-sm num">{{ f.job_count }}</td>
+        <td class="hide-sm num">{{ f.created_at|d }}</td>
+        <td class="actions">{% if f.verified %}{{ m.verified_tag() }}{% else %}
+          <form method="post" action="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ m.csrf() }}<input type="hidden" name="action" value="verify"><button class="btn btn-primary btn-sm" type="submit">Verify</button></form>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<div class="empty"><h3>No facilities here</h3></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

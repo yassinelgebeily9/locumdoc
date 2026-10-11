@@ -788,4 +788,16 @@ AR = {
     "Muscat": "مسقط",
     "Salalah": "صلالة",
     "Manama": "المنامة",
+    # ------------------------------------------------------------------ redesign: search-led home and jobs page
+    "Search locum jobs": "ابحث عن وظائف مؤقتة",
+    "Specialty or job title": "التخصص أو المسمّى الوظيفي",
+    "e.g. Anaesthesia, ICU consultant": "مثال: التخدير، استشاري عناية مركّزة",
+    "Search jobs": "ابحث عن الوظائف",
+    "Popular:": "الأكثر طلبًا:",
+    "Hiring for a hospital or clinic?": "توظّف لمستشفى أو عيادة؟",
+    "Why LocumDoc": "لماذا LocumDoc",
+    "Licensing built in": "الترخيص جزء من المنصة",
+    "Profiles show where each doctor stands with Qatar's DHP": "يُظهر كل ملف موقف الطبيب من ترخيص إدارة الكوادر الصحية في قطر",
+    "More filters": "مزيد من الخيارات",
+    "Show all %(n)s specialties": "اعرض كل التخصصات (%(n)s)",
 }

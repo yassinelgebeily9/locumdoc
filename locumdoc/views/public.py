@@ -40,7 +40,15 @@ def home():
         one=True,
     )
     countries = query("SELECT * FROM countries ORDER BY sort_order")
-    return render_template("public/home.html", jobs=jobs, stats=stats, countries=countries)
+    # the specialties with the most open jobs, offered as one-tap searches under the hero
+    popular = query(
+        "SELECT s.name, s.slug, COUNT(*) AS n FROM jobs j JOIN specialties s ON s.id = j.specialty_id"
+        " JOIN facilities f ON f.user_id = j.facility_id JOIN countries co ON co.id = j.country_id"
+        " WHERE " + PUBLIC_WHERE + " GROUP BY s.id ORDER BY n DESC, s.name LIMIT 5")
+    cities = query("SELECT ci.name FROM cities ci JOIN countries co ON co.id = ci.country_id WHERE co.active = 1"
+                   " ORDER BY ci.name")
+    return render_template("public/home.html", jobs=jobs, stats=stats, countries=countries,
+                           popular=popular, cities=cities)
 
 
 @bp.route("/jobs")

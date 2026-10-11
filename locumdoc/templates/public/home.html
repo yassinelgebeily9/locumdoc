@@ -2,7 +2,7 @@
 {% block title %}{{ _('LocumDoc — Locum jobs for doctors in Qatar and the Gulf') }}{% endblock %}
 {% block body_class %}cine{% endblock %}
 {% block head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/cine.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cine.css') }}?v=2">
   <script src="{{ url_for('static', filename='js/cine.js') }}?v=1" defer></script>
 {% endblock %}
 {% block main %}
@@ -21,7 +21,7 @@
     <p class="cine-lede cine-in d3">{{ _('LocumDoc brings them together: locum work in the Gulf, matched to your specialty, at hospitals and clinics we have verified.') }}</p>
     <div class="hero-ctas cine-in d4">
       <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
-      <a class="btn btn-glass btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
     </div>
   </div>
   <a class="cine-cue cine-in d5" href="#ch-doctors"><span>{{ _('See how it works') }}</span><svg viewBox="0 0 16 24" aria-hidden="true"><rect x="1" y="1" width="14" height="22" rx="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle class="dot" cx="8" cy="7" r="2" fill="currentColor"/></svg></a>
@@ -83,12 +83,12 @@
 </section>
 
 {# ---------------------------------------------------------------- chapter 2: hospitals #}
-<section class="chapter ch-ink" id="ch-facilities" aria-labelledby="ch2-title">
+<section class="chapter ch-light" id="ch-facilities" aria-labelledby="ch2-title">
   <div class="ch-track" data-cine="steps">
     <div class="ch-pin">
       <div class="wrap ch-grid">
         <header class="ch-head">
-          <p class="ch-num"><span>02</span> {{ _('For hospitals and clinics') }}</p>
+          <p class="ch-num dark"><span>02</span> {{ _('For hospitals and clinics') }}</p>
           <h2 id="ch2-title">{{ _('Cover the rota before the gap opens.') }}</h2>
           <p>{{ _('Post the cover you need, review applicants with CVs attached, or invite doctors directly.') }}</p>
           <div class="ch-bar" aria-hidden="true"><i></i></div>
@@ -154,10 +154,10 @@
 </section>
 
 {# ---------------------------------------------------------------- chapter 4: open jobs #}
-<section class="chapter ch-ink ch-jobs" id="ch-jobs" aria-labelledby="ch4-title">
+<section class="chapter ch-light ch-jobs" id="ch-jobs" aria-labelledby="ch4-title">
   <div class="wrap jobs-grid">
     <div class="reveal">
-      <p class="ch-num"><span>04</span> {{ _('Open now') }}</p>
+      <p class="ch-num dark"><span>04</span> {{ _('Open now') }}</p>
       <h2 id="ch4-title">{{ _('Every specialty, every grade') }}</h2>
       <p class="ch-sub">{{ _('From GP clinics to consultant-led ICU cover.') }}</p>
       <ul class="spec-cols">

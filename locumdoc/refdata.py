@@ -55,16 +55,63 @@ GRADES = [
     ("intern", "Intern / house officer"),
 ]
 
-ACADEMIC_RANKS = [
-    # University teaching title, separate from the clinical grade. Most senior first.
-    ("professor", "Professor"),
-    ("associate_professor", "Associate professor"),
-    ("assistant_professor", "Assistant professor"),
-    ("lecturer", "Lecturer"),
-    ("assistant_lecturer", "Assistant lecturer"),
-    ("teaching_assistant", "Teaching assistant / demonstrator"),
-    ("clinical_tutor", "Clinical tutor / instructor"),
+# University teaching titles, separate from the clinical grade.
+#
+# Egyptian universities and Gulf / international universities use the same words for
+# different levels (an Egyptian "assistant professor", أستاذ مساعد, sits where the Gulf
+# has an associate professor, أستاذ مشارك). So doctors pick the exact title from their
+# own system and every title carries an equivalent level, 1 (teaching assistant) to
+# 6 (emeritus), which is what facilities filter on.
+#   Egypt: Supreme Council of Universities ranks (معيد, مدرس مساعد, مدرس, أستاذ مساعد, أستاذ, أستاذ متفرغ)
+#   Gulf:  Saudi / Qatari university ranks (معيد, محاضر, أستاذ مساعد, أستاذ مشارك, أستاذ)
+ACADEMIC_LEVELS = [
+    (1, "Teaching assistant"),
+    (2, "Lecturer"),
+    (3, "Assistant professor"),
+    (4, "Associate professor"),
+    (5, "Professor"),
+    (6, "Emeritus professor"),
 ]
+# (key, label in the dropdown, label shown on profiles, level)
+ACADEMIC_TITLE_GROUPS = [
+    ("Gulf, UK and other universities", [
+        ("teaching_assistant", "Teaching assistant / demonstrator", "Teaching assistant", 1),
+        ("lecturer", "Lecturer", "Lecturer", 2),
+        ("assistant_professor", "Assistant professor", "Assistant professor", 3),
+        ("associate_professor", "Associate professor", "Associate professor", 4),
+        ("professor", "Professor", "Professor", 5),
+        ("professor_emeritus", "Emeritus professor", "Emeritus professor", 6),
+    ]),
+    ("Egyptian universities", [
+        ("eg_demonstrator", "Demonstrator (معيد)", "Demonstrator (Egypt)", 1),
+        ("eg_assistant_lecturer", "Assistant lecturer (مدرس مساعد)", "Assistant lecturer (Egypt)", 2),
+        ("eg_lecturer", "Lecturer (مدرس)", "Lecturer (Egypt)", 3),
+        ("eg_assistant_professor", "Assistant professor (أستاذ مساعد)", "Assistant professor (Egypt)", 4),
+        ("eg_professor", "Professor (أستاذ)", "Professor (Egypt)", 5),
+        ("eg_emeritus", "Emeritus professor (أستاذ متفرغ)", "Emeritus professor (Egypt)", 6),
+    ]),
+]
+# Earlier options, kept so existing profiles still display and filter correctly.
+_LEGACY_ACADEMIC = [
+    ("assistant_lecturer", "Assistant lecturer", 2),
+    ("clinical_tutor", "Clinical tutor / instructor", 1),
+]
+ACADEMIC_RANKS = [(k, shown) for _g, items in ACADEMIC_TITLE_GROUPS for k, _o, shown, _l in items] + \
+    [(k, shown) for k, shown, _l in _LEGACY_ACADEMIC]
+ACADEMIC_LEGACY_KEYS = [k for k, _s, _l in _LEGACY_ACADEMIC]
+ACADEMIC_LEVEL = {k: lvl for _g, items in ACADEMIC_TITLE_GROUPS for k, _o, _s, lvl in items}
+ACADEMIC_LEVEL.update({k: lvl for k, _s, lvl in _LEGACY_ACADEMIC})
+
+
+def academic_equivalent(key):
+    """For an Egyptian title, the Gulf / international title at the same level (English msgid); else None."""
+    if not key.startswith("eg_"):
+        return None
+    return dict(ACADEMIC_LEVELS).get(ACADEMIC_LEVEL.get(key))
+
+
+def academic_keys_at_least(level):
+    return [k for k, lvl in ACADEMIC_LEVEL.items() if lvl >= level]
 
 QATAR_LICENSE_STATUS = [
     ("none", "Not started"),

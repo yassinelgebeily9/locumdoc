@@ -119,3 +119,45 @@
 {%- endmacro %}
 
 {% macro initials(first, last) -%}{{ (first or '?')[0]|upper }}{{ (last or '')[0]|upper }}{%- endmacro %}
+
+
+{# Country dropdown: the most common countries first, then every country A–Z in the visitor's language. #}
+{% macro country_select(form, v, name, label_text, help=None, cls='') -%}
+{% call field_wrap(form, name, label_text, help, False, cls) %}
+{% set current = ((v.get(name) if v else '') or '')|string %}
+{% set common, everything = country_options() %}
+{% set common_keys = common|map(attribute=0)|list %}
+<select id="f-{{ name }}" name="{{ name }}" required
+  {% if form and form.errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  <option value="">{{ _('Choose…') }}</option>
+  <optgroup label="{{ _('Most common') }}">
+    {% for k, l in common %}<option value="{{ k }}" {% if current == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </optgroup>
+  <optgroup label="{{ _('All countries') }}">
+    {% for k, l in everything %}<option value="{{ k }}" {% if current == k and current not in common_keys %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </optgroup>
+</select>
+{% endcall %}
+{%- endmacro %}
+
+{# Academic title dropdown, grouped by university system (see refdata.ACADEMIC_TITLE_GROUPS). #}
+{% macro academic_select(form, v, name, label_text, help=None, cls='') -%}
+{% call field_wrap(form, name, label_text, help, True, cls) %}
+{% set current = ((v.get(name) if v else '') or '')|string %}
+<select id="f-{{ name }}" name="{{ name }}"
+  {% if form and form.errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  <option value="">{{ _('None') }}</option>
+  {% for group, items in ref.ACADEMIC_TITLE_GROUPS %}
+  <optgroup label="{{ _(group) }}">
+    {% for k, opt, shown, lvl in items %}<option value="{{ k }}" {% if current == k %}selected{% endif %}>{{ _(opt) }}</option>{% endfor %}
+  </optgroup>
+  {% endfor %}
+  {% if current in ref.ACADEMIC_LEGACY_KEYS %}<option value="{{ current }}" selected>{{ label(ref.ACADEMIC_RANKS, current) }}</option>{% endif %}
+</select>
+{% endcall %}
+{%- endmacro %}
+
+{# Academic title as shown to facilities, with the Gulf equivalent for Egyptian titles. #}
+{% macro academic_title(key) -%}
+{{ label(ref.ACADEMIC_RANKS, key) }}{% set eq = ref.academic_equivalent(key) %}{% if eq %}{{ comma }}<span class="muted">{{ _('equivalent to %(title)s', title=_(eq)|lower if lang == 'en' else _(eq)) }}</span>{% endif %}
+{%- endmacro %}

@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from flask import Flask, g, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from . import db, i18n, refdata, security
+from . import db, i18n, refdata, security, world
 
 
 def _bool(v):
@@ -89,6 +89,7 @@ def create_app(test_config=None):
             "languages": i18n.LANGUAGES,
             "comma": "، " if i18n.current() == "ar" else ", ",
             "weeks_n": i18n.weeks,
+            "country_options": lambda: world.options(i18n.gettext),
             "currency_name": lambda code: i18n.CURRENCY_AR.get(code, code) if i18n.current() == "ar" else code,
         }
 

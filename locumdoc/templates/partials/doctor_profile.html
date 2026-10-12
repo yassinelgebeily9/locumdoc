@@ -6,8 +6,9 @@
     <dl class="kv">
       <dt>{{ _('Specialty') }}</dt><dd>{{ _(d.specialty) if d.specialty else '—' }}{% if d.subspecialty %}{{ comma }}{{ d.subspecialty }}{% endif %}</dd>
       <dt>{{ _('Clinical grade') }}</dt><dd>{{ label(ref.GRADES, d.grade) }}</dd>
-      <dt>{{ _('Academic title') }}</dt><dd>{{ label(ref.ACADEMIC_RANKS, d.academic_rank) if d.academic_rank else _('None') }}</dd>
+      <dt>{{ _('Academic title') }}</dt><dd>{% if d.academic_rank %}{{ m.academic_title(d.academic_rank) }}{% else %}{{ _('None') }}{% endif %}</dd>
       <dt>{{ _('Experience') }}</dt><dd>{{ d.years_experience|years }}</dd>
+      <dt>{{ _('Graduated from') }}</dt><dd dir="auto">{{ d.medical_school or '—' }}{% if d.graduation_year %}{{ comma }}<span class="tnum">{{ d.graduation_year }}</span>{% endif %}</dd>
       <dt>{{ _('Qualifications') }}</dt><dd dir="auto">{{ d.qualifications or '—' }}</dd>
       <dt>{{ _('Current licence') }}</dt><dd dir="auto">{{ d.primary_license or '—' }}</dd>
       <dt>{{ _('DHP status') }}</dt><dd>{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</dd>
@@ -15,8 +16,8 @@
       <dt>{{ _('PSV report') }}</dt><dd>{{ _('Yes, or in progress') if d.has_psv else _('Not yet') }}</dd>
       <dt>{{ _('Good standing') }}</dt><dd>{{ _('Can provide') if d.good_standing else _('Not confirmed') }}</dd>
       <dt>{{ _('Available') }}</dt><dd>{% if d.available_from %}{% if d.available_to %}{{ _('%(start)s to %(end)s', start=d.available_from|d, end=d.available_to|d) }}{% else %}{{ _('From %(date)s, open-ended', date=d.available_from|d) }}{% endif %}{% else %}{{ _('Not given') }}{% endif %}{% if d.min_weeks %}. {{ _('Minimum %(length)s', length=weeks_n(d.min_weeks)) }}{% endif %}</dd>
-      <dt>{{ _('Nationality') }}</dt><dd dir="auto">{{ d.nationality or '—' }}</dd>
-      <dt>{{ _('Lives in') }}</dt><dd dir="auto">{{ d.current_country or '—' }}</dd>
+      <dt>{{ _('Nationality') }}</dt><dd>{{ _(d.nationality) if d.nationality else '—' }}</dd>
+      <dt>{{ _('Lives in') }}</dt><dd>{{ _(d.current_country) if d.current_country else '—' }}</dd>
       <dt>{{ _('Languages') }}</dt><dd dir="auto">{{ d.languages or '—' }}</dd>
       <dt>{{ _('Email') }}</dt><dd><a class="ltr" href="mailto:{{ d.email }}">{{ d.email }}</a></dd>
       <dt>{{ _('Phone') }}</dt><dd>{% if d.phone %}<a class="ltr" href="tel:{{ d.phone|replace(' ', '') }}">{{ d.phone }}</a>{% else %}—{% endif %}</dd>

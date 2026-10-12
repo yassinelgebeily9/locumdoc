@@ -236,9 +236,10 @@ def doctors():
             args.append(f["grade"])
         if f["academic"] == "any":
             where.append("d.academic_rank != ''")
-        elif f["academic"]:
-            where.append("d.academic_rank = ?")
-            args.append(f["academic"])
+        elif f["academic"].isdigit():
+            keys = refdata.academic_keys_at_least(int(f["academic"]))
+            where.append("d.academic_rank IN (" + ",".join("?" * len(keys)) + ")")
+            args += keys
         if f["licence"] == "any_progress":
             where.append("d.qatar_license_status != 'none'")
         elif f["licence"]:
@@ -249,8 +250,9 @@ def doctors():
                          " (d.available_to IS NULL OR d.available_to >= ?)")
             args += [f["available"], f["available"]]
         if f["q"]:
-            where.append("(d.first_name || ' ' || d.last_name LIKE ? OR d.subspecialty LIKE ? OR d.qualifications LIKE ?)")
-            args += [f"%{f['q']}%"] * 3
+            where.append("(d.first_name || ' ' || d.last_name LIKE ? OR d.subspecialty LIKE ? OR d.qualifications LIKE ?"
+                         " OR d.medical_school LIKE ?)")
+            args += [f"%{f['q']}%"] * 4
         w = " WHERE " + " AND ".join(where)
         page, per, offset = page_args(20)
         total = query("SELECT COUNT(*) AS n FROM doctors d JOIN users u ON u.id = d.user_id" + w, args, one=True)["n"]

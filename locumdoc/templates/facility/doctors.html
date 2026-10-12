@@ -27,7 +27,7 @@
     <div class="field"><label for="academic">{{ _('Academic title') }}</label>
       <select id="academic" name="academic"><option value="">{{ _('Any') }}</option>
         <option value="any" {% if f.academic == 'any' %}selected{% endif %}>{{ _('Any academic title') }}</option>
-        {% for k, l in ref.ACADEMIC_RANKS %}<option value="{{ k }}" {% if f.academic == k %}selected{% endif %}>{{ _(l) }}</option>{% endfor %}
+        {% for lvl, l in ref.ACADEMIC_LEVELS %}<option value="{{ lvl }}" {% if f.academic == lvl|string %}selected{% endif %}>{{ _('%(title)s or above', title=_(l)) }}</option>{% endfor %}
       </select></div>
     <div class="field"><label for="available">{{ _('Available on') }}</label><input id="available" type="date" name="available" value="{{ f.available }}"></div>
     <button class="btn btn-ink" type="submit">{{ _('Search') }}</button>
@@ -50,7 +50,7 @@
       <tr>
         <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=d.user_id) }}">{{ _(d.title) }} {{ d.first_name }} {{ d.last_name }}</a>
           {% if d.verified %} {{ m.verified_tag() }}{% endif %}
-          <span class="sub">{{ _(d.specialty) }}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% if d.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, d.academic_rank) }}{% endif %}{% if d.current_country %}{{ comma }}{{ _('in %(country)s', country=d.current_country) }}{% endif %}</span></td>
+          <span class="sub">{{ _(d.specialty) }}{{ comma }}{{ label(ref.GRADES, d.grade) }}{% if d.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, d.academic_rank) }}{% endif %}{% if d.current_country %}{{ comma }}{{ _('in %(country)s', country=_(d.current_country)) }}{% endif %}</span></td>
         <td class="hide-sm num">{{ d.years_experience|years }}<span class="sub">{{ d.qualifications|truncate(40) }}</span></td>
         <td class="hide-sm">{{ m.pill(d.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</td>
         <td class="num">{% if d.available_from %}{{ d.available_from|d }}{% if d.available_to %}<span class="sub">{{ _('until %(date)s', date=d.available_to|d) }}</span>{% endif %}{% else %}<span class="muted">{{ _('Not given') }}</span>{% endif %}</td>

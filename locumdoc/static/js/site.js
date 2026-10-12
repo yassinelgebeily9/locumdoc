@@ -23,19 +23,6 @@
     if (btn) btn.hidden = true;
   });
 
-  // CVs must be PDFs: narrow the file picker while "CV" is the chosen type.
-  // (The server enforces this too; this only saves a wasted upload.)
-  var kindSel = document.querySelector("select#kind");
-  var fileIn = document.querySelector("input#file[data-cv-accept]");
-  if (kindSel && fileIn) {
-    var allTypes = fileIn.getAttribute("accept");
-    var syncAccept = function () {
-      fileIn.setAttribute("accept", kindSel.value === "cv" ? fileIn.getAttribute("data-cv-accept") : allTypes);
-    };
-    kindSel.addEventListener("change", syncAccept);
-    syncAccept();
-  }
-
   // Keep the job end date after the start date.
   var start = document.querySelector("input[name=start_date]");
   var end = document.querySelector("input[name=end_date]");

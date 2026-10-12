@@ -22,8 +22,8 @@
         </div>
         <div class="field">
           <label for="file">{{ _('File') }}</label>
-          <input id="file" type="file" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" data-cv-accept=".pdf">
-          <span class="help">{{ _('CV: PDF only. Other documents: PDF, Word, JPG or PNG. Up to 10 MB.') }}</span>
+          <input id="file" type="file" name="file" required accept=".pdf,application/pdf">
+          <span class="help">{{ _('PDF only, up to 10 MB.') }}</span>
         </div>
       </div>
       <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Upload') }}</button></div>

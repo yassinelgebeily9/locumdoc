@@ -230,15 +230,17 @@ class FlowTests(Base):
             execute("UPDATE doctors SET visible_to_facilities = 0 WHERE user_id = ?", (did,))
         self.assertEqual(fac.get(f"/files/{file_id}").status_code, 404)
 
-    def test_cv_must_be_pdf(self):
+    def test_documents_must_be_pdf(self):
         doc = self.signup_doctor(ready=False)
         docx = b"PK\x03\x04" + b"\x00" * 64
-        r = self.post(doc, "/doctor/documents", {"kind": "cv", "file": (io.BytesIO(docx), "cv.docx")},
-                      content_type="multipart/form-data", follow_redirects=True)
-        self.assertIn(b"must be a PDF", r.data)
+        jpg = b"\xff\xd8\xff\xe0" + b"\x00" * 64
+        for kind, data, name in (("cv", docx, "cv.docx"), ("license", docx, "licence.docx"),
+                                 ("passport", jpg, "passport.jpg"), ("cv", docx, "renamed.pdf")):
+            r = self.post(doc, "/doctor/documents", {"kind": kind, "file": (io.BytesIO(data), name)},
+                          content_type="multipart/form-data", follow_redirects=True)
+            self.assertTrue(b"must be PDFs" in r.data or b"look like a valid PDF" in r.data, name)
         self.assertEqual(len(self.db("SELECT * FROM documents")), 0)
-        # other documents may still be Word files
-        self.post(doc, "/doctor/documents", {"kind": "license", "file": (io.BytesIO(docx), "licence.docx")},
+        self.post(doc, "/doctor/documents", {"kind": "license", "file": (io.BytesIO(PDF), "licence.pdf")},
                   content_type="multipart/form-data")
         self.assertEqual([d["kind"] for d in self.db("SELECT kind FROM documents")], ["license"])
 

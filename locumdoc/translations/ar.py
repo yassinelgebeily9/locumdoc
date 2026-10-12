@@ -660,7 +660,7 @@ AR = {
     "Professor": "أستاذ (بروفيسور)",
     "Associate professor": "أستاذ مشارك",
     "Assistant professor": "أستاذ مساعد",
-    "Lecturer": "مدرّس / محاضر",
+    "Lecturer": "محاضر",
     "Assistant lecturer": "مدرّس مساعد",
     "Teaching assistant / demonstrator": "معيد",
     "Clinical tutor / instructor": "مدرّب سريري",
@@ -811,4 +811,41 @@ AR = {
     "Documents must be PDFs. In Word or Pages, choose Export or Save As PDF; for a photo or scan, save it as a PDF first. Then upload that file.":
         "يجب أن تكون المستندات بصيغة PDF. في Word أو Pages اختر التصدير أو الحفظ بصيغة PDF، وإذا كانت صورة أو مستندًا ممسوحًا فاحفظه بصيغة PDF أولًا، ثم ارفع ذلك الملف.",
     "PDF only, up to 10 MB.": "PDF فقط، حتى 10 ميغابايت.",
+    # ------------------------------------------------------------------ academic titles by system, university, nationality
+    "Gulf, UK and other universities": "جامعات الخليج والمملكة المتحدة وغيرها",
+    "Egyptian universities": "الجامعات المصرية",
+    "Teaching assistant": "معيد",
+    "Emeritus professor": "أستاذ فخري",
+    "Demonstrator (معيد)": "معيد",
+    "Assistant lecturer (مدرس مساعد)": "مدرس مساعد",
+    "Lecturer (مدرس)": "مدرس",
+    "Assistant professor (أستاذ مساعد)": "أستاذ مساعد",
+    "Professor (أستاذ)": "أستاذ",
+    "Emeritus professor (أستاذ متفرغ)": "أستاذ متفرغ",
+    "Demonstrator (Egypt)": "معيد (مصر)",
+    "Assistant lecturer (Egypt)": "مدرس مساعد (مصر)",
+    "Lecturer (Egypt)": "مدرس (مصر)",
+    "Assistant professor (Egypt)": "أستاذ مساعد (مصر)",
+    "Professor (Egypt)": "أستاذ (مصر)",
+    "Emeritus professor (Egypt)": "أستاذ متفرغ (مصر)",
+    "equivalent to %(title)s": "يعادل %(title)s",
+    "%(title)s or above": "%(title)s أو أعلى",
+    "If you also hold a university teaching post. Egyptian titles are listed separately because their levels differ from Gulf titles.":
+        "إذا كنت تشغل أيضًا وظيفة تدريس جامعية. الألقاب المصرية مدرجة منفصلة لأن مستوياتها تختلف عن ألقاب الخليج.",
+    "Only if you hold a university teaching post.": "فقط إذا كنت تشغل وظيفة تدريس جامعية.",
+    "University you graduated from": "الجامعة التي تخرّجت منها",
+    "Your medical school, e.g. Cairo University (Kasr Al Ainy).": "كلية الطب التي درست فيها، مثل جامعة القاهرة (قصر العيني).",
+    "Year of graduation": "سنة التخرّج",
+    "the university you graduated from": "الجامعة التي تخرّجت منها",
+    "your graduation year": "سنة تخرّجك",
+    "Graduated from": "تخرّج من",
+    "Most common": "الأكثر شيوعًا",
+    "All countries": "كل الدول",
 }
+
+
+# Country names for the nationality / country dropdowns (never override a hand-written entry above).
+from .world_ar import WORLD_AR  # noqa: E402
+
+for _k, _v in WORLD_AR.items():
+    AR.setdefault(_k, _v)

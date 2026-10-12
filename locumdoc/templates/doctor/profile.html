@@ -17,8 +17,8 @@
         {{ m.input(form, v, 'first_name', _('First name')) }}
         {{ m.input(form, v, 'last_name', _('Last name')) }}
         {{ m.input(form, v, 'phone', _('Phone (with country code)'), type='tel', attrs='autocomplete="tel"') }}
-        {{ m.input(form, v, 'nationality', _('Nationality')) }}
-        {{ m.input(form, v, 'current_country', _('Country you live in now'), attrs='autocomplete="country-name"') }}
+        {{ m.country_select(form, v, 'nationality', _('Nationality')) }}
+        {{ m.country_select(form, v, 'current_country', _('Country you live in now')) }}
         {{ m.input(form, v, 'languages', _('Languages'), optional=True, attrs='placeholder="' ~ _('English, Arabic') ~ '"') }}
       </div>
     </fieldset>
@@ -33,8 +33,10 @@
         {% endcall %}
         {{ m.input(form, v, 'subspecialty', _('Subspecialty or special interest'), optional=True) }}
         {{ m.select(form, v, 'grade', _('Clinical grade'), ref.GRADES, help=_('Your current hospital grade.')) }}
-        {{ m.select(form, v, 'academic_rank', _('Academic title'), ref.ACADEMIC_RANKS, optional=True, placeholder=None, help=_('If you also hold a university teaching post.'), options_prefix=[('', _('None'))]) }}
+        {{ m.academic_select(form, v, 'academic_rank', _('Academic title'), help=_('If you also hold a university teaching post. Egyptian titles are listed separately because their levels differ from Gulf titles.')) }}
         {{ m.input(form, v, 'years_experience', _('Years of experience since graduating'), type='number', attrs='min="0" max="60" inputmode="numeric"') }}
+        {{ m.input(form, v, 'medical_school', _('University you graduated from'), help=_('Your medical school, e.g. Cairo University (Kasr Al Ainy).')) }}
+        {{ m.input(form, v, 'graduation_year', _('Year of graduation'), type='number', optional=True, attrs='min="1950" max="' ~ today[:4] ~ '" inputmode="numeric"') }}
         {{ m.input(form, v, 'qualifications', _('Qualifications'), cls='full', help=_('Degrees, boards and fellowships, e.g. MBBS, MRCP (UK), CCT General Internal Medicine.')) }}
         {{ m.input(form, v, 'primary_license', _('Current medical licence'), cls='full', help=_('Where you are registered to practise today, e.g. GMC full registration with licence to practise.')) }}
       </div>

@@ -61,7 +61,28 @@ def migrate():
     cols = {r[1] for r in db.execute("PRAGMA table_info(doctors)")}
     if "academic_rank" not in cols:
         db.execute("ALTER TABLE doctors ADD COLUMN academic_rank TEXT NOT NULL DEFAULT ''")
+    if "medical_school" not in cols:
+        db.execute("ALTER TABLE doctors ADD COLUMN medical_school TEXT NOT NULL DEFAULT ''")
+    if "graduation_year" not in cols:
+        db.execute("ALTER TABLE doctors ADD COLUMN graduation_year INTEGER")
+    # Nationality used to be typed freely ("British"); it is now a country from the list.
+    for word, country in DEMONYMS.items():
+        db.execute("UPDATE doctors SET nationality = ? WHERE lower(trim(nationality)) = ?", (country, word))
     db.commit()
+
+
+DEMONYMS = {
+    "egyptian": "Egypt", "jordanian": "Jordan", "sudanese": "Sudan", "syrian": "Syria", "lebanese": "Lebanon",
+    "palestinian": "Palestine", "iraqi": "Iraq", "yemeni": "Yemen", "tunisian": "Tunisia", "libyan": "Libya",
+    "algerian": "Algeria", "moroccan": "Morocco", "qatari": "Qatar", "saudi": "Saudi Arabia",
+    "emirati": "United Arab Emirates", "kuwaiti": "Kuwait", "omani": "Oman", "bahraini": "Bahrain",
+    "indian": "India", "pakistani": "Pakistan", "bangladeshi": "Bangladesh", "sri lankan": "Sri Lanka",
+    "filipino": "Philippines", "nigerian": "Nigeria", "british": "United Kingdom", "english": "United Kingdom",
+    "scottish": "United Kingdom", "welsh": "United Kingdom", "irish": "Ireland", "american": "United States",
+    "canadian": "Canada", "australian": "Australia", "south african": "South Africa", "turkish": "Turkey",
+    "iranian": "Iran", "german": "Germany", "french": "France", "italian": "Italy", "spanish": "Spain",
+    "greek": "Greece", "romanian": "Romania", "polish": "Poland", "ukrainian": "Ukraine", "russian": "Russia",
+}
 
 
 def seed_reference():
@@ -111,15 +132,18 @@ DEMO_JOBS = [
 ]
 
 DEMO_DOCTORS = [
-    ("Sarah", "Mitchell", "Anaesthesia", "consultant", 14, "United Kingdom", "British",
+    ("Sarah", "Mitchell", "Anaesthesia", "consultant", 14, "United Kingdom", "United Kingdom",
      "MBBS, FRCA, CCT Anaesthesia", "GMC full registration with licence to practise", "eligible", "exempt"),
-    ("Omar", "Haddad", "Emergency Medicine", "specialist", 9, "Jordan", "Jordanian",
+    ("Omar", "Haddad", "Emergency Medicine", "specialist", 9, "Jordan", "Jordan",
      "MD, Arab Board Emergency Medicine", "Jordan Medical Council", "evaluating", "passed"),
-    ("Priya", "Raman", "Paediatrics", "specialist", 11, "Ireland", "Irish",
+    ("Priya", "Raman", "Paediatrics", "specialist", 11, "Ireland", "India",
      "MB BCh, MRCPCH", "IMC specialist registration", "none", "exempt"),
-    ("Youssef", "Mansour", "Radiology", "consultant", 17, "Egypt", "Egyptian",
+    ("Youssef", "Mansour", "Radiology", "consultant", 17, "Egypt", "Egypt",
      "MBBCh, MD Radiology, FRCR", "Egyptian Medical Syndicate", "licensed", "exempt"),
 ]
+
+DEMO_SCHOOLS = [("University of Bristol", 2008), ("University of Jordan", 2013),
+                ("Royal College of Surgeons in Ireland", 2011), ("Cairo University (Kasr Al Ainy)", 2005)]
 
 
 def seed_demo():
@@ -170,7 +194,7 @@ def seed_demo():
             " good_standing, languages, available_from, available_to, min_weeks, bio, verified)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)",
             (uid, fn, ln, "+44 7700 900000", nat, country, spec[sname], grade, yrs, quals, lic, qstat, exam,
-             1 if qstat != "none" else 0, "English, Arabic" if nat in ("Jordanian", "Egyptian") else "English",
+             1 if qstat != "none" else 0, "English, Arabic" if nat in ("Jordan", "Egypt") else "English",
              avail.isoformat(), (avail + timedelta(weeks=16)).isoformat(), 8,
              "Demo profile. Experienced locum available for blocks of 2 to 4 months.", 1 if i % 2 == 0 else 0),
         )
@@ -180,8 +204,11 @@ def seed_demo():
         db.execute("INSERT INTO documents (user_id, kind, original_name, storage_name, mime_type, size_bytes)"
                    " VALUES (?, 'cv', ?, ?, 'application/pdf', ?)",
                    (uid, f"CV {fn} {ln}.pdf", name, os.path.getsize(os.path.join(current_app.config["UPLOAD_DIR"], name))))
-    db.execute("UPDATE doctors SET academic_rank = 'assistant_professor' WHERE academic_rank = '' AND user_id ="
-               " (SELECT id FROM users WHERE email = 'doctor4@demo.locumdoc.me')")
+    db.execute("UPDATE doctors SET academic_rank = 'eg_assistant_professor' WHERE academic_rank IN ('', 'assistant_professor')"
+               " AND user_id = (SELECT id FROM users WHERE email = 'doctor4@demo.locumdoc.me')")
+    for i, (school, year) in enumerate(DEMO_SCHOOLS):
+        db.execute("UPDATE doctors SET medical_school = ?, graduation_year = ? WHERE medical_school = '' AND user_id ="
+                   " (SELECT id FROM users WHERE email = ?)", (school, year, f"doctor{i + 1}@demo.locumdoc.me"))
     db.commit()
     if db.execute("SELECT COUNT(*) FROM applications").fetchone()[0] == 0:
         for email, specialty, status in (("doctor1@demo.locumdoc.me", "Anaesthesia", "shortlisted"),

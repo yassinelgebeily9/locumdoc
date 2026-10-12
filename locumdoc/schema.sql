@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS doctors (
     academic_rank           TEXT NOT NULL DEFAULT '',   -- university title, see refdata.ACADEMIC_RANKS
     years_experience        INTEGER,
     qualifications          TEXT NOT NULL DEFAULT '',   -- e.g. MBBS, MRCP, CCT
+    medical_school          TEXT NOT NULL DEFAULT '',   -- university the doctor graduated from
+    graduation_year         INTEGER,
     primary_license         TEXT NOT NULL DEFAULT '',   -- e.g. GMC full registration
     qatar_license_status    TEXT NOT NULL DEFAULT 'none',
     has_psv                 INTEGER NOT NULL DEFAULT 0,  -- primary source verification report

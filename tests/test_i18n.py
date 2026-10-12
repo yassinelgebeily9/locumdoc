@@ -35,6 +35,18 @@ def msgids():
                     refdata.JOB_STATUSES):
         for _k, v in options:
             found.setdefault(v, "refdata")
+    for _lvl, v in refdata.ACADEMIC_LEVELS:
+        found.setdefault(v, "refdata")
+    for group, items in refdata.ACADEMIC_TITLE_GROUPS:
+        found.setdefault(group, "refdata")
+        for _k, opt, shown, _l in items:
+            found.setdefault(opt, "refdata")
+            found.setdefault(shown, "refdata")
+    for _k, v in refdata.ACADEMIC_RANKS:
+        found.setdefault(v, "refdata")
+    from locumdoc import world
+    for _c, v in world.WORLD:
+        found.setdefault(v, "world")
     for name in refdata.SPECIALTIES:
         found.setdefault(name, "specialties")
     for c in refdata.COUNTRIES:

@@ -38,7 +38,7 @@
       {% for a in apps %}
       <tr>
         <td><a class="row-link" href="{{ url_for('facility.doctor', doctor_id=a.doctor_id) }}">{{ _(a.dtitle) }} {{ a.first_name }} {{ a.last_name }}</a>
-          <span class="sub">{{ label(ref.GRADES, a.grade) }}{% if a.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, a.academic_rank) }}{% endif %}{{ comma }}{{ _('lives in %(country)s', country=a.current_country or '—') }}. {{ _('Applied %(date)s', date=a.created_at|d) }}</span>
+          <span class="sub">{{ label(ref.GRADES, a.grade) }}{% if a.academic_rank %}{{ comma }}{{ label(ref.ACADEMIC_RANKS, a.academic_rank) }}{% endif %}{{ comma }}{{ _('lives in %(country)s', country=_(a.current_country) if a.current_country else '—') }}. {{ _('Applied %(date)s', date=a.created_at|d) }}</span>
           {% if a.cover_note %}<span class="sub" dir="auto">“{{ a.cover_note|truncate(140) }}”</span>{% endif %}</td>
         <td class="hide-sm num">{{ a.years_experience|years }}</td>
         <td class="hide-sm">{{ m.pill(a.qatar_license_status, ref.QATAR_LICENSE_STATUS) }}</td>

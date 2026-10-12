@@ -17,6 +17,7 @@
         </select>
         {% endcall %}
         {{ m.select(form, form.clean, 'grade', _('Clinical grade'), ref.GRADES, cls='full') }}
+        {{ m.academic_select(form, form.clean, 'academic_rank', _('Academic title'), cls='full', help=_('Only if you hold a university teaching post.')) }}
         {{ m.input(form, form.clean, 'email', _('Email'), type='email', cls='full', attrs='autocomplete="email"') }}
         {{ m.input(form, form.clean, 'password', _('Password'), type='password', cls='full', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
         <div class="full">

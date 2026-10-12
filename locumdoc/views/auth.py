@@ -62,6 +62,7 @@ def join_doctor():
         pw = _check_password(form)
         form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label=_("your specialty"))
         form.choice("grade", refdata.GRADES, label=_("your grade"))
+        form.choice("academic_rank", refdata.ACADEMIC_RANKS, required=False)
         if not form.flag("consent"):
             form.errors["consent"] = _("Agree to the terms and privacy notice to create an account.")
         if email and query("SELECT 1 FROM users WHERE email = ?", (email,), one=True):
@@ -70,9 +71,9 @@ def join_doctor():
             uid = create_user(email, pw, "doctor", g.lang)
             c = form.clean
             execute(
-                "INSERT INTO doctors (user_id, first_name, last_name, specialty_id, grade, visible_to_facilities)"
-                " VALUES (?, ?, ?, ?, ?, ?)",
-                (uid, c["first_name"], c["last_name"], int(c["specialty_id"]), c["grade"],
+                "INSERT INTO doctors (user_id, first_name, last_name, specialty_id, grade, academic_rank,"
+                " visible_to_facilities) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (uid, c["first_name"], c["last_name"], int(c["specialty_id"]), c["grade"], c["academic_rank"],
                  1 if request.form.get("visible") else 0),
             )
             user = query("SELECT * FROM users WHERE id = ?", (uid,), one=True)

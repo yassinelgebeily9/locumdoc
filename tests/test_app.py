@@ -64,7 +64,7 @@ class Base(unittest.TestCase):
         self.assertEqual(r.status_code, 302, r.data[:500])
         if ready:
             r = self.post(c, "/doctor/profile", {
-                "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "British",
+                "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
                 "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant",
                 "years_experience": "12", "qualifications": "MBBS, FRCA", "primary_license": "GMC",
                 "qatar_license_status": "evaluating", "exam_status": "exempt", "available_from": "2030-01-01",
@@ -372,7 +372,7 @@ class GradeTests(Base):
         doc = self.signup_doctor()
         spec = self.db("SELECT id FROM specialties WHERE name='Anaesthesia'")[0]["id"]
         r = self.post(doc, "/doctor/profile", {
-            "title": "Prof", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "British",
+            "title": "Prof", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
             "current_country": "United Kingdom", "specialty_id": spec, "grade": "senior_consultant",
             "academic_rank": "associate_professor", "years_experience": "22", "qualifications": "MBBS, FRCA",
             "primary_license": "GMC", "qatar_license_status": "eligible", "exam_status": "exempt",
@@ -384,12 +384,31 @@ class GradeTests(Base):
         adm = self.admin()
         fid = self.db("SELECT user_id FROM facilities")[0]["user_id"]
         self.post(adm, f"/admin/facilities/{fid}", {"action": "verify"})
-        self.assertIn(b"Associate professor", fac.get("/facility/doctors?academic=associate_professor").data)
+        self.assertIn(b"Associate professor", fac.get("/facility/doctors?academic=4").data)   # level 4 or above
         self.assertIn(b"Amal Nasser", fac.get("/facility/doctors?academic=any").data)
-        self.assertNotIn(b"Amal Nasser", fac.get("/facility/doctors?academic=professor").data)
+        self.assertNotIn(b"Amal Nasser", fac.get("/facility/doctors?academic=5").data)     # professor or above
+        # An Egyptian "assistant professor" (أستاذ مساعد) sits at the Gulf associate-professor level
+        base = {"title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+20 1", "nationality": "Egypt",
+                "medical_school": "Cairo University (Kasr Al Ainy)", "graduation_year": "2005",
+                "current_country": "Egypt", "specialty_id": spec, "grade": "consultant", "years_experience": "20",
+                "qualifications": "MBBCh, MD", "primary_license": "Egyptian Medical Syndicate",
+                "qatar_license_status": "eligible", "exam_status": "exempt", "available_from": "2030-01-01",
+                "visible_to_facilities": "1"}
+        self.post(doc, "/doctor/profile", dict(base, academic_rank="eg_assistant_professor"))
+        self.assertIn(b"Amal Nasser", fac.get("/facility/doctors?academic=4").data)
+        self.assertNotIn(b"Amal Nasser", fac.get("/facility/doctors?academic=5").data)
+        did = self.db("SELECT user_id FROM doctors")[0]["user_id"]
+        page = fac.get(f"/facility/doctors/{did}").data
+        self.assertIn(b"Assistant professor (Egypt)", page)
+        self.assertIn(b"equivalent to associate professor", page)
+        self.assertIn(b"Cairo University (Kasr Al Ainy)", page)
+        # nationality must come from the country list; university is required
+        r = self.post(doc, "/doctor/profile", dict(base, nationality="Egyptian", medical_school=""))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.db("SELECT nationality FROM doctors")[0]["nationality"], "Egypt")
         # clearing it is allowed
         self.post(doc, "/doctor/profile", {
-            "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "British",
+            "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
             "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant", "academic_rank": "",
             "years_experience": "22", "qualifications": "MBBS", "primary_license": "GMC",
             "qatar_license_status": "eligible", "exam_status": "exempt"})

@@ -2,9 +2,9 @@ from flask import (Blueprint, current_app, flash, g, redirect, render_template, 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .. import mail, refdata, storage
+from .. import db, mail, refdata, store
 from ..i18n import _
-from ..db import create_user, execute, get_db, query
+from ..db import EmailTaken, create_user, user_by_email
 from ..security import client_ip, login_required, login_user, rate_limited
 from . import Form
 
@@ -31,12 +31,7 @@ def _check_password(form, name="password"):
 
 
 def _active_locations():
-    countries = query("SELECT * FROM countries WHERE active = 1 ORDER BY sort_order")
-    cities = query(
-        "SELECT ci.id, ci.name, co.name AS country FROM cities ci JOIN countries co ON co.id = ci.country_id"
-        " WHERE co.active = 1 ORDER BY co.sort_order, ci.name"
-    )
-    return countries, cities
+    return [c for c in db.countries() if c["active"]], db.cities(active_only=True)
 
 
 @bp.route("/join")
@@ -50,7 +45,7 @@ def join():
 def join_doctor():
     if g.user:
         return redirect(home_for(g.user))
-    specialties = query("SELECT id, name FROM specialties ORDER BY name")
+    specialties = db.specialties()
     form = Form()
     if request.method == "POST":
         if rate_limited("signup:" + client_ip(), limit=10, window=3600):
@@ -65,19 +60,19 @@ def join_doctor():
         form.choice("academic_rank", refdata.ACADEMIC_RANKS, required=False)
         if not form.flag("consent"):
             form.errors["consent"] = _("Agree to the terms and privacy notice to create an account.")
-        if email and query("SELECT 1 FROM users WHERE email = ?", (email,), one=True):
-            form.errors["email"] = _("An account with this email already exists. Log in instead.")
+        uid = None
         if form.ok:
-            uid = create_user(email, pw, "doctor", g.lang)
+            try:
+                uid = create_user(email, pw, "doctor", g.lang)
+            except EmailTaken:
+                form.errors["email"] = _("An account with this email already exists. Log in instead.")
+        if uid:
             c = form.clean
-            execute(
-                "INSERT INTO doctors (user_id, first_name, last_name, specialty_id, grade, academic_rank,"
-                " visible_to_facilities) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (uid, c["first_name"], c["last_name"], int(c["specialty_id"]), c["grade"], c["academic_rank"],
-                 1 if request.form.get("visible") else 0),
-            )
-            user = query("SELECT * FROM users WHERE id = ?", (uid,), one=True)
-            login_user(user)
+            store.add("doctors", {"user_id": uid, "first_name": c["first_name"], "last_name": c["last_name"],
+                                  "specialty_id": c["specialty_id"], "grade": c["grade"],
+                                  "academic_rank": c["academic_rank"],
+                                  "visible_to_facilities": 1 if request.form.get("visible") else 0}, doc_id=uid)
+            login_user(store.get("users", uid))
             mail.send(email, "Welcome to LocumDoc", "welcome_doctor", g.lang, first_name=c["first_name"])
             mail.notify_admin("New doctor sign-up", "admin_new_user", kind="doctor",
                               name=f"Dr {c['first_name']} {c['last_name']}", email=email)
@@ -107,19 +102,20 @@ def join_facility():
         pw = _check_password(form)
         if not form.flag("consent"):
             form.errors["consent"] = _("Agree to the terms and privacy notice to create an account.")
-        if email and query("SELECT 1 FROM users WHERE email = ?", (email,), one=True):
-            form.errors["email"] = _("An account with this email already exists. Log in instead.")
+        uid = None
         if form.ok:
+            try:
+                uid = create_user(email, pw, "facility", g.lang)
+            except EmailTaken:
+                form.errors["email"] = _("An account with this email already exists. Log in instead.")
+        if uid:
             c = form.clean
-            city = query("SELECT * FROM cities WHERE id = ?", (int(c["city_id"]),), one=True)
-            uid = create_user(email, pw, "facility", g.lang)
-            execute(
-                "INSERT INTO facilities (user_id, name, facility_type, sector, country_id, city_id, contact_name,"
-                " contact_role, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (uid, c["name"], c["facility_type"], c["sector"], city["country_id"], city["id"],
-                 c["contact_name"], c["contact_role"], c["phone"]),
-            )
-            login_user(query("SELECT * FROM users WHERE id = ?", (uid,), one=True))
+            city = store.get("cities", c["city_id"])
+            store.add("facilities", {"user_id": uid, "name": c["name"], "facility_type": c["facility_type"],
+                                     "sector": c["sector"], "country_id": city["country_id"], "city_id": city["id"],
+                                     "contact_name": c["contact_name"], "contact_role": c["contact_role"],
+                                     "phone": c["phone"]}, doc_id=uid)
+            login_user(store.get("users", uid))
             mail.send(email, "Your LocumDoc facility account", "welcome_facility", g.lang,
                       contact_name=c["contact_name"], facility=c["name"])
             mail.notify_admin("New facility to verify", "admin_new_user", kind="facility",
@@ -140,10 +136,10 @@ def login():
         if rate_limited("login:" + client_ip()) or rate_limited("login:" + email, limit=6):
             flash(_("Too many attempts. Wait 10 minutes, or reset your password."), "error")
             return render_template("auth/login.html", form=form), 429
-        user = query("SELECT * FROM users WHERE email = ?", (email,), one=True)
+        user = user_by_email(email)
         if user and user["is_active"] and check_password_hash(user["password_hash"], pw):
             login_user(user)
-            execute("UPDATE users SET last_login_at = datetime('now') WHERE id = ?", (user["id"],))
+            store.update("users", user["id"], last_login_at=store.now())
             return redirect(_safe_next(request.args.get("next")) or home_for(user))
         form.errors["password"] = _("That email and password don't match an account.")
     return render_template("auth/login.html", form=form)
@@ -168,8 +164,8 @@ def forgot():
     if request.method == "POST":
         email = form.email()
         if form.ok and not rate_limited("reset:" + client_ip(), limit=5, window=3600):
-            user = query("SELECT * FROM users WHERE email = ? AND is_active = 1", (email,), one=True)
-            if user:
+            user = user_by_email(email)
+            if user and user["is_active"]:
                 token = _serializer().dumps({"uid": user["id"], "v": user["password_hash"][-12:]})
                 mail.send(email, "Reset your LocumDoc password", "reset_password", user["lang"],
                           link=current_app.config["SITE_URL"] + url_for(".reset", token=token))
@@ -186,7 +182,7 @@ def reset(token):
     except (BadSignature, SignatureExpired):
         flash(_("That reset link has expired or was already used. Request a new one."), "error")
         return redirect(url_for(".forgot"))
-    user = query("SELECT * FROM users WHERE id = ?", (data["uid"],), one=True)
+    user = store.get("users", data["uid"])
     if not user or user["password_hash"][-12:] != data["v"]:
         flash(_("That reset link has expired or was already used. Request a new one."), "error")
         return redirect(url_for(".forgot"))
@@ -194,7 +190,7 @@ def reset(token):
     if request.method == "POST":
         pw = _check_password(form)
         if form.ok:
-            execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(pw), user["id"]))
+            store.update("users", user["id"], password_hash=generate_password_hash(pw))
             flash(_("Password updated. Log in with your new password."), "success")
             return redirect(url_for(".login"))
     return render_template("auth/reset.html", form=form)
@@ -211,8 +207,8 @@ def account():
             form.errors["current_password"] = _("Your current password is incorrect.")
         pw = _check_password(form, "new_password")
         if form.ok:
-            execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(pw), g.user["id"]))
-            login_user(query("SELECT * FROM users WHERE id = ?", (g.user["id"],), one=True))
+            store.update("users", g.user["id"], password_hash=generate_password_hash(pw))
+            login_user(store.get("users", g.user["id"]))
             flash(_("Password changed."), "success")
             return redirect(url_for(".account"))
     return render_template("auth/account.html", form=form)
@@ -224,11 +220,7 @@ def delete_account():
     if not check_password_hash(g.user["password_hash"], request.form.get("confirm_password", "")):
         flash(_("Enter your password to delete your account."), "error")
         return redirect(url_for(".account"))
-    for d in query("SELECT storage_name FROM documents WHERE user_id = ?", (g.user["id"],)):
-        storage.delete(d["storage_name"])
-    db = get_db()
-    db.execute("DELETE FROM users WHERE id = ?", (g.user["id"],))
-    db.commit()
+    db.delete_user(g.user["id"])
     session.clear()
     flash(_("Your account and all your files have been deleted."), "info")
     return redirect(url_for("public.home"))

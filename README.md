@@ -20,7 +20,7 @@ export SECRET_KEY=dev SEED_DEMO=1 ADMIN_EMAIL=admin@locumdoc.me ADMIN_PASSWORD=a
 flask --app wsgi run
 ```
 
-Open http://localhost:5000. The database is created automatically in `instance/`.
+Open http://localhost:5000. Without Firebase settings, records are kept in `instance/localstore.json` and PDFs in `instance/uploads/`. If `instance/` still has a `locumdoc.sqlite3` from the earlier version, its accounts, jobs and files are brought across automatically on first start.
 
 Demo logins (only when `SEED_DEMO=1`), password `demo-password`:
 
@@ -48,15 +48,33 @@ The whole doctor- and facility-facing site is available in English and Arabic, w
 
 To add a third language later, add it to `LANGUAGES` in `locumdoc/i18n.py`, create `translations/<code>.py` and register it in `CATALOGS`.
 
+## Where the data lives: Firebase
+
+In production, every record (accounts, profiles, jobs, applications, invitations, messages) is stored in **Cloud Firestore** and every uploaded PDF in a private **Firebase Storage** bucket. The web server keeps nothing, so redeploys and restarts never lose data. Setting up the Firebase project takes about 15 minutes: follow [docs/firebase-setup.md](docs/firebase-setup.md), then add three settings to the server:
+
+| Setting | Value |
+|---|---|
+| `FIREBASE_PROJECT_ID` | the project ID, e.g. `locumdoc-qa` |
+| `FIREBASE_STORAGE_BUCKET` | e.g. `locumdoc-qa.firebasestorage.app` |
+| `FIREBASE_CREDENTIALS_JSON` | the whole contents of the service account key file |
+
+Without those settings the app falls back to the local store described above.
+
+To copy data from the earlier SQLite version into Firebase, run this once on a computer with those three settings exported:
+
+```bash
+flask --app wsgi import-sqlite instance/locumdoc.sqlite3
+```
+
 ## Put it live on locumdoc.me
 
-The app is one Docker container plus a persistent disk (for the SQLite database and uploaded files). Two easy routes:
+The app is one Docker container; data lives in Firebase. Two easy routes:
 
 ### Option A — Render (simplest, managed HTTPS)
 
 1. Push this folder to a private GitHub repository.
-2. On render.com: **New → Blueprint**, pick the repo. `render.yaml` creates the web service and a 5 GB disk.
-3. Fill in the variables it asks for: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NOTIFY_EMAIL`, and the `SMTP_*` settings (see Email below).
+2. On render.com: **New → Blueprint**, pick the repo. `render.yaml` creates the web service.
+3. Fill in the variables it asks for: the three `FIREBASE_*` settings, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NOTIFY_EMAIL`, and the `SMTP_*` settings (see Email below).
 4. In the service's **Settings → Custom domains**, add `locumdoc.me` and `www.locumdoc.me`.
 5. At your domain registrar, create the DNS records Render shows you (typically an `A` record for `locumdoc.me` and a `CNAME` for `www`). HTTPS is issued automatically once DNS resolves.
 
@@ -87,7 +105,7 @@ Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` from any transactiona
 - [ ] Set a long random `SECRET_KEY` and `SECURE_COOKIES=1`.
 - [ ] Keep `SEED_DEMO=0` (or unset) in production.
 - [ ] Have a lawyer review `templates/public/privacy.html` and `terms.html`. They're written as a solid starting point covering GDPR and Qatar's PDPPL, but they aren't legal advice, and you'll need to add your company's legal name and address.
-- [ ] Turn on daily backups of the disk (Render: disk snapshots; VPS: back up `/srv/locumdoc`, which holds `locumdoc.sqlite3` and `uploads/`).
+- [ ] Turn on Firestore backups (Firestore → Disaster recovery → daily backups) and keep the Storage bucket private.
 - [ ] Check the Qatar licensing guide (`templates/public/country_qatar.html`) against DHP's current rules.
 - [ ] Send yourself a test of each email: sign up as a doctor and a facility, apply, change a status, reset a password.
 
@@ -98,15 +116,17 @@ In the admin panel go to **Countries**, add cities if needed, and click **Open**
 ## How it's built
 
 - Flask (Python), server-rendered HTML, no JavaScript framework. Pages work without JavaScript.
-- SQLite with WAL mode: comfortably handles thousands of users on one server. To move to PostgreSQL later, swap `db.py`'s connection for `psycopg` and adjust the few SQLite-specific functions (`datetime('now')`, `INSERT OR IGNORE`, `GROUP_CONCAT`).
+- Cloud Firestore (Firebase) for records, through a small layer in `store.py` that also has a local backend for development and tests. Firestore has no joins, so `db.py` fetches related records (a job's facility, a doctor's specialty) and caches them for the request. Every query filters on a single field, so Firestore needs no custom indexes.
+- Firebase Storage (Google Cloud Storage) for PDFs, kept private and served only through the app.
 - Security: hashed passwords, CSRF tokens on every form, strict Content-Security-Policy, rate-limited login/sign-up/reset, private uploads stored under random names and served only to authorised users, file-type checks by content, session invalidated on password change.
 - Fonts are self-hosted (TeX Gyre Adventor, Inter and IBM Plex Sans Arabic), so no visitor data goes to Google Fonts.
 
 ```
 locumdoc/
   __init__.py       app factory, config, security headers, template filters
-  db.py             database helpers, CLI commands, demo data
-  schema.sql        tables
+  store.py          Firestore and local backends, record defaults, per-request cache
+  db.py             lookups that join records, users, CLI commands, demo data
+  import_sqlite.py  one-off copy from the earlier SQLite version
   refdata.py        countries, cities, specialties, option lists
   security.py       sessions, CSRF, role checks, rate limiting
   storage.py        private file uploads
@@ -117,6 +137,7 @@ locumdoc/
   templates/        HTML pages and email texts
   static/           CSS, fonts, logo, small JS
 tests/test_app.py   end-to-end tests
+tests/test_firestore_backend.py   the same flows through the Firestore code path
 ```
 
 Useful commands:
@@ -124,4 +145,5 @@ Useful commands:
 ```bash
 flask --app wsgi create-admin someone@locumdoc.me   # add another admin
 flask --app wsgi seed-demo                           # add demo data
+flask --app wsgi import-sqlite path/to/locumdoc.sqlite3   # copy data from the old SQLite version
 ```

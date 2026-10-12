@@ -2,104 +2,72 @@ from datetime import date
 
 from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, render_template, request, url_for)
 
-from .. import i18n, mail, refdata
+from .. import db, i18n, mail, store
 from ..i18n import _
-from ..db import execute, query
+from ..db import public_jobs
 from ..security import client_ip, rate_limited
 from . import Form, page_args
 
 bp = Blueprint("public", __name__)
 
-JOB_SELECT = """
-    SELECT j.*, s.name AS specialty, ci.name AS city, co.name AS country, co.slug AS country_slug,
-           f.name AS facility, f.facility_type, f.sector
-    FROM jobs j
-    JOIN specialties s ON s.id = j.specialty_id
-    JOIN countries co ON co.id = j.country_id
-    LEFT JOIN cities ci ON ci.id = j.city_id
-    JOIN facilities f ON f.user_id = j.facility_id
-"""
-PUBLIC_WHERE = "j.status = 'open' AND f.verified = 1 AND co.active = 1 AND j.end_date >= date('now')"
-
-
-def public_jobs(where="", args=(), order="j.start_date", limit=None, offset=0):
-    sql = JOB_SELECT + " WHERE " + PUBLIC_WHERE + (" AND " + where if where else "") + " ORDER BY " + order
-    if limit:
-        sql += f" LIMIT {int(limit)} OFFSET {int(offset)}"
-    return query(sql, args)
-
 
 @bp.route("/")
 def home():
-    jobs = public_jobs(limit=6)
-    stats = query(
-        "SELECT (SELECT COUNT(*) FROM jobs j JOIN facilities f ON f.user_id=j.facility_id JOIN countries co"
-        " ON co.id=j.country_id WHERE " + PUBLIC_WHERE + ") AS open_jobs,"
-        " (SELECT COUNT(DISTINCT j.specialty_id) FROM jobs j JOIN facilities f ON f.user_id=j.facility_id"
-        " JOIN countries co ON co.id=j.country_id WHERE " + PUBLIC_WHERE + ") AS specialties",
-        one=True,
-    )
-    countries = query("SELECT * FROM countries ORDER BY sort_order")
-    return render_template("public/home.html", jobs=jobs, stats=stats, countries=countries)
+    jobs = public_jobs()
+    stats = {"open_jobs": len(jobs), "specialties": len({j["specialty_id"] for j in jobs})}
+    return render_template("public/home.html", jobs=jobs[:6], stats=stats, countries=db.countries())
+
+
+def _matches(text, q):
+    return q.casefold() in (text or "").casefold()
 
 
 @bp.route("/jobs")
 def jobs():
-    where, args = [], []
     f = {k: request.args.get(k, "").strip() for k in ("q", "specialty", "city", "grade", "country")}
+    tests = []
     if f["q"]:
+        q = f["q"]
         # Also match Arabic specialty names, e.g. "تخدير" finds Anaesthesia jobs.
-        ar_ids = [r["id"] for r in query("SELECT id, name FROM specialties")
-                  if f["q"] in i18n.AR.get(r["name"], "")]
-        id_clause = (" OR s.id IN (" + ",".join("?" * len(ar_ids)) + ")") if ar_ids else ""
-        where.append("(j.title LIKE ? OR s.name LIKE ? OR f.name LIKE ?" + id_clause + ")")
-        args += [f"%{f['q']}%"] * 3 + ar_ids
+        tests.append(lambda j: (_matches(j["title"], q) or _matches(j["specialty"], q) or _matches(j["facility"], q)
+                                or q in i18n.AR.get(j["specialty"] or "", "")))
     if f["specialty"]:
-        where.append("s.slug = ?")
-        args.append(f["specialty"])
+        tests.append(lambda j: j["specialty_id"] == f["specialty"])
     if f["city"]:
-        where.append("ci.name = ?")
-        args.append(f["city"])
+        tests.append(lambda j: j["city"] == f["city"])
     if f["grade"]:
-        where.append("j.grade = ?")
-        args.append(f["grade"])
+        tests.append(lambda j: j["grade"] == f["grade"])
     if f["country"]:
-        where.append("co.slug = ?")
-        args.append(f["country"])
-    w = " AND ".join(where)
+        tests.append(lambda j: j["country_slug"] == f["country"])
+    matching = public_jobs(lambda j: all(t(j) for t in tests))
     page, per, offset = page_args(20)
-    total = query("SELECT COUNT(*) AS n FROM (" + JOB_SELECT + " WHERE " + PUBLIC_WHERE
-                  + (" AND " + w if w else "") + ")", args, one=True)["n"]
-    rows = public_jobs(w, args, limit=per, offset=offset)
-    specialties = query("SELECT name, slug FROM specialties ORDER BY name")
-    cities = query("SELECT ci.name FROM cities ci JOIN countries co ON co.id = ci.country_id WHERE co.active = 1"
-                   " ORDER BY ci.name")
+    rows = matching[offset:offset + per]
+    specialties = db.specialties()
+    cities = sorted({c["name"] for c in db.cities(active_only=True)})
     applied = set()
     if g.user and g.user["role"] == "doctor":
-        applied = {r["job_id"] for r in query("SELECT job_id FROM applications WHERE doctor_id = ?", (g.user["id"],))}
-    return render_template("public/jobs.html", jobs=rows, total=total, f=f, specialties=specialties,
-                           cities=cities, page=page, per=per, applied=applied)
+        applied = {a["job_id"] for a in store.find("applications", doctor_id=g.user["id"])}
+    return render_template("public/jobs.html", jobs=rows, total=len(matching), f=f, specialties=specialties,
+                           cities=[{"name": n} for n in cities], page=page, per=per, applied=applied)
 
 
-@bp.route("/jobs/<int:job_id>")
+@bp.route("/jobs/<job_id>")
 def job(job_id):
-    row = query(JOB_SELECT + " WHERE j.id = ?", (job_id,), one=True)
+    row = db.get_job(job_id)
     if not row:
         abort(404)
     is_public = row["status"] == "open" and row["end_date"] >= date.today().isoformat()
     owner = g.user and g.user["id"] == row["facility_id"]
     is_admin = g.user and g.user["role"] == "admin"
-    fac = query("SELECT verified FROM facilities WHERE user_id = ?", (row["facility_id"],), one=True)
-    if not (owner or is_admin) and not (is_public and fac["verified"]):
+    if not (owner or is_admin) and not (is_public and row["facility_verified"]):
         abort(404)
     application = None
     readiness = None
     if g.user and g.user["role"] == "doctor":
-        application = query("SELECT * FROM applications WHERE job_id = ? AND doctor_id = ?",
-                            (job_id, g.user["id"]), one=True)
+        application = store.first("applications", job_id=job_id, doctor_id=g.user["id"])
         from .doctor import profile_readiness
         readiness = profile_readiness(g.user["id"])
-    similar = public_jobs("j.specialty_id = ? AND j.id != ?", (row["specialty_id"], job_id), limit=3)
+    similar = public_jobs(lambda j: j["specialty_id"] == row["specialty_id"] and j["id"] != job_id, limit=3)
     return render_template("public/job.html", job=row, application=application, readiness=readiness,
                            similar=similar, is_public=is_public)
 
@@ -111,11 +79,11 @@ def for_facilities():
 
 @bp.route("/countries/<slug>")
 def country(slug):
-    c = query("SELECT * FROM countries WHERE slug = ?", (slug,), one=True)
+    c = store.first("countries", slug=slug)
     if not c:
         abort(404)
-    cities = query("SELECT name FROM cities WHERE country_id = ? ORDER BY name", (c["id"],))
-    jobs = public_jobs("co.id = ?", (c["id"],), limit=4) if c["active"] else []
+    cities = sorted(store.find("cities", country_id=c["id"]), key=lambda x: x["name"])
+    jobs = public_jobs(lambda j: j["country_id"] == c["id"], limit=4) if c["active"] else []
     if slug == "qatar":
         return render_localized("country_qatar.html", country=c, cities=cities, jobs=jobs)
     return render_template("public/country_soon.html", country=c, cities=cities, jobs=jobs)
@@ -135,8 +103,7 @@ def contact():
             form.errors["message"] = _("Too many messages from this network. Email us directly instead.")
         if form.ok:
             c = form.clean
-            execute("INSERT INTO enquiries (name, email, organisation, message) VALUES (?, ?, ?, ?)",
-                    (c["name"], c["email"], c["organisation"], c["message"]))
+            store.add("enquiries", {k: c[k] for k in ("name", "email", "organisation", "message")})
             mail.notify_admin("New enquiry from " + c["name"], "admin_enquiry", **c)
             flash(_("Message sent. We reply within one working day."), "success")
             return redirect(url_for(".contact"))
@@ -176,7 +143,7 @@ def set_language(code):
     resp.set_cookie(i18n.COOKIE, code, max_age=365 * 24 * 3600, samesite="Lax", httponly=True,
                     secure=current_app.config["SESSION_COOKIE_SECURE"])
     if g.user:
-        execute("UPDATE users SET lang = ? WHERE id = ?", (code, g.user["id"]))
+        store.update("users", g.user["id"], lang=code)
     return resp
 
 
@@ -192,7 +159,7 @@ def sitemap():
     base = current_app.config["SITE_URL"]
     urls = [url_for(e) for e in ("public.home", "public.jobs", "public.for_facilities", "public.about",
                                  "public.contact", "auth.join")]
-    urls += [url_for("public.country", slug=c["slug"]) for c in query("SELECT slug FROM countries")]
+    urls += [url_for("public.country", slug=c["slug"]) for c in db.countries()]
     urls += [url_for("public.job", job_id=j["id"]) for j in public_jobs()]
     xml = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']

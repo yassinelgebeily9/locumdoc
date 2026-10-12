@@ -1,19 +1,19 @@
-import os
+import io
 
 from flask import Blueprint, abort, g, send_file
 
-from .. import storage
-from ..db import query
+from .. import storage, store
+from ..db import get_facility
 from ..security import login_required
-from .facility import can_view_doctor, get_facility
+from .facility import can_view_doctor
 
 bp = Blueprint("files", __name__, url_prefix="/files")
 
 
-@bp.route("/<int:doc_id>")
+@bp.route("/<doc_id>")
 @login_required()
 def download(doc_id):
-    doc = query("SELECT * FROM documents WHERE id = ?", (doc_id,), one=True)
+    doc = store.get("documents", doc_id)
     if not doc:
         abort(404)
     role = g.user["role"]
@@ -24,11 +24,11 @@ def download(doc_id):
     )
     if not allowed:
         abort(404)
-    path = storage.path_for(doc["storage_name"])
-    if not os.path.exists(path):
+    data = storage.read(doc["storage_name"])
+    if data is None:
         abort(404)
     inline = doc["mime_type"] in ("application/pdf", "image/jpeg", "image/png")
-    resp = send_file(path, mimetype=doc["mime_type"], as_attachment=not inline,
+    resp = send_file(io.BytesIO(data), mimetype=doc["mime_type"], as_attachment=not inline,
                      download_name=doc["original_name"], max_age=0)
     resp.headers["Cache-Control"] = "private, no-store"
     return resp

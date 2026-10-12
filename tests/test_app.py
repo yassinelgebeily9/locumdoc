@@ -230,6 +230,18 @@ class FlowTests(Base):
             execute("UPDATE doctors SET visible_to_facilities = 0 WHERE user_id = ?", (did,))
         self.assertEqual(fac.get(f"/files/{file_id}").status_code, 404)
 
+    def test_cv_must_be_pdf(self):
+        doc = self.signup_doctor(ready=False)
+        docx = b"PK\x03\x04" + b"\x00" * 64
+        r = self.post(doc, "/doctor/documents", {"kind": "cv", "file": (io.BytesIO(docx), "cv.docx")},
+                      content_type="multipart/form-data", follow_redirects=True)
+        self.assertIn(b"must be a PDF", r.data)
+        self.assertEqual(len(self.db("SELECT * FROM documents")), 0)
+        # other documents may still be Word files
+        self.post(doc, "/doctor/documents", {"kind": "license", "file": (io.BytesIO(docx), "licence.docx")},
+                  content_type="multipart/form-data")
+        self.assertEqual([d["kind"] for d in self.db("SELECT kind FROM documents")], ["license"])
+
     def test_upload_validation(self):
         doc = self.signup_doctor(ready=False)
         self.post(doc, "/doctor/documents", {"kind": "cv", "file": (io.BytesIO(b"MZ\x90evil"), "cv.pdf")},

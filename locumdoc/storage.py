@@ -35,12 +35,17 @@ class UploadError(ValueError):
     pass
 
 
-def save(file_storage):
-    """Validate and store an uploaded file. Returns (storage_name, original_name, mime, size)."""
+def save(file_storage, pdf_only=False):
+    """Validate and store an uploaded file. Returns (storage_name, original_name, mime, size).
+
+    pdf_only: accept nothing but a real PDF (used for CVs).
+    """
     if not file_storage or not file_storage.filename:
         raise UploadError(_("Choose a file to upload."))
     original = os.path.basename(file_storage.filename)[:200]
     ext = os.path.splitext(original)[1].lower()
+    if pdf_only and ext != ".pdf":
+        raise UploadError(_("Your CV must be a PDF. In Word or Pages, choose Export or Save As PDF, then upload that file."))
     if ext not in ALLOWED:
         raise UploadError(_("Upload a PDF, Word document, JPG or PNG."))
     head = file_storage.stream.read(8)

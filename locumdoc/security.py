@@ -6,7 +6,7 @@ from functools import wraps
 
 from flask import abort, flash, g, redirect, request, session, url_for
 
-from .db import query
+from . import store
 from .i18n import _
 
 
@@ -16,9 +16,9 @@ def load_user():
     g.user = None
     uid = session.get("uid")
     if uid:
-        user = query("SELECT * FROM users WHERE id = ? AND is_active = 1", (uid,), one=True)
-        # Invalidate the session if the password changed since login.
-        if user and session.get("pwv") == user["password_hash"][-12:]:
+        user = store.get("users", uid)
+        # Invalidate the session if the account was suspended or the password changed since login.
+        if user and user["is_active"] and session.get("pwv") == user["password_hash"][-12:]:
             g.user = user
         else:
             session.clear()

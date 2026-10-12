@@ -14,4 +14,4 @@ USER app
 
 EXPOSE 8000
 VOLUME ["/data"]
-CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:8000", "--preload", "--workers", "2", "--threads", "4", "--timeout", "60", "--access-logfile", "-"]
+CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "60", "--access-logfile", "-"]

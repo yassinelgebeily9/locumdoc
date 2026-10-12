@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from flask import Flask, g, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from . import db, i18n, refdata, security, world
+from . import db, i18n, refdata, security, storage, store, world
 
 
 def _bool(v):
@@ -16,7 +16,15 @@ def create_app(test_config=None):
     data_dir = os.environ.get("DATA_DIR", app.instance_path)
     app.config.update(
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-only-change-me"),
-        DATABASE=os.environ.get("DATABASE_PATH", os.path.join(data_dir, "locumdoc.sqlite3")),
+        # Firebase: set FIREBASE_PROJECT_ID (+ FIREBASE_STORAGE_BUCKET and FIREBASE_CREDENTIALS_JSON) to keep
+        # records in Firestore and PDFs in Firebase Storage. Without them, everything stays in DATA_DIR.
+        FIREBASE_PROJECT_ID=os.environ.get("FIREBASE_PROJECT_ID", ""),
+        FIREBASE_STORAGE_BUCKET=os.environ.get("FIREBASE_STORAGE_BUCKET", ""),
+        FIREBASE_CREDENTIALS_JSON=os.environ.get("FIREBASE_CREDENTIALS_JSON", ""),
+        FIRESTORE_DATABASE=os.environ.get("FIRESTORE_DATABASE", ""),
+        DATA_BACKEND=os.environ.get("DATA_BACKEND", "firestore"),
+        LOCAL_STORE_PATH=os.environ.get("LOCAL_STORE_PATH", os.path.join(data_dir, "localstore.json")),
+        LEGACY_SQLITE_PATH=os.path.join(data_dir, "locumdoc.sqlite3"),  # imported once by the local store
         UPLOAD_DIR=os.environ.get("UPLOAD_DIR", os.path.join(data_dir, "uploads")),
         MAX_CONTENT_LENGTH=int(os.environ.get("MAX_UPLOAD_MB", "10")) * 1024 * 1024,
         SITE_URL=os.environ.get("SITE_URL", "http://localhost:5000").rstrip("/"),
@@ -42,10 +50,10 @@ def create_app(test_config=None):
     if app.config["SECRET_KEY"] == "dev-only-change-me" and not app.debug and not app.config.get("TESTING"):
         app.logger.warning("SECRET_KEY is not set. Set it before going live.")
 
-    os.makedirs(app.config["UPLOAD_DIR"], exist_ok=True)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-    app.teardown_appcontext(db.close_db)
+    store.init_app(app)
+    storage.init_app(app)
     db.register_cli(app)
     db.ensure_db(app)
 

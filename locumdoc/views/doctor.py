@@ -2,27 +2,20 @@ from datetime import date
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
-from .. import mail, refdata, storage, world
+from .. import db, mail, refdata, storage, store, world
 from ..i18n import _
-from ..db import execute, get_db, query
+from ..db import get_doctor, public_jobs
 from ..security import login_required
 from . import Form
-from .public import JOB_SELECT, public_jobs
 
 bp = Blueprint("doctor", __name__, url_prefix="/doctor")
 
 PROFILE_FIELDS = ("phone", "nationality", "current_country", "medical_school", "qualifications", "primary_license")
 
 
-def get_doctor(uid):
-    return query(
-        "SELECT d.*, u.email, u.lang, s.name AS specialty FROM doctors d JOIN users u ON u.id = d.user_id"
-        " LEFT JOIN specialties s ON s.id = d.specialty_id WHERE d.user_id = ?", (uid,), one=True)
-
-
 def profile_readiness(uid):
     d = get_doctor(uid)
-    has_cv = query("SELECT 1 FROM documents WHERE user_id = ? AND kind = 'cv'", (uid,), one=True) is not None
+    has_cv = d["cv_count"] > 0
     profile_done = all(d[f] for f in PROFILE_FIELDS) and d["years_experience"] is not None
     items = [
         (_("Complete your professional profile"), profile_done, url_for("doctor.profile")),
@@ -36,16 +29,12 @@ def profile_readiness(uid):
 @login_required("doctor")
 def dashboard():
     d = get_doctor(g.user["id"])
-    apps = query(
-        "SELECT a.*, j.title, j.start_date, j.end_date, f.name AS facility, ci.name AS city FROM applications a"
-        " JOIN jobs j ON j.id = a.job_id JOIN facilities f ON f.user_id = j.facility_id"
-        " LEFT JOIN cities ci ON ci.id = j.city_id WHERE a.doctor_id = ? ORDER BY a.updated_at DESC LIMIT 5",
-        (g.user["id"],))
-    invites = query(
-        "SELECT i.*, f.name AS facility, j.title AS job_title FROM invitations i"
-        " JOIN facilities f ON f.user_id = i.facility_id LEFT JOIN jobs j ON j.id = i.job_id"
-        " WHERE i.doctor_id = ? AND i.status = 'sent' ORDER BY i.created_at DESC", (g.user["id"],))
-    matches = public_jobs("j.specialty_id = ?", (d["specialty_id"],), limit=4) if d["specialty_id"] else []
+    apps = [db.application_full(a) for a in
+            db.newest_first(store.find("applications", doctor_id=g.user["id"]), "updated_at")[:5]]
+    invites = [db.invitation_full(i) for i in
+               db.newest_first(store.find("invitations", doctor_id=g.user["id"], status="sent"))]
+    spec = d["specialty_id"]
+    matches = public_jobs(lambda j: j["specialty_id"] == spec, limit=4) if spec else []
     return render_template("doctor/dashboard.html", d=d, apps=apps, invites=invites, matches=matches,
                            readiness=profile_readiness(g.user["id"]))
 
@@ -54,8 +43,8 @@ def dashboard():
 @login_required("doctor")
 def profile():
     d = get_doctor(g.user["id"])
-    specialties = query("SELECT id, name FROM specialties ORDER BY name")
-    countries = query("SELECT code, name, active FROM countries ORDER BY sort_order")
+    specialties = db.specialties()
+    countries = db.countries()
     form = Form()
     if request.method == "POST":
         form.choice("title", [("Dr", "Dr"), ("Prof", "Prof"), ("Mr", "Mr"), ("Ms", "Ms")])
@@ -89,20 +78,15 @@ def profile():
         form.flag("visible_to_facilities")
         if form.ok:
             c = form.clean
-            execute(
-                "UPDATE doctors SET title=?, first_name=?, last_name=?, phone=?, nationality=?, current_country=?,"
-                " specialty_id=?, subspecialty=?, grade=?, academic_rank=?, years_experience=?, medical_school=?,"
-                " graduation_year=?, qualifications=?, primary_license=?,"
-                " qatar_license_status=?, exam_status=?, has_psv=?, good_standing=?, languages=?, available_from=?,"
-                " available_to=?, min_weeks=?, preferred_countries=?, bio=?, visible_to_facilities=?,"
-                " updated_at=datetime('now') WHERE user_id=?",
-                (c["title"], c["first_name"], c["last_name"], c["phone"], c["nationality"], c["current_country"],
-                 int(c["specialty_id"]), c["subspecialty"], c["grade"], c["academic_rank"], c["years_experience"],
-                 c["medical_school"], c["graduation_year"], c["qualifications"],
-                 c["primary_license"], c["qatar_license_status"] or "none", c["exam_status"] or "unknown",
-                 c["has_psv"], c["good_standing"], c["languages"], c["available_from"], c["available_to"],
-                 c["min_weeks"], ",".join(prefs) or "QA", c["bio"], c["visible_to_facilities"], g.user["id"]),
-            )
+            fields = {k: c[k] for k in (
+                "title", "first_name", "last_name", "phone", "nationality", "current_country", "specialty_id",
+                "subspecialty", "grade", "academic_rank", "years_experience", "medical_school", "graduation_year",
+                "qualifications", "primary_license", "has_psv", "good_standing", "languages", "available_from",
+                "available_to", "min_weeks", "bio", "visible_to_facilities")}
+            fields.update(qatar_license_status=c["qatar_license_status"] or "none",
+                          exam_status=c["exam_status"] or "unknown", preferred_countries=",".join(prefs) or "QA",
+                          updated_at=store.now())
+            store.update("doctors", g.user["id"], **fields)
             flash(_("Profile saved."), "success")
             if not profile_readiness(g.user["id"])["ready"]:
                 return redirect(url_for(".documents"))
@@ -124,7 +108,7 @@ def documents():
         if kind not in dict(refdata.DOCUMENT_KINDS):
             flash(_("Choose what kind of document this is."), "error")
             return redirect(url_for(".documents"))
-        count = query("SELECT COUNT(*) AS n FROM documents WHERE user_id = ?", (g.user["id"],), one=True)["n"]
+        count = store.count("documents", user_id=g.user["id"])
         if count >= 20:
             flash(_("You can store up to 20 documents. Delete one to add another."), "error")
             return redirect(url_for(".documents"))
@@ -133,24 +117,23 @@ def documents():
         except storage.UploadError as e:
             flash(str(e), "error")
             return redirect(url_for(".documents"))
-        execute("INSERT INTO documents (user_id, kind, original_name, storage_name, mime_type, size_bytes)"
-                " VALUES (?, ?, ?, ?, ?, ?)", (g.user["id"], kind, original, name, mime, size))
-        execute("UPDATE doctors SET updated_at = datetime('now') WHERE user_id = ?", (g.user["id"],))
+        store.add("documents", {"user_id": g.user["id"], "kind": kind, "original_name": original,
+                                "storage_name": name, "mime_type": mime, "size_bytes": size})
+        store.update("doctors", g.user["id"], updated_at=store.now())
         flash(_("%(kind)s uploaded.", kind=refdata.label(refdata.DOCUMENT_KINDS, kind)), "success")
         return redirect(url_for(".documents"))
-    docs = query("SELECT * FROM documents WHERE user_id = ? ORDER BY kind = 'cv' DESC, created_at DESC",
-                 (g.user["id"],))
+    docs = db.documents_for(g.user["id"])
     return render_template("doctor/documents.html", docs=docs, readiness=profile_readiness(g.user["id"]))
 
 
-@bp.route("/documents/<int:doc_id>/delete", methods=["POST"])
+@bp.route("/documents/<doc_id>/delete", methods=["POST"])
 @login_required("doctor")
 def delete_document(doc_id):
-    doc = query("SELECT * FROM documents WHERE id = ? AND user_id = ?", (doc_id, g.user["id"]), one=True)
-    if not doc:
+    doc = store.get("documents", doc_id)
+    if not doc or doc["user_id"] != g.user["id"]:
         abort(404)
     storage.delete(doc["storage_name"])
-    execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+    store.delete("documents", doc_id)
     flash(_("%(name)s deleted.", name=doc["original_name"]), "info")
     return redirect(url_for(".documents"))
 
@@ -158,36 +141,29 @@ def delete_document(doc_id):
 @bp.route("/applications")
 @login_required("doctor")
 def applications():
-    apps = query(
-        "SELECT a.*, j.title, j.start_date, j.end_date, j.rate_amount, j.rate_currency, j.rate_period,"
-        " j.status AS job_status, f.name AS facility, ci.name AS city FROM applications a"
-        " JOIN jobs j ON j.id = a.job_id JOIN facilities f ON f.user_id = j.facility_id"
-        " LEFT JOIN cities ci ON ci.id = j.city_id WHERE a.doctor_id = ? ORDER BY a.created_at DESC",
-        (g.user["id"],))
-    invites = query(
-        "SELECT i.*, f.name AS facility, j.title AS job_title FROM invitations i"
-        " JOIN facilities f ON f.user_id = i.facility_id LEFT JOIN jobs j ON j.id = i.job_id"
-        " WHERE i.doctor_id = ? ORDER BY i.created_at DESC", (g.user["id"],))
+    apps = [db.application_full(a) for a in db.newest_first(store.find("applications", doctor_id=g.user["id"]))]
+    invites = [db.invitation_full(i) for i in db.newest_first(store.find("invitations", doctor_id=g.user["id"]))]
     return render_template("doctor/applications.html", apps=apps, invites=invites)
 
 
-@bp.route("/jobs/<int:job_id>/apply", methods=["POST"])
+@bp.route("/jobs/<job_id>/apply", methods=["POST"])
 @login_required("doctor")
 def apply(job_id):
-    job = query(JOB_SELECT + " WHERE j.id = ? AND j.status = 'open' AND f.verified = 1 AND co.active = 1",
-                (job_id,), one=True)
-    if not job:
+    job = db.get_job(job_id)
+    if not job or not (job["status"] == "open" and job["facility_verified"] and job["country_active"]):
         abort(404)
     if not profile_readiness(g.user["id"])["ready"]:
         flash(_("Complete your profile and upload your CV before applying."), "error")
         return redirect(url_for("public.job", job_id=job_id))
-    if query("SELECT 1 FROM applications WHERE job_id = ? AND doctor_id = ?", (job_id, g.user["id"]), one=True):
+    if store.first("applications", job_id=job_id, doctor_id=g.user["id"]):
         flash(_("You've already applied for this job."), "info")
         return redirect(url_for("public.job", job_id=job_id))
     note = (request.form.get("cover_note") or "").strip()[:3000]
-    execute("INSERT INTO applications (job_id, doctor_id, cover_note) VALUES (?, ?, ?)", (job_id, g.user["id"], note))
+    # One application per doctor per job: the id makes a second click a no-op.
+    store.create("applications", f"{job_id}_{g.user['id']}", {"job_id": job_id, "doctor_id": g.user["id"],
+                                                               "cover_note": note})
     d = get_doctor(g.user["id"])
-    fac_user = query("SELECT email, lang FROM users WHERE id = ?", (job["facility_id"],), one=True)
+    fac_user = store.get("users", job["facility_id"])
     ctx = dict(job=job, doctor=d, note=note)
     title = {"title": job["title"]}
     mail.send(fac_user["email"], "New applicant: %(title)s", "facility_new_application", fac_user["lang"], title, **ctx)
@@ -199,43 +175,40 @@ def apply(job_id):
     return redirect(url_for(".applications"))
 
 
-@bp.route("/applications/<int:app_id>/withdraw", methods=["POST"])
+@bp.route("/applications/<app_id>/withdraw", methods=["POST"])
 @login_required("doctor")
 def withdraw(app_id):
-    a = query("SELECT * FROM applications WHERE id = ? AND doctor_id = ?", (app_id, g.user["id"]), one=True)
-    if not a:
+    a = store.get("applications", app_id)
+    if not a or a["doctor_id"] != g.user["id"]:
         abort(404)
     if a["status"] in ("placed", "withdrawn"):
         flash(_("This application can no longer be withdrawn."), "error")
     else:
-        execute("UPDATE applications SET status = 'withdrawn', updated_at = datetime('now') WHERE id = ?", (app_id,))
+        store.update("applications", app_id, status="withdrawn", updated_at=store.now())
         flash(_("Application withdrawn."), "info")
     return redirect(url_for(".applications"))
 
 
-@bp.route("/invitations/<int:inv_id>", methods=["POST"])
+@bp.route("/invitations/<inv_id>", methods=["POST"])
 @login_required("doctor")
 def respond_invitation(inv_id):
-    inv = query("SELECT * FROM invitations WHERE id = ? AND doctor_id = ?", (inv_id, g.user["id"]), one=True)
-    if not inv or inv["status"] != "sent":
+    inv = store.get("invitations", inv_id)
+    if not inv or inv["doctor_id"] != g.user["id"] or inv["status"] != "sent":
         abort(404)
     answer = request.form.get("answer")
     if answer not in ("accepted", "declined"):
         abort(400)
-    db = get_db()
-    db.execute("UPDATE invitations SET status = ? WHERE id = ?", (answer, inv_id))
-    db.commit()
-    fac = query("SELECT f.name, u.email, u.lang FROM facilities f JOIN users u ON u.id = f.user_id WHERE f.user_id = ?",
-                (inv["facility_id"],), one=True)
+    store.update("invitations", inv_id, status=answer)
+    fac = db.get_facility(inv["facility_id"])
     d = get_doctor(g.user["id"])
     subject = "Dr %(name)s accepted your invitation" if answer == "accepted" else "Dr %(name)s declined your invitation"
     mail.send(fac["email"], subject, "facility_invite_answer", fac["lang"], {"name": d["last_name"]},
               doctor=d, answer=answer, facility=fac["name"])
     if answer == "accepted" and inv["job_id"]:
         if profile_readiness(g.user["id"])["ready"]:
-            db.execute("INSERT OR IGNORE INTO applications (job_id, doctor_id, cover_note, status)"
-                       " VALUES (?, ?, 'Accepted invitation', 'shortlisted')", (inv["job_id"], g.user["id"]))
-            db.commit()
+            store.create("applications", f"{inv['job_id']}_{g.user['id']}",
+                         {"job_id": inv["job_id"], "doctor_id": g.user["id"], "cover_note": "Accepted invitation",
+                          "status": "shortlisted"})
             flash(_("Invitation accepted. You've been added to the shortlist for this job."), "success")
         else:
             flash(_("Invitation accepted. Finish your profile and CV so the facility can review you."), "success")

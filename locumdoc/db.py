@@ -1,113 +1,218 @@
+"""Records and the lookups views need, on top of store.py (Firestore in production).
+
+Firestore has no SQL joins, so the helpers here fetch the related records (the job's
+facility, the doctor's specialty...) and merge the fields a page shows into one dict.
+Lookups are cached per request by store.py, so this stays cheap.
+"""
 import os
 import re
-import sqlite3
 from datetime import date, timedelta
 
 import click
-from flask import current_app, g
 from werkzeug.security import generate_password_hash
 
-from . import refdata
+from . import refdata, storage, store
 
 
-def get_db():
-    if "db" not in g:
-        conn = sqlite3.connect(current_app.config["DATABASE"])
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        conn.execute("PRAGMA journal_mode = WAL")
-        g.db = conn
-    return g.db
-
-
-def close_db(_exc=None):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
-
-
-def query(sql, args=(), one=False):
-    cur = get_db().execute(sql, args)
-    rows = cur.fetchall()
-    cur.close()
-    return (rows[0] if rows else None) if one else rows
-
-
-def execute(sql, args=()):
-    db = get_db()
-    cur = db.execute(sql, args)
-    db.commit()
-    return cur.lastrowid
+class EmailTaken(ValueError):
+    pass
 
 
 def slugify(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-def init_schema():
-    db = get_db()
-    with current_app.open_resource("schema.sql") as f:
-        db.executescript(f.read().decode("utf8"))
-    migrate()
-    seed_reference()
+def city_id_for(country_code, name):
+    return f"{country_code.lower()}-{slugify(name)}"
 
 
-def migrate():
-    """Small in-place upgrades for databases created by earlier versions."""
-    db = get_db()
-    cols = {r[1] for r in db.execute("PRAGMA table_info(users)")}
-    if "lang" not in cols:
-        db.execute("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'")
-    cols = {r[1] for r in db.execute("PRAGMA table_info(doctors)")}
-    if "academic_rank" not in cols:
-        db.execute("ALTER TABLE doctors ADD COLUMN academic_rank TEXT NOT NULL DEFAULT ''")
-    if "medical_school" not in cols:
-        db.execute("ALTER TABLE doctors ADD COLUMN medical_school TEXT NOT NULL DEFAULT ''")
-    if "graduation_year" not in cols:
-        db.execute("ALTER TABLE doctors ADD COLUMN graduation_year INTEGER")
-    # Nationality used to be typed freely ("British"); it is now a country from the list.
-    for word, country in DEMONYMS.items():
-        db.execute("UPDATE doctors SET nationality = ? WHERE lower(trim(nationality)) = ?", (country, word))
-    db.commit()
-
-
-DEMONYMS = {
-    "egyptian": "Egypt", "jordanian": "Jordan", "sudanese": "Sudan", "syrian": "Syria", "lebanese": "Lebanon",
-    "palestinian": "Palestine", "iraqi": "Iraq", "yemeni": "Yemen", "tunisian": "Tunisia", "libyan": "Libya",
-    "algerian": "Algeria", "moroccan": "Morocco", "qatari": "Qatar", "saudi": "Saudi Arabia",
-    "emirati": "United Arab Emirates", "kuwaiti": "Kuwait", "omani": "Oman", "bahraini": "Bahrain",
-    "indian": "India", "pakistani": "Pakistan", "bangladeshi": "Bangladesh", "sri lankan": "Sri Lanka",
-    "filipino": "Philippines", "nigerian": "Nigeria", "british": "United Kingdom", "english": "United Kingdom",
-    "scottish": "United Kingdom", "welsh": "United Kingdom", "irish": "Ireland", "american": "United States",
-    "canadian": "Canada", "australian": "Australia", "south african": "South Africa", "turkish": "Turkey",
-    "iranian": "Iran", "german": "Germany", "french": "France", "italian": "Italy", "spanish": "Spain",
-    "greek": "Greece", "romanian": "Romania", "polish": "Poland", "ukrainian": "Ukraine", "russian": "Russia",
-}
-
+# ------------------------------------------------------------ reference data
 
 def seed_reference():
-    """Insert countries, cities and specialties if missing. Safe to run repeatedly."""
-    db = get_db()
+    """Add countries, cities and specialties that are missing. Never overwrites admin changes."""
+    have = {c["id"] for c in store.find("countries")}
     for code, name, slug, cur, body, active, sort in refdata.COUNTRIES:
-        db.execute(
-            "INSERT OR IGNORE INTO countries (code, name, slug, currency, licensing_body, active, sort_order)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (code, name, slug, cur, body, 1 if active else 0, sort),
-        )
-    for code, cities in refdata.CITIES.items():
-        cid = db.execute("SELECT id FROM countries WHERE code = ?", (code,)).fetchone()[0]
-        for city in cities:
-            db.execute("INSERT OR IGNORE INTO cities (country_id, name) VALUES (?, ?)", (cid, city))
+        if code not in have:
+            store.create("countries", code, {"code": code, "name": name, "slug": slug, "currency": cur,
+                                             "licensing_body": body, "active": 1 if active else 0,
+                                             "sort_order": sort})
+    have = {c["id"] for c in store.find("cities")}
+    for code, names in refdata.CITIES.items():
+        for name in names:
+            cid = city_id_for(code, name)
+            if cid not in have:
+                store.create("cities", cid, {"country_id": code, "name": name})
+    have = {s["id"] for s in store.find("specialties")}
     for name in refdata.SPECIALTIES:
-        db.execute("INSERT OR IGNORE INTO specialties (name, slug) VALUES (?, ?)", (name, slugify(name)))
-    db.commit()
+        slug = slugify(name)
+        if slug not in have:
+            store.create("specialties", slug, {"name": name, "slug": slug})
+
+
+def specialties():
+    return sorted(store.find("specialties"), key=lambda s: s["name"])
+
+
+def specialty_name(sid):
+    s = store.get("specialties", sid)
+    return s["name"] if s else None
+
+
+def countries():
+    return sorted(store.find("countries"), key=lambda c: (c["sort_order"], c["name"]))
+
+
+def cities(active_only=False, include=None):
+    """Cities with their country's name and currency, ordered like the old SQL (country, then name)."""
+    by_code = {c["id"]: c for c in store.find("countries")}
+    out = []
+    for ci in store.find("cities"):
+        co = by_code.get(ci["country_id"])
+        if not co:
+            continue
+        if active_only and not co["active"] and ci["id"] != include:
+            continue
+        out.append(dict(ci, country=co["name"], currency=co["currency"], _sort=co["sort_order"]))
+    return sorted(out, key=lambda c: (c["_sort"], c["name"]))
+
+
+# --------------------------------------------------------------------- users
+
+def user_by_email(email):
+    return store.first("users", email=(email or "").strip().lower())
 
 
 def create_user(email, password, role, lang="en"):
-    return execute(
-        "INSERT INTO users (email, password_hash, role, lang) VALUES (?, ?, ?, ?)",
-        (email.strip().lower(), generate_password_hash(password), role, lang),
-    )
+    """Create a login. Raises EmailTaken if the address is already registered (checked atomically)."""
+    email = email.strip().lower()
+    uid = store._backend().new_id("users")
+    if not store.create("emails", store.email_key(email), {"user_id": uid}, defaults=False):
+        raise EmailTaken(email)
+    store.add("users", {"email": email, "password_hash": generate_password_hash(password), "role": role,
+                        "lang": lang}, doc_id=uid)
+    return uid
+
+
+def delete_user(uid):
+    """Remove an account and everything that belongs to it (profile, files, jobs, applications)."""
+    user = store.get("users", uid)
+    if not user:
+        return
+    for d in store.find("documents", user_id=uid):
+        storage.delete(d["storage_name"])
+        store.delete("documents", d["id"])
+    store.delete_where("applications", doctor_id=uid)
+    store.delete_where("invitations", doctor_id=uid)
+    store.delete_where("invitations", facility_id=uid)
+    for j in store.find("jobs", facility_id=uid):
+        store.delete_where("applications", job_id=j["id"])
+        for inv in store.find("invitations", job_id=j["id"]):
+            store.update("invitations", inv["id"], job_id=None)
+        store.delete("jobs", j["id"])
+    store.delete("doctors", uid)
+    store.delete("facilities", uid)
+    store.delete("emails", store.email_key(user["email"]))
+    store.delete("users", uid)
+
+
+# ----------------------------------------------------- joined views of records
+
+def doctor_full(d):
+    """A doctor profile plus account details, specialty name and whether a CV is on file."""
+    if d is None:
+        return None
+    u = store.get("users", d["id"]) or {}
+    docs = store.find("documents", user_id=d["id"])
+    return dict(d, email=u.get("email", ""), lang=u.get("lang", "en"), created_at=u.get("created_at"),
+                last_login_at=u.get("last_login_at"), is_active=u.get("is_active", 0),
+                specialty=specialty_name(d["specialty_id"]),
+                cv_count=sum(1 for x in docs if x["kind"] == "cv"))
+
+
+def get_doctor(uid):
+    return doctor_full(store.get("doctors", uid))
+
+
+def facility_full(f):
+    if f is None:
+        return None
+    u = store.get("users", f["id"]) or {}
+    ci = store.get("cities", f["city_id"])
+    co = store.get("countries", f["country_id"])
+    return dict(f, email=u.get("email", ""), lang=u.get("lang", "en"), created_at=u.get("created_at"),
+                last_login_at=u.get("last_login_at"), is_active=u.get("is_active", 0),
+                city=ci["name"] if ci else None, country=co["name"] if co else None,
+                currency=co["currency"] if co else None)
+
+
+def get_facility(uid):
+    return facility_full(store.get("facilities", uid))
+
+
+def job_full(j):
+    """A job plus the names the listings show: specialty, city, country, facility."""
+    if j is None:
+        return None
+    co = store.get("countries", j["country_id"]) or {}
+    ci = store.get("cities", j["city_id"])
+    f = store.get("facilities", j["facility_id"]) or {}
+    return dict(j, specialty=specialty_name(j["specialty_id"]), city=ci["name"] if ci else None,
+                country=co.get("name"), country_slug=co.get("slug"), country_active=co.get("active", 0),
+                facility=f.get("name"), facility_type=f.get("facility_type"), sector=f.get("sector"),
+                facility_verified=f.get("verified", 0))
+
+
+def get_job(job_id):
+    return job_full(store.get("jobs", job_id))
+
+
+def is_public(job):
+    return (job["status"] == "open" and job["facility_verified"] and job["country_active"]
+            and job["end_date"] >= date.today().isoformat())
+
+
+def public_jobs(match=None, limit=None, offset=0):
+    """Open jobs at verified facilities in open countries, soonest start first."""
+    rows = [job_full(j) for j in store.find("jobs", status="open")]
+    rows = [r for r in rows if is_public(r) and (match is None or match(r))]
+    rows.sort(key=lambda r: (r["start_date"], r["created_at"]))
+    return rows[offset:offset + limit] if limit else rows[offset:]
+
+
+def application_full(a, specialty_of="doctor"):
+    """An application with its job, facility, city and doctor fields merged in."""
+    j = store.get("jobs", a["job_id"]) or {}
+    d = store.get("doctors", a["doctor_id"]) or {}
+    f = store.get("facilities", j.get("facility_id")) or {}
+    ci = store.get("cities", j.get("city_id"))
+    spec = j.get("specialty_id") if specialty_of == "job" else d.get("specialty_id")
+    return dict(a, title=j.get("title", ""), start_date=j.get("start_date"), end_date=j.get("end_date"),
+                rate_amount=j.get("rate_amount"), rate_currency=j.get("rate_currency"),
+                rate_period=j.get("rate_period"), job_status=j.get("status"), facility_id=j.get("facility_id"),
+                facility=f.get("name"), city=ci["name"] if ci else None,
+                dtitle=d.get("title"), first_name=d.get("first_name", ""), last_name=d.get("last_name", ""),
+                grade=d.get("grade"), academic_rank=d.get("academic_rank"),
+                years_experience=d.get("years_experience"), qatar_license_status=d.get("qatar_license_status"),
+                current_country=d.get("current_country"), available_from=d.get("available_from"),
+                specialty=specialty_name(spec))
+
+
+def invitation_full(i):
+    f = store.get("facilities", i["facility_id"]) or {}
+    j = store.get("jobs", i["job_id"])
+    title = j["title"] if j else None
+    return dict(i, facility=f.get("name"), job_title=title, title=title)
+
+
+def newest_first(rows, key="created_at"):
+    return sorted(rows, key=lambda r: r.get(key) or "", reverse=True)
+
+
+def documents_for(uid, cv_first=True):
+    docs = newest_first(store.find("documents", user_id=uid))
+    if cv_first:
+        docs.sort(key=lambda d: d["kind"] != "cv")
+    return docs
 
 
 # ---------------------------------------------------------------- demo content
@@ -144,83 +249,77 @@ DEMO_DOCTORS = [
 
 DEMO_SCHOOLS = [("University of Bristol", 2008), ("University of Jordan", 2013),
                 ("Royal College of Surgeons in Ireland", 2011), ("Cairo University (Kasr Al Ainy)", 2005)]
+DEMO_ACADEMIC = {3: "eg_assistant_professor"}
 
 
 def seed_demo():
-    db = get_db()
-    qa = db.execute("SELECT id FROM countries WHERE code='QA'").fetchone()[0]
-    city = {r["name"]: r["id"] for r in db.execute("SELECT id, name FROM cities WHERE country_id=?", (qa,))}
-    spec = {r["name"]: r["id"] for r in db.execute("SELECT id, name FROM specialties")}
+    """Demo facilities, jobs, doctors and applications. Safe to run on every start."""
     fac_ids = []
     for i, (name, ftype, sector, cname, contact) in enumerate(DEMO_FACILITIES):
         email = f"facility{i + 1}@demo.locumdoc.me"
-        row = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
-        if row:
-            fac_ids.append(row[0])
+        u = user_by_email(email)
+        if u:
+            fac_ids.append(u["id"])
             continue
-        uid = create_user(email, "demo-password", "facility")
-        db.execute(
-            "INSERT INTO facilities (user_id, name, facility_type, sector, country_id, city_id, contact_name,"
-            " contact_role, phone, about, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-            (uid, name, ftype, sector, qa, city[cname], contact, "Medical staffing lead",
-             "+974 4000 0000", "Demo facility used to preview the platform."),
-        )
+        try:
+            uid = create_user(email, "demo-password", "facility")
+        except EmailTaken:  # another worker is seeding at the same moment
+            return
+        store.add("facilities", {"user_id": uid, "name": name, "facility_type": ftype, "sector": sector,
+                                 "country_id": "QA", "city_id": city_id_for("QA", cname), "contact_name": contact,
+                                 "contact_role": "Medical staffing lead", "phone": "+974 4000 0000",
+                                 "about": "Demo facility used to preview the platform.", "verified": 1}, doc_id=uid)
         fac_ids.append(uid)
-    if db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 0:
+    if store.create("_meta", "demo-jobs", {"at": store.now()}, defaults=False):
         today = date.today()
         for fidx, title, sname, grade, cname, start, weeks, rate, period, perks in DEMO_JOBS:
             s = today + timedelta(days=start)
             e = s + timedelta(weeks=weeks)
-            db.execute(
-                "INSERT INTO jobs (facility_id, title, specialty_id, grade, country_id, city_id, start_date, end_date,"
-                " rate_amount, rate_currency, rate_period, accommodation, flights, transport, licensing_support,"
-                " description, requirements) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'QAR', ?, ?, ?, ?, ?, ?, ?)",
-                (fac_ids[fidx], title, spec[sname], grade, qa, city[cname], s.isoformat(), e.isoformat(),
-                 rate, period, *perks,
-                 "Cover for a planned absence in a busy department. Full induction, rota shared in advance, "
-                 "and a named clinical lead for the duration of the placement.",
-                 "Specialty qualification recognised by DHP (category 1 or 2 preferred). "
-                 "At least 3 years post-specialty experience. Current certificate of good standing."),
-            )
+            acc, fl, tr, lic = perks
+            store.add("jobs", {
+                "facility_id": fac_ids[fidx], "title": title, "specialty_id": slugify(sname), "grade": grade,
+                "country_id": "QA", "city_id": city_id_for("QA", cname), "start_date": s.isoformat(),
+                "end_date": e.isoformat(), "rate_amount": rate, "rate_currency": "QAR", "rate_period": period,
+                "accommodation": acc, "flights": fl, "transport": tr, "licensing_support": lic,
+                "description": "Cover for a planned absence in a busy department. Full induction, rota shared in "
+                               "advance, and a named clinical lead for the duration of the placement.",
+                "requirements": "Specialty qualification recognised by DHP (category 1 or 2 preferred). "
+                                "At least 3 years post-specialty experience. Current certificate of good standing."})
     for i, (fn, ln, sname, grade, yrs, country, nat, quals, lic, qstat, exam) in enumerate(DEMO_DOCTORS):
         email = f"doctor{i + 1}@demo.locumdoc.me"
-        if db.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
+        if user_by_email(email):
             continue
-        uid = create_user(email, "demo-password", "doctor")
+        try:
+            uid = create_user(email, "demo-password", "doctor")
+        except EmailTaken:
+            continue
         avail = date.today() + timedelta(days=20 + i * 10)
-        db.execute(
-            "INSERT INTO doctors (user_id, first_name, last_name, phone, nationality, current_country, specialty_id,"
-            " grade, years_experience, qualifications, primary_license, qatar_license_status, exam_status, has_psv,"
-            " good_standing, languages, available_from, available_to, min_weeks, bio, verified)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)",
-            (uid, fn, ln, "+44 7700 900000", nat, country, spec[sname], grade, yrs, quals, lic, qstat, exam,
-             1 if qstat != "none" else 0, "English, Arabic" if nat in ("Jordan", "Egypt") else "English",
-             avail.isoformat(), (avail + timedelta(weeks=16)).isoformat(), 8,
-             "Demo profile. Experienced locum available for blocks of 2 to 4 months.", 1 if i % 2 == 0 else 0),
-        )
-        name = f"demo-cv-{uid}.pdf"
-        with open(os.path.join(current_app.config["UPLOAD_DIR"], name), "wb") as fh:
-            fh.write(_demo_pdf(f"Dr {fn} {ln}", sname, quals))
-        db.execute("INSERT INTO documents (user_id, kind, original_name, storage_name, mime_type, size_bytes)"
-                   " VALUES (?, 'cv', ?, ?, 'application/pdf', ?)",
-                   (uid, f"CV {fn} {ln}.pdf", name, os.path.getsize(os.path.join(current_app.config["UPLOAD_DIR"], name))))
-    db.execute("UPDATE doctors SET academic_rank = 'eg_assistant_professor' WHERE academic_rank IN ('', 'assistant_professor')"
-               " AND user_id = (SELECT id FROM users WHERE email = 'doctor4@demo.locumdoc.me')")
-    for i, (school, year) in enumerate(DEMO_SCHOOLS):
-        db.execute("UPDATE doctors SET medical_school = ?, graduation_year = ? WHERE medical_school = '' AND user_id ="
-                   " (SELECT id FROM users WHERE email = ?)", (school, year, f"doctor{i + 1}@demo.locumdoc.me"))
-    db.commit()
-    if db.execute("SELECT COUNT(*) FROM applications").fetchone()[0] == 0:
+        school, year = DEMO_SCHOOLS[i]
+        store.add("doctors", {
+            "user_id": uid, "first_name": fn, "last_name": ln, "phone": "+44 7700 900000", "nationality": nat,
+            "current_country": country, "specialty_id": slugify(sname), "grade": grade,
+            "academic_rank": DEMO_ACADEMIC.get(i, ""), "years_experience": yrs, "qualifications": quals,
+            "medical_school": school, "graduation_year": year, "primary_license": lic,
+            "qatar_license_status": qstat, "exam_status": exam, "has_psv": 1 if qstat != "none" else 0,
+            "good_standing": 1, "languages": "English, Arabic" if nat in ("Jordan", "Egypt") else "English",
+            "available_from": avail.isoformat(), "available_to": (avail + timedelta(weeks=16)).isoformat(),
+            "min_weeks": 8, "bio": "Demo profile. Experienced locum available for blocks of 2 to 4 months.",
+            "verified": 1 if i % 2 == 0 else 0}, doc_id=uid)
+        pdf = _demo_pdf(f"Dr {fn} {ln}", sname, quals)
+        name = storage.write_bytes(pdf)
+        store.add("documents", {"user_id": uid, "kind": "cv", "original_name": f"CV {fn} {ln}.pdf",
+                                "storage_name": name, "mime_type": "application/pdf", "size_bytes": len(pdf)})
+    if store.create("_meta", "demo-applications", {"at": store.now()}, defaults=False):
         for email, specialty, status in (("doctor1@demo.locumdoc.me", "Anaesthesia", "shortlisted"),
                                          ("doctor4@demo.locumdoc.me", "Radiology", "submitted"),
                                          ("doctor2@demo.locumdoc.me", "Emergency Medicine", "interview")):
-            row = db.execute(
-                "SELECT u.id AS uid, j.id AS jid FROM users u, jobs j WHERE u.email = ? AND j.specialty_id = ?"
-                " LIMIT 1", (email, spec[specialty])).fetchone()
-            if row:
-                db.execute("INSERT OR IGNORE INTO applications (job_id, doctor_id, cover_note, status) VALUES (?, ?, ?, ?)",
-                           (row["jid"], row["uid"], "Available for the full placement. PSV report ready.", status))
-        db.commit()
+            u = user_by_email(email)
+            jobs = store.find("jobs", specialty_id=slugify(specialty))
+            if u and jobs:
+                jid = jobs[0]["id"]
+                store.create("applications", f"{jid}_{u['id']}", {
+                    "job_id": jid, "doctor_id": u["id"], "status": status,
+                    "cover_note": "Available for the full placement. PSV report ready."})
 
 
 def _demo_pdf(*lines):
@@ -247,11 +346,13 @@ def _demo_pdf(*lines):
     return out.encode("latin-1")
 
 
+# ---------------------------------------------------------------- start-up
+
 def register_cli(app):
     @app.cli.command("init-db")
     def init_db_cmd():
-        """Create tables and load reference data."""
-        init_schema()
+        """Load reference data (countries, cities, specialties)."""
+        seed_reference()
         click.echo("Database ready.")
 
     @app.cli.command("seed-demo")
@@ -265,24 +366,41 @@ def register_cli(app):
     @click.password_option()
     def create_admin_cmd(email, password):
         """Create an administrator account."""
-        if query("SELECT 1 FROM users WHERE email = ?", (email.lower(),), one=True):
+        try:
+            create_user(email, password, "admin")
+        except EmailTaken:
             raise click.ClickException("A user with that email already exists.")
-        create_user(email, password, "admin")
         click.echo(f"Admin {email} created.")
+
+    @app.cli.command("import-sqlite")
+    @click.argument("sqlite_path")
+    @click.option("--uploads", default=None, help="Folder holding the uploaded files (default: next to the database).")
+    def import_sqlite_cmd(sqlite_path, uploads):
+        """Copy records and uploaded PDFs from the old SQLite database into the current store."""
+        from .import_sqlite import run
+        click.echo(run(sqlite_path, uploads))
+
+
+def _import_legacy_sqlite(app):
+    """On a computer that ran the old SQLite version, bring its accounts across on first start."""
+    path = app.config.get("LEGACY_SQLITE_PATH")
+    if (isinstance(store._backend(), store.LocalBackend) and path and os.path.exists(path)
+            and not store.find("users")):
+        from .import_sqlite import run
+        app.logger.warning("Moved data from %s: %s", path, run(path))
 
 
 def ensure_db(app):
-    """Create the database on first boot so a fresh deploy works without manual steps."""
-    path = app.config["DATABASE"]
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    """Load reference data and the admin account on start-up, so a fresh project works without manual steps."""
     with app.app_context():
-        init_schema()
+        seed_reference()
+        _import_legacy_sqlite(app)
         admin_email = app.config.get("ADMIN_EMAIL")
         admin_pw = app.config.get("ADMIN_PASSWORD")
-        if admin_email and admin_pw and not query("SELECT 1 FROM users WHERE email=?", (admin_email.lower(),), one=True):
+        if admin_email and admin_pw and not user_by_email(admin_email):
             try:
                 create_user(admin_email, admin_pw, "admin")
-            except sqlite3.IntegrityError:
+            except EmailTaken:
                 pass  # another worker created it first
         if app.config.get("SEED_DEMO"):
             seed_demo()

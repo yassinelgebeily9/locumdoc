@@ -1,16 +1,19 @@
 # One-click deploy on Render (render.com): New > Blueprint > point at this repo.
-# A persistent disk keeps the database and uploaded CVs across deploys.
+# Records live in Firestore and PDFs in Firebase Storage (see docs/firebase-setup.md),
+# so the web service itself keeps nothing and the free plan is enough.
 services:
   - type: web
     name: locumdoc
     runtime: docker
-    plan: starter            # persistent disks need a paid instance
+    plan: free
     healthCheckPath: /robots.txt
-    disk:
-      name: locumdoc-data
-      mountPath: /data
-      sizeGB: 5
     envVars:
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON   # the service account key file's contents
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: SITE_URL

@@ -4,6 +4,7 @@ from datetime import date
 
 from flask import request
 
+from .. import phones
 from ..i18n import _
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -75,6 +76,28 @@ class Form:
             v = None
         self.clean[name] = v
         return v
+
+    def phone(self, name="phone", required=True):
+        """Country code from `<name>_country` plus the number; stored as +E.164 when valid."""
+        cname = name + "_country"
+        region = (self.data.get(cname) or "").strip().upper()
+        raw = (self.data.get(name) or "").strip()
+        self.clean[cname], self.clean[name] = region, raw
+        if not raw:
+            if required:
+                self.errors[name] = _("Enter a phone number.")
+            return None
+        try:
+            value, region = phones.normalise(region, raw)
+        except phones.PhoneError as e:
+            if str(e) == "country":
+                self.errors[name] = _("Choose the country code.")
+            else:
+                self.errors[name] = _("Enter a valid phone number for %(country)s (+%(code)s).",
+                                      country=_(phones.NAMES.get(region, region)), code=phones.dial_code(region))
+            return None
+        self.clean[cname], self.clean[name] = region, value
+        return value
 
     def flag(self, name):
         v = 1 if self.data.get(name) in ("1", "on", "yes", "true") else 0

@@ -250,6 +250,7 @@ DEMO_DOCTORS = [
 DEMO_SCHOOLS = [("University of Bristol", 2008), ("University of Jordan", 2013),
                 ("Royal College of Surgeons in Ireland", 2011), ("Cairo University (Kasr Al Ainy)", 2005)]
 DEMO_ACADEMIC = {3: "eg_assistant_professor"}
+DEMO_PHONES = ["+447911123456", "+962791234567", "+353851234567", "+201001234567"]
 
 
 def seed_demo():
@@ -267,7 +268,7 @@ def seed_demo():
             return
         store.add("facilities", {"user_id": uid, "name": name, "facility_type": ftype, "sector": sector,
                                  "country_id": "QA", "city_id": city_id_for("QA", cname), "contact_name": contact,
-                                 "contact_role": "Medical staffing lead", "phone": "+974 4000 0000",
+                                 "contact_role": "Medical staffing lead", "phone": "+97444000000",
                                  "about": "Demo facility used to preview the platform.", "verified": 1}, doc_id=uid)
         fac_ids.append(uid)
     if store.create("_meta", "demo-jobs", {"at": store.now()}, defaults=False):
@@ -296,7 +297,7 @@ def seed_demo():
         avail = date.today() + timedelta(days=20 + i * 10)
         school, year = DEMO_SCHOOLS[i]
         store.add("doctors", {
-            "user_id": uid, "first_name": fn, "last_name": ln, "phone": "+44 7700 900000", "nationality": nat,
+            "user_id": uid, "first_name": fn, "last_name": ln, "phone": DEMO_PHONES[i], "nationality": nat,
             "current_country": country, "specialty_id": slugify(sname), "grade": grade,
             "academic_rank": DEMO_ACADEMIC.get(i, ""), "years_experience": yrs, "qualifications": quals,
             "medical_school": school, "graduation_year": year, "primary_license": lic,

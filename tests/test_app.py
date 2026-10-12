@@ -70,7 +70,7 @@ class Base(unittest.TestCase):
         self.assertEqual(r.status_code, 302, r.data[:500])
         if ready:
             r = self.post(c, "/doctor/profile", {
-                "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
+                "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone_country": "GB", "phone": "07911 123456", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
                 "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant",
                 "years_experience": "12", "qualifications": "MBBS, FRCA", "primary_license": "GMC",
                 "qatar_license_status": "evaluating", "exam_status": "exempt", "available_from": "2030-01-01",
@@ -85,7 +85,7 @@ class Base(unittest.TestCase):
         c = self.client()
         city = "qa-doha"
         r = self.post(c, "/join/facility", {"name": name, "facility_type": "hospital", "sector": "private",
-                                            "city_id": city, "contact_name": "Hana", "phone": "+974 1",
+                                            "city_id": city, "contact_name": "Hana", "phone_country": "QA", "phone": "4400 1234",
                                             "email": email, "password": "long-password-2", "consent": "1"})
         self.assertEqual(r.status_code, 302, r.data[:800])
         return c
@@ -377,7 +377,7 @@ class GradeTests(Base):
         doc = self.signup_doctor()
         spec = "anaesthesia"
         r = self.post(doc, "/doctor/profile", {
-            "title": "Prof", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
+            "title": "Prof", "first_name": "Amal", "last_name": "Nasser", "phone_country": "GB", "phone": "07911 123456", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
             "current_country": "United Kingdom", "specialty_id": spec, "grade": "senior_consultant",
             "academic_rank": "associate_professor", "years_experience": "22", "qualifications": "MBBS, FRCA",
             "primary_license": "GMC", "qatar_license_status": "eligible", "exam_status": "exempt",
@@ -393,7 +393,7 @@ class GradeTests(Base):
         self.assertIn(b"Amal Nasser", fac.get("/facility/doctors?academic=any").data)
         self.assertNotIn(b"Amal Nasser", fac.get("/facility/doctors?academic=5").data)     # professor or above
         # An Egyptian "assistant professor" (أستاذ مساعد) sits at the Gulf associate-professor level
-        base = {"title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+20 1", "nationality": "Egypt",
+        base = {"title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+20 100 123 4567", "nationality": "Egypt",
                 "medical_school": "Cairo University (Kasr Al Ainy)", "graduation_year": "2005",
                 "current_country": "Egypt", "specialty_id": spec, "grade": "consultant", "years_experience": "20",
                 "qualifications": "MBBCh, MD", "primary_license": "Egyptian Medical Syndicate",
@@ -413,11 +413,40 @@ class GradeTests(Base):
         self.assertEqual(self.rows("doctors")[0]["nationality"], "Egypt")
         # clearing it is allowed
         self.post(doc, "/doctor/profile", {
-            "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+44 1", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
+            "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone_country": "GB", "phone": "07911 123456", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
             "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant", "academic_rank": "",
             "years_experience": "22", "qualifications": "MBBS", "primary_license": "GMC",
             "qatar_license_status": "eligible", "exam_status": "exempt"})
         self.assertEqual(self.rows("doctors")[0]["academic_rank"], "")
+
+    def test_phone_numbers_checked_per_country(self):
+        doc = self.signup_doctor()
+        base = {"title": "Dr", "first_name": "Amal", "last_name": "Nasser", "nationality": "United Kingdom",
+                "medical_school": "University of Leeds", "current_country": "United Kingdom", "specialty_id": "anaesthesia",
+                "grade": "consultant", "years_experience": "12", "qualifications": "MBBS", "primary_license": "GMC",
+                "qatar_license_status": "eligible", "exam_status": "exempt"}
+        stored = lambda: self.rows("doctors")[0]["phone"]
+        # A Qatari number with the Qatar code is stored in international form
+        self.assertEqual(self.post(doc, "/doctor/profile", dict(base, phone_country="QA", phone="5512 3456")).status_code, 302)
+        self.assertEqual(stored(), "+97455123456")
+        # Too short for Qatar, or nonsense: rejected with the country named, nothing saved
+        for bad in ("1234", "999 999 999 999", "hello"):
+            r = self.post(doc, "/doctor/profile", dict(base, phone_country="QA", phone=bad))
+            self.assertEqual(r.status_code, 200, bad)
+            self.assertIn(b"valid phone number for Qatar (+974)", r.data)
+        self.assertEqual(stored(), "+97455123456")
+        # A full international number overrides the dropdown
+        self.post(doc, "/doctor/profile", dict(base, phone_country="QA", phone="+20 100 123 4567"))
+        self.assertEqual(stored(), "+201001234567")
+        # Shown formatted, and the form comes back with Egypt selected
+        page = doc.get("/doctor/profile").data.decode()
+        self.assertIn('<option value="EG" selected', page)
+        self.assertIn('value="010 01234567"', page)
+        fac = self.signup_facility()
+        r = self.post(fac, "/facility/profile", {"name": "Test Hospital", "facility_type": "hospital", "sector": "private",
+                                                 "city_id": "qa-doha", "contact_name": "Hana", "phone_country": "QA",
+                                                 "phone": "12"})
+        self.assertIn(b"valid phone number for Qatar", r.data)
 
     def test_import_from_old_sqlite_database(self):
         import sqlite3

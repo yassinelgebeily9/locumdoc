@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from flask import Flask, g, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from . import db, i18n, refdata, security, storage, store, world
+from . import db, i18n, phones, refdata, security, storage, store, world
 
 
 def _bool(v):
@@ -98,6 +98,9 @@ def create_app(test_config=None):
             "comma": "، " if i18n.current() == "ar" else ", ",
             "weeks_n": i18n.weeks,
             "country_options": lambda: world.options(i18n.gettext),
+        "phone_country_options": lambda: phones.options(i18n.gettext, i18n.current() == "ar"),
+        "phone_parts": phones.parts,
+        "phone_code_for": phones.code_for_country,
             "currency_name": lambda code: i18n.CURRENCY_AR.get(code, code) if i18n.current() == "ar" else code,
         }
 
@@ -121,6 +124,9 @@ def create_app(test_config=None):
     @app.template_filter("years")
     def _years(n):
         return "—" if n in (None, "") else i18n.years(n)
+
+    app.add_template_filter(phones.display, "phone")
+    app.add_template_filter(phones.tel_link, "tel")
 
     @app.template_filter("filesize")
     def _filesize(n):

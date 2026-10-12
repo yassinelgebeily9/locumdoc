@@ -3,7 +3,7 @@ import io
 
 from flask import Blueprint, Response, abort, flash, redirect, render_template, request, url_for
 
-from .. import db, mail, refdata, store
+from .. import db, mail, phones, refdata, store
 from ..i18n import _
 from ..db import get_doctor, get_facility
 from ..security import login_required
@@ -66,7 +66,7 @@ def _doctors_csv(rows):
     w.writerow(["Name", "Email", "Phone", "Specialty", "Grade", "Academic title", "Years", "University", "Graduated", "Nationality", "Lives in",
                 "Qatar licence", "Available from", "Available to", "Verified", "Has CV"])
     for d in rows:
-        w.writerow([f"{d['title']} {d['first_name']} {d['last_name']}", d["email"], d["phone"], d["specialty"],
+        w.writerow([f"{d['title']} {d['first_name']} {d['last_name']}", d["email"], phones.display(d["phone"]), d["specialty"],
                     refdata.label(refdata.GRADES, d["grade"]), refdata.label(refdata.ACADEMIC_RANKS, d["academic_rank"], ""),
                     d["years_experience"], d["medical_school"], d["graduation_year"] or "", d["nationality"],
                     d["current_country"], refdata.label(refdata.QATAR_LICENSE_STATUS, d["qatar_license_status"]),

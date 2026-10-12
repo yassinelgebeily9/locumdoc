@@ -97,7 +97,7 @@ def join_facility():
         form.choice("city_id", [(c["id"], c["name"]) for c in cities], label=_("a city"))
         form.text("contact_name", required=True, max_len=120, label=_("your name"))
         form.text("contact_role", max_len=120)
-        form.text("phone", required=True, max_len=40, label=_("a phone number"))
+        form.phone()
         email = form.email()
         pw = _check_password(form)
         if not form.flag("consent"):

@@ -19,7 +19,7 @@
       <div class="table-wrap"><table class="data">
         <tbody>
         {% for f in pending %}
-        <tr><td><a class="row-link" href="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ f.name }}</a><span class="sub">{{ f.city }}, {{ f.contact_name }}, {{ f.phone }}</span></td>
+        <tr><td><a class="row-link" href="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ f.name }}</a><span class="sub">{{ f.city }}, {{ f.contact_name }}, {{ f.phone|phone }}</span></td>
           <td class="actions"><form method="post" action="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ m.csrf() }}<input type="hidden" name="action" value="verify"><button class="btn btn-primary btn-sm" type="submit">Verify</button></form></td></tr>
         {% endfor %}
         </tbody>

@@ -20,7 +20,7 @@
       {{ m.input(form, v, 'website', _('Website'), type='url', optional=True, attrs='placeholder="https://"') }}
       {{ m.input(form, v, 'contact_name', _('Contact name')) }}
       {{ m.input(form, v, 'contact_role', _('Contact role'), optional=True) }}
-      {{ m.input(form, v, 'phone', _('Phone'), type='tel') }}
+      {{ m.phone_input(form, v, 'phone', _('Phone')) }}
       <div></div>
       {{ m.textarea(form, v, 'about', _('About the facility'), optional=True, cls='full', help=_('Departments, bed numbers, patient population, what locums can expect.')) }}
     </div>

@@ -16,7 +16,7 @@
       {% for f in rows %}
       <tr>
         <td><a class="row-link" href="{{ url_for('admin.facility', fac_id=f.user_id) }}">{{ f.name }}</a><span class="sub">{{ label(ref.FACILITY_TYPES, f.facility_type) }}, {{ label(ref.SECTORS, f.sector)|lower }}, {{ f.city }}</span></td>
-        <td class="hide-sm">{{ f.contact_name }}<span class="sub">{{ f.email }}, {{ f.phone }}</span></td>
+        <td class="hide-sm">{{ f.contact_name }}<span class="sub">{{ f.email }}, {{ f.phone|phone }}</span></td>
         <td class="hide-sm num">{{ f.job_count }}</td>
         <td class="hide-sm num">{{ f.created_at|d }}</td>
         <td class="actions">{% if f.verified %}{{ m.verified_tag() }}{% else %}

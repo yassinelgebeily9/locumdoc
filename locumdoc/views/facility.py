@@ -63,7 +63,7 @@ def profile():
         form.text("website", max_len=200)
         form.text("contact_name", required=True, max_len=120, label=_("a contact name"))
         form.text("contact_role", max_len=120)
-        form.text("phone", required=True, max_len=40, label=_("a phone number"))
+        form.phone()
         form.text("about", max_len=2000)
         if form.ok:
             c = form.clean

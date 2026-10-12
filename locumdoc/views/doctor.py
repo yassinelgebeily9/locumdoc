@@ -122,7 +122,7 @@ def documents():
             flash(_("You can store up to 20 documents. Delete one to add another."), "error")
             return redirect(url_for(".documents"))
         try:
-            name, original, mime, size = storage.save(request.files.get("file"))
+            name, original, mime, size = storage.save(request.files.get("file"), pdf_only=(kind == "cv"))
         except storage.UploadError as e:
             flash(str(e), "error")
             return redirect(url_for(".documents"))

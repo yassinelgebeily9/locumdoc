@@ -16,7 +16,7 @@
         <div></div>
         {{ m.input(form, v, 'first_name', _('First name')) }}
         {{ m.input(form, v, 'last_name', _('Last name')) }}
-        {{ m.input(form, v, 'phone', _('Phone (with country code)'), type='tel', attrs='autocomplete="tel"') }}
+        {{ m.phone_input(form, v, 'phone', _('Phone'), phone_code_for(v.get('current_country'))) }}
         {{ m.country_select(form, v, 'nationality', _('Nationality')) }}
         {{ m.country_select(form, v, 'current_country', _('Country you live in now')) }}
         {{ m.input(form, v, 'languages', _('Languages'), optional=True, attrs='placeholder="' ~ _('English, Arabic') ~ '"') }}

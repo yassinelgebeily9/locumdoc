@@ -140,6 +140,33 @@
 {% endcall %}
 {%- endmacro %}
 
+{# Phone: country-code dropdown + the number. The server checks it against that country's numbering plan. #}
+{% macro phone_input(form, v, name, label_text, default_country='QA', help=None, cls='') -%}
+{% set cc, number = phone_parts(v.get(name) if v else '', v.get(name ~ '_country') if v else '', default_country) %}
+{% set common, everything = phone_country_options() %}
+{% set common_keys = common|map(attribute=0)|list %}
+{% set err = form and form.errors.get(name) %}
+<div class="field phone-field {{ cls }}{% if err %} has-error{% endif %}">
+  <label for="f-{{ name }}">{{ label_text }}</label>
+  <div class="phone-row">
+    <label class="visually-hidden" for="f-{{ name }}_country">{{ _('Country code') }}</label>
+    <select id="f-{{ name }}_country" name="{{ name }}_country" dir="ltr" required autocomplete="tel-country-code">
+      <optgroup label="{{ _('Most common') }}">
+        {% for k, l in common %}<option value="{{ k }}" {% if cc == k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </optgroup>
+      <optgroup label="{{ _('All countries') }}">
+        {% for k, l in everything %}<option value="{{ k }}" {% if cc == k and cc not in common_keys %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </optgroup>
+    </select>
+    <input class="ltr" type="tel" id="f-{{ name }}" name="{{ name }}" value="{{ number }}" required inputmode="tel"
+      autocomplete="tel-national" maxlength="24"
+      {% if err %}aria-invalid="true" aria-describedby="e-{{ name }}"{% elif help %}aria-describedby="h-{{ name }}"{% endif %}>
+  </div>
+  {% if err %}<span class="error" id="e-{{ name }}">{{ err }}</span>
+  {% elif help %}<span class="help" id="h-{{ name }}">{{ help }}</span>{% endif %}
+</div>
+{%- endmacro %}
+
 {# Academic title dropdown, grouped by university system (see refdata.ACADEMIC_TITLE_GROUPS). #}
 {% macro academic_select(form, v, name, label_text, help=None, cls='') -%}
 {% call field_wrap(form, name, label_text, help, True, cls) %}

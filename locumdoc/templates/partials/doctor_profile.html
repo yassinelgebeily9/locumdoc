@@ -20,7 +20,7 @@
       <dt>{{ _('Lives in') }}</dt><dd>{{ _(d.current_country) if d.current_country else '—' }}</dd>
       <dt>{{ _('Languages') }}</dt><dd dir="auto">{{ d.languages or '—' }}</dd>
       <dt>{{ _('Email') }}</dt><dd><a class="ltr" href="mailto:{{ d.email }}">{{ d.email }}</a></dd>
-      <dt>{{ _('Phone') }}</dt><dd>{% if d.phone %}<a class="ltr" href="tel:{{ d.phone|replace(' ', '') }}">{{ d.phone }}</a>{% else %}—{% endif %}</dd>
+      <dt>{{ _('Phone') }}</dt><dd>{% if d.phone %}<a class="ltr" href="tel:{{ d.phone|tel }}">{{ d.phone|phone }}</a>{% else %}—{% endif %}</dd>
     </dl>
   </div>
 </div>

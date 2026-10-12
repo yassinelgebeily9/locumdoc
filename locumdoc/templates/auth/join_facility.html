@@ -28,7 +28,7 @@
         <div class="form-grid">
           {{ m.input(form, form.clean, 'contact_name', _('Your name'), attrs='autocomplete="name"') }}
           {{ m.input(form, form.clean, 'contact_role', _('Your role'), optional=True, attrs='placeholder="' ~ _('e.g. Medical staffing manager') ~ '"') }}
-          {{ m.input(form, form.clean, 'phone', _('Phone'), type='tel', attrs='autocomplete="tel" placeholder="+974"') }}
+          {{ m.phone_input(form, form.clean, 'phone', _('Phone')) }}
           {{ m.input(form, form.clean, 'email', _('Work email'), type='email', attrs='autocomplete="email"') }}
           {{ m.input(form, form.clean, 'password', _('Password'), type='password', cls='full', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
           <div class="full">{% include "partials/consent.html" %}</div>

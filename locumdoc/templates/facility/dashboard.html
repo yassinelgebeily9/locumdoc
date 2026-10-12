@@ -14,7 +14,7 @@
 <div class="wrap content">
   {% if not fac.verified %}
   <div class="callout amber">
-    <p><strong>{{ _('Verification in progress.') }}</strong> {{ _("We're checking %(facility)s, usually within one working day, and may call %(phone)s.", facility=fac.name, phone=fac.phone) }}</p>
+    <p><strong>{{ _('Verification in progress.') }}</strong> {{ _("We're checking %(facility)s, usually within one working day, and may call %(phone)s.", facility=fac.name, phone=fac.phone|phone) }}</p>
     <p>{{ _("You can post jobs now. They go live, and the doctor directory opens, as soon as you're verified.") }}</p>
   </div>
   {% endif %}

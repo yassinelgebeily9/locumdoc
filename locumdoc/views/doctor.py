@@ -50,7 +50,7 @@ def profile():
         form.choice("title", [("Dr", "Dr"), ("Prof", "Prof"), ("Mr", "Mr"), ("Ms", "Ms")])
         form.text("first_name", required=True, max_len=80, label=_("your first name"))
         form.text("last_name", required=True, max_len=80, label=_("your last name"))
-        form.text("phone", required=True, max_len=40, label=_("a phone number"))
+        form.phone()
         countries_all = [(n, n) for _c, n in world.WORLD]
         form.choice("nationality", countries_all, label=_("your nationality"))
         form.choice("current_country", countries_all, label=_("where you live now"))

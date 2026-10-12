@@ -27,7 +27,7 @@
           <dt>Website</dt><dd>{% if fac.website %}<a href="{{ fac.website }}" rel="noopener nofollow" target="_blank">{{ fac.website }}</a>{% else %}—{% endif %}</dd>
           <dt>Contact</dt><dd>{{ fac.contact_name }}{% if fac.contact_role %}, {{ fac.contact_role }}{% endif %}</dd>
           <dt>Email</dt><dd><a href="mailto:{{ fac.email }}">{{ fac.email }}</a></dd>
-          <dt>Phone</dt><dd><a href="tel:{{ fac.phone|replace(' ', '') }}">{{ fac.phone }}</a></dd>
+          <dt>Phone</dt><dd><a class="ltr" href="tel:{{ fac.phone|tel }}">{{ fac.phone|phone }}</a></dd>
           <dt>About</dt><dd>{{ fac.about or '—' }}</dd>
         </dl>
       </div>

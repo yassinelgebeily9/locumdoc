@@ -15,10 +15,11 @@ Firebase Storage buckets require the Blaze plan. At LocumDoc's size, usage stays
 1. Click **Upgrade** at the bottom of the left menu and add a billing account.
 2. In Google Cloud **Billing → Budgets & alerts**, set a budget, for example $10 a month with email alerts. Then a mistake can't run up a surprise bill.
 
-## 3. Create the Firestore database (in Doha)
+## 3. Create the Firestore database (next to the web server)
 
 1. In the left menu: **Build → Firestore Database → Create database**.
-2. **Location:** choose **`me-central1` (Doha)**. You can't change this later. Keeping the data in Qatar helps with Qatar's data-protection law (PDPPL) and with hospital customers.
+2. **Location:** choose the region the web server runs in. The Render service runs in Frankfurt, so choose **`europe-west3` (Frankfurt)**. Each page makes many small database calls, and a database on another continent adds around 0.1 s to every one of them.
+   You can't change a database's location later. To move later (for example to Doha, `me-central1`, if the web server moves to Google Cloud in Qatar), create a second Firestore database there, copy the data across with Firestore's export/import, and set `FIRESTORE_DATABASE` to its name.
 3. **Rules:** choose **production mode**. That locks the database to everyone except the LocumDoc server, which is what we want: the website reads and writes through its own server key, never from visitors' browsers.
 
 LocumDoc doesn't need any custom indexes.
@@ -26,7 +27,7 @@ LocumDoc doesn't need any custom indexes.
 ## 4. Create the Storage bucket
 
 1. **Build → Storage → Get started**.
-2. Pick a location. Choose `me-central1` (Doha) if it's offered, so the PDFs sit next to the database.
+2. Pick the same location as the database: `europe-west3` (Frankfurt).
 3. Choose **production mode** for the rules, so the bucket stays private.
 4. The bucket name appears at the top of the Storage page, for example `gs://locumdoc-3f2a1.firebasestorage.app`. The part after `gs://` is the `FIREBASE_STORAGE_BUCKET` setting.
 

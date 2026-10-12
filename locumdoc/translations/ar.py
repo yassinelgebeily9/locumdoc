@@ -788,9 +788,8 @@ AR = {
     "Muscat": "مسقط",
     "Salalah": "صلالة",
     "Manama": "المنامة",
-    # ------------------------------------------------------------------ CVs must be PDF
-    "Your CV must be a PDF. In Word or Pages, choose Export or Save As PDF, then upload that file.":
-        "يجب أن تكون سيرتك الذاتية بصيغة PDF. في Word أو Pages اختر التصدير أو الحفظ بصيغة PDF، ثم ارفع ذلك الملف.",
-    "CV: PDF only. Other documents: PDF, Word, JPG or PNG. Up to 10 MB.":
-        "السيرة الذاتية: PDF فقط. المستندات الأخرى: PDF أو Word أو JPG أو PNG. حتى 10 ميغابايت.",
+    # ------------------------------------------------------------------ every document is a PDF
+    "Documents must be PDFs. In Word or Pages, choose Export or Save As PDF; for a photo or scan, save it as a PDF first. Then upload that file.":
+        "يجب أن تكون المستندات بصيغة PDF. في Word أو Pages اختر التصدير أو الحفظ بصيغة PDF، وإذا كانت صورة أو مستندًا ممسوحًا فاحفظه بصيغة PDF أولًا، ثم ارفع ذلك الملف.",
+    "PDF only, up to 10 MB.": "PDF فقط، حتى 10 ميغابايت.",
 }

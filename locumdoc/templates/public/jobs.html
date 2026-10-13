@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Locum jobs for doctors in Qatar — LocumDoc') }}{% endblock %}
+{% block description %}{{ _('Browse open locum jobs for doctors in Qatar at verified hospitals and clinics: every specialty and grade, with dates, rates and licensing support.') }}{% endblock %}
 {% block main %}
 <div class="wrap page-head">
   <div class="row">
@@ -7,7 +8,7 @@
       <h1>{{ _('Locum jobs') }}</h1>
       <p>{% if f.q or f.specialty or f.city or f.grade %}{{ _('Open jobs at verified facilities matching your filters: %(n)s', n=total) }}{% else %}{{ _('Open jobs at verified facilities: %(n)s', n=total) }}{% endif %}</p>
     </div>
-    {% if not current_user %}<a class="btn btn-outline" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a profile to apply') }}</a>{% endif %}
+    {% if not current_user %}<a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}" data-hero-cta>{{ _('Create a profile to apply') }}</a>{% endif %}
   </div>
 </div>
 <div class="wrap content">

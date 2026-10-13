@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Contact LocumDoc') }}{% endblock %}
+{% block description %}{{ _("Questions about LocumDoc, or hiring locum doctors in Qatar? Send us a message and we'll reply within one working day.") }}{% endblock %}
+{% block sticky_cta %}{% endblock %}
 {% block main %}
 <div class="wrap page-head">
   <h1>{{ _('Talk to us') }}</h1>
@@ -8,6 +10,7 @@
 <div class="wrap content grid-main">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
+    {{ m.error_summary(form) }}
     <div class="form-grid">
       {{ m.input(form, form.clean, 'name', _('Your name')) }}
       {{ m.input(form, form.clean, 'email', _('Email'), type='email') }}
@@ -15,7 +18,7 @@
       {{ m.textarea(form, form.clean, 'message', _('Message'), cls='full', rows=6) }}
       <div class="visually-hidden" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
     </div>
-    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Send message') }}</button></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit" data-loading="{{ _('Sending…') }}">{{ _('Send message') }}</button></div>
   </form>
   <aside class="panel panel-pad">
     <h3>{{ _('Email') }}</h3>

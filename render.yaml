@@ -14,6 +14,8 @@ services:
         sync: false
       - key: FIREBASE_CREDENTIALS_JSON   # the service account key file's contents
         sync: false
+      - key: FIREBASE_WEB_CONFIG         # web app config for Analytics (public values, see docs)
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: SITE_URL

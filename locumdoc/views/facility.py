@@ -2,7 +2,7 @@ from datetime import date
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
-from .. import db, mail, refdata, store
+from .. import analytics, db, mail, refdata, store
 from ..i18n import _
 from ..db import get_doctor, get_facility
 from ..security import login_required
@@ -115,12 +115,12 @@ def _job_form(fac, job=None):
                 flash(_("Job updated."), "success")
                 return redirect(url_for(".job", job_id=job["id"])), None
             jid = store.add("jobs", dict(vals, facility_id=g.user["id"]))
+            analytics.track("job_posted", specialty=db.specialty_name(vals["specialty_id"]) or "")
             mail.notify_admin("New job: %(title)s", "admin_new_job", {"title": c["title"]}, title=c["title"], facility=fac["name"],
                               verified=fac["verified"], job_id=jid)
             flash(_("Job published.") if fac["verified"] else
                   _("Job saved. It goes live as soon as we've verified your facility."), "success")
             return redirect(url_for(".job", job_id=jid)), None
-        flash(_("Some details need attention. Check the highlighted fields."), "error")
     v = dict(job) if job else {"city_id": fac["city_id"], "rate_period": "month"}
     if request.method == "POST":
         v.update(form.clean)

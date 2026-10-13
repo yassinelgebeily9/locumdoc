@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ _('LocumDoc — Locum jobs for doctors in Qatar and the Gulf') }}{% endblock %}
+{% block description %}{{ _('Locum work for doctors of every specialty in the Gulf, starting with Qatar. One profile, one CV upload, verified hospitals and clinics.') }}{% endblock %}
 {% block main %}
 <section class="hero">
   <div class="wrap hero-grid">
@@ -7,7 +8,7 @@
       <div class="launch">{{ m.qatar_flag() }} {{ _('Now placing doctors in Qatar') }}</div>
       <h1>{{ _('Locum work in the Gulf, matched to your specialty.') }}</h1>
       <p class="lede">{{ _('Build one profile, upload your CV once, and apply to locum cover at verified hospitals and clinics. Facilities post the shifts they need and invite doctors directly.') }}</p>
-      <div class="hero-ctas">
+      <div class="hero-ctas" data-hero-cta>
         <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
         <a class="btn btn-outline btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
       </div>

@@ -1,5 +1,5 @@
 <div class="field{% if form.errors.get('consent') %} has-error{% endif %}">
-  <label class="check"><input type="checkbox" name="consent" value="1" {% if form.clean.get('consent') %}checked{% endif %}>
+  <label class="check"><input type="checkbox" id="f-consent" name="consent" value="1" required {% if form.clean.get('consent') %}checked{% endif %}>
     <span>{{ _('I agree to the terms of use and the privacy notice.') }}
       <a href="{{ url_for('public.terms') }}" target="_blank" rel="noopener">{{ _('Terms') }}</a> · <a href="{{ url_for('public.privacy') }}" target="_blank" rel="noopener">{{ _('Privacy') }}</a></span></label>
   {% if form.errors.get('consent') %}<span class="error">{{ form.errors['consent'] }}</span>{% endif %}

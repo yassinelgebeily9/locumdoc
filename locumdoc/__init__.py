@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from flask import Flask, g, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from . import db, i18n, phones, refdata, security, storage, store, world
+from . import analytics, db, i18n, phones, refdata, security, storage, store, world
 
 
 def _bool(v):
@@ -22,6 +22,8 @@ def create_app(test_config=None):
         FIREBASE_STORAGE_BUCKET=os.environ.get("FIREBASE_STORAGE_BUCKET", ""),
         FIREBASE_CREDENTIALS_JSON=os.environ.get("FIREBASE_CREDENTIALS_JSON", ""),
         FIRESTORE_DATABASE=os.environ.get("FIRESTORE_DATABASE", ""),
+        # Firebase Analytics: the web-app config from the Firebase console, as JSON (public values).
+        FIREBASE_WEB_CONFIG=os.environ.get("FIREBASE_WEB_CONFIG", ""),
         DATA_BACKEND=os.environ.get("DATA_BACKEND", "firestore"),
         LOCAL_STORE_PATH=os.environ.get("LOCAL_STORE_PATH", os.path.join(data_dir, "localstore.json")),
         LEGACY_SQLITE_PATH=os.path.join(data_dir, "locumdoc.sqlite3"),  # imported once by the local store
@@ -70,10 +72,15 @@ def create_app(test_config=None):
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        a = analytics.web_config() is not None  # allow Google Analytics' hosts only when it's configured
         resp.headers.setdefault(
             "Content-Security-Policy",
-            "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
-            "font-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'",
+            "default-src 'self'; "
+            f"img-src 'self' data:{' ' + analytics.CSP_IMG if a else ''}; "
+            "style-src 'self'; "
+            f"script-src 'self'{' ' + analytics.CSP_SCRIPT if a else ''}; "
+            f"connect-src 'self'{' ' + analytics.CSP_CONNECT if a else ''}; "
+            "font-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
         )
         if app.config["SESSION_COOKIE_SECURE"]:
             resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
@@ -82,9 +89,21 @@ def create_app(test_config=None):
         return resp
 
     # ------------------------------------------------------------ templates
+    # Pages search engines shouldn't list: anything behind a login, one-off pages and errors.
+    PRIVATE_BLUEPRINTS = {"doctor", "facility", "admin", "files"}
+    PRIVATE_ENDPOINTS = {"auth.account", "auth.reset", "auth.forgot", "public.contact_thanks", "public.cookies"}
+
     @app.context_processor
     def _ctx():
+        site = app.config["SITE_URL"]
         return {
+            "site_url": site,
+            "cookie_consent": analytics.consent(),
+            "analytics_config": analytics.web_config() if analytics.enabled_here() else None,
+            "analytics_events": analytics.pending_events,
+            "canonical_url": site + request.path,
+            "noindex": g.get("noindex") or request.blueprint in PRIVATE_BLUEPRINTS
+                       or request.endpoint in PRIVATE_ENDPOINTS,
             "csrf_token": security.csrf_token,
             "current_user": g.get("user"),
             "ref": refdata,
@@ -142,16 +161,29 @@ def create_app(test_config=None):
     @app.errorhandler(400)
     @app.errorhandler(403)
     @app.errorhandler(404)
+    @app.errorhandler(405)
     @app.errorhandler(413)
+    @app.errorhandler(500)
     def _err(e):
         _ = i18n.gettext
+        code = getattr(e, "code", 500) or 500
+        if code == 500:
+            app.logger.exception("Server error on %s", request.path, exc_info=getattr(e, "original_exception", e))
         messages = {
             400: (_("Request not accepted"), _(getattr(e, "description", "") or "Reload the page and try again.")),
             403: (_("No access"), _("This page belongs to a different type of account.")),
             404: (_("Page not found"), _("The link may be out of date, or the job may have closed.")),
+            405: (_("Page not found"), _("The link may be out of date, or the job may have closed.")),
             413: (_("File too large"), _("Uploads can be up to %(mb)s MB.", mb=app.config["MAX_CONTENT_LENGTH"] // 1048576)),
+            500: (_("Something went wrong on our side"),
+                  _("Nothing you did caused this. Try again in a minute; if it keeps happening, email us and we'll fix it.")),
         }
-        title, text = messages.get(e.code, (_("Something went wrong"), ""))
-        return render_template("public/error.html", code=e.code, title=title, text=text), e.code
+        title, text = messages.get(code, (_("Something went wrong"), ""))
+        g.noindex = True
+        try:
+            return render_template("public/error.html", code=code, title=title, text=text), code
+        except Exception:  # never let the error page itself fail
+            app.logger.exception("Error page failed")
+            return f"<h1>{code}</h1><p>{title}</p>", code
 
     return app

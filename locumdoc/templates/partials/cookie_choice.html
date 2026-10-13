@@ -1,0 +1,7 @@
+{# The two consent buttons, given equal weight. Used in the banner and on the cookie settings page. #}
+<form class="cookie-choice" method="post" action="{{ url_for('public.cookies') }}" data-cookie-form>
+  {{ m.csrf() }}
+  <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') if request.endpoint != 'public.cookies' else url_for('public.cookies') }}">
+  <button class="btn btn-ink btn-sm" type="submit" name="choice" value="analytics">{{ _('Accept analytics') }}</button>
+  <button class="btn btn-ink btn-sm" type="submit" name="choice" value="essential">{{ _('Essential only') }}</button>
+</form>

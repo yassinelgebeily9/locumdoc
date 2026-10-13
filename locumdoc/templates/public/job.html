@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ _('%(title)s in %(city)s — LocumDoc', title=job.title, city=_(job.city or job.country)) }}{% endblock %}
 {% block description %}{{ _('%(specialty)s locum at %(facility)s, %(city)s. Starts %(date)s, %(length)s.', specialty=_(job.specialty), facility=job.facility, city=_(job.city), date=job.start_date|d, length=job|weeks) }}{% endblock %}
+{% block sticky_cta %}
+{% if is_public and not current_user %}
+<div class="sticky-cta" data-sticky-cta><a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a profile to apply') }}</a></div>
+{% elif is_public and current_user and current_user.role == 'doctor' and not application and readiness and readiness.ready %}
+<div class="sticky-cta" data-sticky-cta><a class="btn btn-primary" href="#apply">{{ _('Apply for this job') }}</a></div>
+{% endif %}
+{% endblock %}
 {% block main %}
 <div class="wrap page-head">
   <div class="crumb"><a href="{{ url_for('public.jobs') }}">{{ _('Locum jobs') }}</a> / {{ _(job.specialty) }}</div>
@@ -45,7 +52,7 @@
   </div>
 
   <aside class="stack aside-first">
-    <div class="panel panel-pad apply-box">
+    <div class="panel panel-pad apply-box" id="apply" data-hero-cta>
       <div class="rate-big">{{ job.rate_amount|money(job.rate_currency) }}</div>
       {% if job.rate_amount %}<div class="muted">{{ label(ref.RATE_PERIODS, job.rate_period) }}</div>{% endif %}
       {{ m.perks(job) }}
@@ -76,7 +83,7 @@
               <label for="cover_note">{{ _('Note to the facility') }} <span class="opt">{{ _('(optional)') }}</span></label>
               <textarea id="cover_note" name="cover_note" rows="4" maxlength="3000" dir="auto" placeholder="{{ _('Your availability, relevant experience, licensing status') }}"></textarea>
             </div>
-            <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Apply with my profile and CV') }}</button></div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit" data-loading="{{ _('Sending your application…') }}">{{ _('Apply with my profile and CV') }}</button></div>
           </form>
         {% endif %}
       {% elif current_user.role == 'facility' and current_user.id == job.facility_id %}

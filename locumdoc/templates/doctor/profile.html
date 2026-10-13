@@ -8,6 +8,7 @@
 <div class="wrap content">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
+    {{ m.error_summary(form) }}
     <fieldset class="fieldset">
       <legend>{{ _('Personal details') }}</legend>
       <p class="legend-help">{{ _('Your phone number is shared only with facilities you apply to, or that you allow to find you.') }}</p>
@@ -88,7 +89,7 @@
     </fieldset>
 
     <div class="form-actions">
-      <button class="btn btn-primary btn-lg" type="submit">{{ _('Save profile') }}</button>
+      <button class="btn btn-primary btn-lg" type="submit" data-loading="{{ _('Saving…') }}">{{ _('Save profile') }}</button>
       <a class="btn btn-ghost" href="{{ url_for('doctor.dashboard') }}">{{ _('Cancel') }}</a>
     </div>
   </form>

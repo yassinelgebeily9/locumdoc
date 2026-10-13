@@ -66,3 +66,15 @@ Then use its key instead.
 ## Backups
 
 In **Firestore Database → Disaster recovery**, turn on daily backups. Losing the database would mean losing every account.
+
+## Analytics (Google Analytics for Firebase)
+
+The site loads analytics only for visitors who click **Accept analytics** in the cookie banner. To switch it on:
+
+1. In Firebase: gear icon → **Project settings → Integrations → Google Analytics → Enable**. Create a new Analytics account for LocumDoc, or pick an existing one.
+2. Still in **Project settings → General**, under **Your apps**, click the **</>** (Web) button. Call the app `LocumDoc web`, leave "Firebase Hosting" unticked, and click **Register app**.
+3. Firebase shows a `firebaseConfig` block. Copy just the part between `{` and `}`, including the braces. It contains `apiKey`, `projectId`, `appId` and `measurementId` (which starts with `G-`). These values are public identifiers that appear in every visitor's browser; they aren't secrets.
+4. On Render → **Environment**, add `FIREBASE_WEB_CONFIG` and paste that block as the value. Save and deploy.
+5. In Google Analytics → **Admin → Data settings → Data retention**, set event data retention to **14 months**, matching the privacy notice. In **Admin → Data collection**, keep Google signals off.
+
+Events LocumDoc sends, besides page views: `sign_up` (doctor or facility), `login`, `job_application`, `job_posted` and `generate_lead` (contact form). They carry the account type, specialty or grade, never names, emails or documents. In Google Analytics, mark `sign_up`, `job_application` and `generate_lead` as key events to track conversions.

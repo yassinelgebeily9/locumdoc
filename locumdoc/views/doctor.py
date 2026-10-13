@@ -2,7 +2,7 @@ from datetime import date
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
-from .. import db, mail, refdata, storage, store, world
+from .. import analytics, db, mail, refdata, storage, store, world
 from ..i18n import _
 from ..db import get_doctor, public_jobs
 from ..security import login_required
@@ -91,7 +91,6 @@ def profile():
             if not profile_readiness(g.user["id"])["ready"]:
                 return redirect(url_for(".documents"))
             return redirect(url_for(".dashboard"))
-        flash(_("Some details need attention. Check the highlighted fields."), "error")
     values = dict(d)
     if request.method == "POST":
         values.update(form.clean)
@@ -160,8 +159,8 @@ def apply(job_id):
         return redirect(url_for("public.job", job_id=job_id))
     note = (request.form.get("cover_note") or "").strip()[:3000]
     # One application per doctor per job: the id makes a second click a no-op.
-    store.create("applications", f"{job_id}_{g.user['id']}", {"job_id": job_id, "doctor_id": g.user["id"],
-                                                               "cover_note": note})
+    app_id = f"{job_id}_{g.user['id']}"
+    store.create("applications", app_id, {"job_id": job_id, "doctor_id": g.user["id"], "cover_note": note})
     d = get_doctor(g.user["id"])
     fac_user = store.get("users", job["facility_id"])
     ctx = dict(job=job, doctor=d, note=note)
@@ -170,9 +169,21 @@ def apply(job_id):
     mail.notify_admin("Application: Dr %(name)s for %(title)s", "facility_new_application",
                       {"name": d["last_name"], "title": job["title"]}, **ctx)
     mail.send(d["email"], "Application sent: %(title)s", "doctor_applied", d["lang"], title, **ctx)
-    flash(_("Application sent. The facility will see your profile and CV, and you'll get an email when your status changes."),
-          "success")
-    return redirect(url_for(".applications"))
+    analytics.track("job_application", specialty=job["specialty"] or "", grade=job["grade"] or "")
+    return redirect(url_for(".application_sent", app_id=app_id))
+
+
+@bp.route("/applications/<app_id>/sent")
+@login_required("doctor")
+def application_sent(app_id):
+    """Thank-you page after applying: what happens next, and similar jobs."""
+    a = store.get("applications", app_id)
+    if not a or a["doctor_id"] != g.user["id"]:
+        abort(404)
+    job = db.get_job(a["job_id"])
+    applied = {x["job_id"] for x in store.find("applications", doctor_id=g.user["id"])}
+    similar = public_jobs(lambda j: j["specialty_id"] == job["specialty_id"] and j["id"] not in applied, limit=3) if job else []
+    return render_template("public/thanks.html", kind="application", job=job, similar=similar)
 
 
 @bp.route("/applications/<app_id>/withdraw", methods=["POST"])

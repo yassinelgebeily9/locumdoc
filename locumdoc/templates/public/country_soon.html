@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Locum work in %(country)s — LocumDoc', country=_(country.name)) }}{% endblock %}
+{% block description %}{% if country.active %}{{ _('Open locum jobs for doctors in %(country)s at verified hospitals and clinics.', country=_(country.name)) }}{% else %}{{ _('Locum work for doctors in %(country)s opens soon on LocumDoc. Create your profile now and hear first when facilities there start posting.', country=_(country.name)) }}{% endif %}{% endblock %}
 {% block main %}
 <div class="wrap page-head">
   <h1>{{ _('Locum work in %(country)s', country=_(country.name)) }}</h1>

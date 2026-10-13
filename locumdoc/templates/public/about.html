@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% block title %}About LocumDoc{% endblock %}
+{% block description %}LocumDoc connects doctors of every specialty with verified hospitals and clinics for locum work in Qatar, with the rest of the Gulf to follow.{% endblock %}
 {% block main %}
 <div class="wrap page-head">
   <h1>About LocumDoc</h1>
   <p>A locum marketplace for doctors and healthcare facilities in the Gulf.</p>
+  <div class="hero-ctas" data-hero-cta>
+    <a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}">Create a doctor profile</a>
+    <a class="btn btn-outline" href="{{ url_for('auth.join_facility') }}">Register a facility</a>
+  </div>
 </div>
 <div class="wrap content">
   <div class="panel panel-pad prose">

@@ -9,6 +9,7 @@
 <div class="wrap content">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
+    {{ m.error_summary(form) }}
     <fieldset class="fieldset">
       <legend>{{ _('The role') }}</legend>
       <div class="form-grid">

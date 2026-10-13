@@ -1,0 +1,14 @@
+{# "Continue with Google" (Firebase Authentication). Shown only when the Firebase web config is set.
+   intent: "login", "doctor" or "facility" (which sign-up to finish if the Google account is new). #}
+{% if google_signin %}
+<div class="google-signin" data-google-signin data-intent="{{ intent }}" data-next="{{ next or '' }}"
+     data-endpoint="{{ url_for('auth.google') }}" data-csrf="{{ csrf_token() }}"
+     data-msg-failed="{{ _("Google sign-in didn't work. Try again, or use your email and password.") }}"
+     data-msg-blocked="{{ _('Your browser blocked the Google window. Allow pop-ups for this site and try again.') }}">
+  <button class="btn btn-google" type="button" data-loading="{{ _('Connecting to Google…') }}">{{ _('Continue with Google') }}</button>
+  <p class="error" role="alert" data-google-error hidden></p>
+</div>
+<div class="or-divider" role="separator"><span>{{ _('or') }}</span></div>
+<script type="application/json" id="ld-firebase-config">{{ google_signin|tojson }}</script>
+<script type="module" src="{{ url_for('static', filename='js/google-signin.js') }}?v=2"></script>
+{% endif %}

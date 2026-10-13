@@ -1,0 +1,6 @@
+{# Shown on the sign-up forms while finishing an account that started with Google. #}
+<div class="callout teal google-pending">
+  <p><strong>{{ _('Signing up with Google') }}</strong></p>
+  <p>{{ _("Your account will use %(email)s. You won't need a password: log in with Google next time.", email=google_pending.email) }}
+    <a href="{{ url_for('auth.google_cancel') }}">{{ _('Use a different email') }}</a></p>
+</div>

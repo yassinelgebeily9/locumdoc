@@ -460,6 +460,15 @@ form[aria-busy="true"] { cursor: progress; }
 .error-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0 8px; }
 .page-head .hero-ctas { margin-top: 20px; }
 
+/* ---- Continue with Google ---- */
+.google-signin { margin-bottom: 4px; }
+.btn-google { width: 100%; min-height: 48px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 600; }
+.btn-google:hover { border-color: var(--ink-3); background: var(--paper); }
+.google-signin .error { display: block; margin-top: 8px; color: var(--red); font-size: var(--s-1); font-weight: 500; }
+.or-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--ink-3); font-size: var(--s-1); }
+.or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.google-pending { margin-bottom: 20px; }
+
 /* ---- Cookie banner ---- */
 .cookie-banner { position: fixed; inset-inline: 0; bottom: 0; z-index: 60; background: var(--ink); color: #e9edf0; box-shadow: 0 -8px 24px rgb(0 0 0 / .18); }
 .cookie-banner[hidden] { display: none; }

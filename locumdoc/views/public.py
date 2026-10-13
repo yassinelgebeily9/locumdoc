@@ -142,7 +142,7 @@ def cookies():
         if request.headers.get("X-Requested-With") != "fetch":
             flash(_("Cookie settings saved."), "success")
         return resp
-    return render_template("public/cookies.html", analytics_available=analytics.web_config() is not None)
+    return render_template("public/cookies.html", analytics_available=analytics.analytics_config() is not None)
 
 
 def render_localized(name, **ctx):

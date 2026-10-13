@@ -7,6 +7,7 @@
   <div class="auth-shell">
     <h1>{{ _('Log in') }}</h1>
     <p>{{ _('Doctors, facilities and administrators all log in here.') }}</p>
+    {% with intent='login', next=request.args.get('next') %}{% include "partials/google_signin.html" %}{% endwith %}
     <form class="panel panel-pad" method="post" novalidate>
       {{ m.csrf() }}
     {{ m.error_summary(form) }}

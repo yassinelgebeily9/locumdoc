@@ -10,12 +10,18 @@
     {{ m.csrf() }}
     {{ m.error_summary(form) }}
     <input type="hidden" name="action" value="password">
+    {% if current_user.password_hash %}
     <h2>{{ _('Change password') }}</h2>
     <div class="stack">
       {{ m.input(form, {}, 'current_password', _('Current password'), type='password', attrs='autocomplete="current-password"') }}
+    {% else %}
+    <h2>{{ _('Set a password') }}</h2>
+    <p class="muted">{{ _('You sign in with Google. Add a password if you also want to log in with your email.') }}</p>
+    <div class="stack">
+    {% endif %}
       {{ m.input(form, {}, 'new_password', _('New password'), type='password', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
     </div>
-    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Change password') }}</button></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Change password') if current_user.password_hash else _('Set password') }}</button></div>
   </form>
 
   {% if current_user.role != 'admin' %}
@@ -23,7 +29,11 @@
     {{ m.csrf() }}
     <h2>{{ _('Delete account') }}</h2>
     <p class="muted">{{ _('This permanently deletes your profile, applications and every document you uploaded.') if current_user.role == 'doctor' else _('This permanently deletes your facility, its jobs and its applicant lists.') }}</p>
+    {% if current_user.password_hash %}
     {{ m.input(None, {}, 'confirm_password', _('Enter your password to confirm'), type='password', attrs='autocomplete="current-password"') }}
+    {% else %}
+    {{ m.input(None, {}, 'confirm_password', _('Type your email address to confirm'), type='email', attrs='autocomplete="off"') }}
+    {% endif %}
     <div class="form-actions"><button class="btn btn-danger" type="submit">{{ _('Delete my account') }}</button></div>
   </form>
   {% endif %}

@@ -1,8 +1,9 @@
-from flask import (Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for)
+from flask import (Blueprint, abort, current_app, flash, g, jsonify, redirect, render_template, request, session,
+                   url_for)
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .. import analytics, db, mail, refdata, store
+from .. import analytics, db, google_auth, mail, refdata, store
 from ..i18n import _
 from ..db import EmailTaken, create_user, user_by_email
 from ..security import client_ip, login_required, login_user, rate_limited
@@ -30,6 +31,23 @@ def _check_password(form, name="password"):
     return pw
 
 
+def _password_ok(user, password):
+    """Accounts made with Google have no password; nothing matches it."""
+    return bool(user["password_hash"]) and check_password_hash(user["password_hash"], password or "")
+
+
+def _google_pending():
+    return session.get("google_pending")
+
+
+def _signup_identity(form):
+    """Email and password for a sign-up form, or the Google account being finished."""
+    pending = _google_pending()
+    if pending:
+        return pending["email"], None, pending["uid"]
+    return form.email(), _check_password(form), None
+
+
 def _active_locations():
     return [c for c in db.countries() if c["active"]], db.cities(active_only=True)
 
@@ -53,8 +71,7 @@ def join_doctor():
             return redirect(url_for(".join_doctor"))
         form.text("first_name", required=True, max_len=80, label=_("your first name"))
         form.text("last_name", required=True, max_len=80, label=_("your last name"))
-        email = form.email()
-        pw = _check_password(form)
+        email, pw, google_uid = _signup_identity(form)
         form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label=_("your specialty"))
         form.choice("grade", refdata.GRADES, label=_("your grade"))
         form.choice("academic_rank", refdata.ACADEMIC_RANKS, required=False)
@@ -63,7 +80,7 @@ def join_doctor():
         uid = None
         if form.ok:
             try:
-                uid = create_user(email, pw, "doctor", g.lang)
+                uid = create_user(email, pw, "doctor", g.lang, google_uid=google_uid)
             except EmailTaken:
                 form.errors["email"] = _("An account with this email already exists. Log in instead.")
         if uid:
@@ -73,12 +90,15 @@ def join_doctor():
                                   "academic_rank": c["academic_rank"],
                                   "visible_to_facilities": 1 if request.form.get("visible") else 0}, doc_id=uid)
             login_user(store.get("users", uid))
-            analytics.track("sign_up", method="email", account_type="doctor")
+            analytics.track("sign_up", method="google" if google_uid else "email", account_type="doctor")
             mail.send(email, "Welcome to LocumDoc", "welcome_doctor", g.lang, first_name=c["first_name"])
             mail.notify_admin("New doctor sign-up", "admin_new_user", kind="doctor",
                               name=f"Dr {c['first_name']} {c['last_name']}", email=email)
             flash(_("Account created. Finish your profile and upload your CV so facilities can find you."), "success")
             return redirect(url_for("doctor.profile"))
+    elif _google_pending():
+        first, last = google_auth.split_name(_google_pending().get("name"))
+        form.clean.update(first_name=first, last_name=last)
     return render_template("auth/join_doctor.html", form=form, specialties=specialties)
 
 
@@ -99,14 +119,13 @@ def join_facility():
         form.text("contact_name", required=True, max_len=120, label=_("your name"))
         form.text("contact_role", max_len=120)
         form.phone()
-        email = form.email()
-        pw = _check_password(form)
+        email, pw, google_uid = _signup_identity(form)
         if not form.flag("consent"):
             form.errors["consent"] = _("Agree to the terms and privacy notice to create an account.")
         uid = None
         if form.ok:
             try:
-                uid = create_user(email, pw, "facility", g.lang)
+                uid = create_user(email, pw, "facility", g.lang, google_uid=google_uid)
             except EmailTaken:
                 form.errors["email"] = _("An account with this email already exists. Log in instead.")
         if uid:
@@ -117,13 +136,15 @@ def join_facility():
                                      "contact_name": c["contact_name"], "contact_role": c["contact_role"],
                                      "phone": c["phone"]}, doc_id=uid)
             login_user(store.get("users", uid))
-            analytics.track("sign_up", method="email", account_type="facility")
+            analytics.track("sign_up", method="google" if google_uid else "email", account_type="facility")
             mail.send(email, "Your LocumDoc facility account", "welcome_facility", g.lang,
                       contact_name=c["contact_name"], facility=c["name"])
             mail.notify_admin("New facility to verify", "admin_new_user", kind="facility",
                               name=c["name"], email=email)
             flash(_("Account created. We verify every facility before its jobs go live, usually within one working day. You can draft jobs now."), "success")
             return redirect(url_for("facility.dashboard"))
+    elif _google_pending():
+        form.clean["contact_name"] = _google_pending().get("name", "")
     return render_template("auth/join_facility.html", form=form, cities=cities)
 
 
@@ -139,7 +160,10 @@ def login():
             flash(_("Too many attempts. Wait 10 minutes, or reset your password."), "error")
             return render_template("auth/login.html", form=form), 429
         user = user_by_email(email)
-        if user and user["is_active"] and check_password_hash(user["password_hash"], pw):
+        if user and user["is_active"] and not user["password_hash"]:
+            form.errors["password"] = _("This account signs in with Google. Use Continue with Google above.")
+            return render_template("auth/login.html", form=form)
+        if user and user["is_active"] and _password_ok(user, pw):
             login_user(user)
             store.update("users", user["id"], last_login_at=store.now())
             if user["role"] != "admin":
@@ -154,6 +178,47 @@ def logout():
     session.clear()
     flash(_("You're logged out."), "info")
     return redirect(url_for("public.home"))
+
+
+# ------------------------------------------------------------- Google sign-in
+
+@bp.route("/auth/google", methods=["POST"])
+def google():
+    """Called by the Continue with Google button with a Firebase ID token. Answers with where to go next."""
+    cfg = analytics.google_signin_config()
+    if not cfg:
+        abort(404)
+    if rate_limited("google:" + client_ip(), limit=20, window=600):
+        return jsonify(error=_("Too many attempts. Wait 10 minutes and try again.")), 429
+    try:
+        claims = google_auth.verify(request.form.get("id_token", ""), cfg["projectId"])
+    except google_auth.InvalidToken:
+        return jsonify(error=_("Google sign-in didn't work. Try again, or use your email and password.")), 400
+    email = claims["email"].strip().lower()
+    nxt = _safe_next(request.form.get("next"))
+    user = user_by_email(email)
+    if user:
+        if not user["is_active"]:
+            return jsonify(error=_("This account is suspended. Contact us if you think this is a mistake.")), 403
+        changes = {"last_login_at": store.now(), "email_verified": 1}
+        if not user.get("google_uid"):
+            changes["google_uid"] = claims["sub"]  # link Google to the existing account with the same email
+        store.update("users", user["id"], **changes)
+        login_user(store.get("users", user["id"]))
+        if user["role"] != "admin":
+            analytics.track("login", method="google")
+        return jsonify(redirect=nxt or home_for(user))
+    # New to LocumDoc: finish signing up as a doctor or a facility, without a password.
+    session["google_pending"] = {"email": email, "uid": claims["sub"], "name": (claims.get("name") or "")[:120]}
+    intent = request.form.get("intent")
+    target = {"doctor": url_for(".join_doctor"), "facility": url_for(".join_facility")}.get(intent, url_for(".join"))
+    return jsonify(redirect=target)
+
+
+@bp.route("/auth/google/cancel")
+def google_cancel():
+    session.pop("google_pending", None)
+    return redirect(url_for(".join"))
 
 
 # ------------------------------------------------------------- password reset
@@ -207,7 +272,7 @@ def reset(token):
 def account():
     form = Form()
     if request.method == "POST" and request.form.get("action") == "password":
-        if not check_password_hash(g.user["password_hash"], request.form.get("current_password", "")):
+        if g.user["password_hash"] and not _password_ok(g.user, request.form.get("current_password")):
             form.errors["current_password"] = _("Your current password is incorrect.")
         pw = _check_password(form, "new_password")
         if form.ok:
@@ -221,8 +286,12 @@ def account():
 @bp.route("/account/delete", methods=["POST"])
 @login_required("doctor", "facility")
 def delete_account():
-    if not check_password_hash(g.user["password_hash"], request.form.get("confirm_password", "")):
-        flash(_("Enter your password to delete your account."), "error")
+    confirm = request.form.get("confirm_password", "")
+    ok = (_password_ok(g.user, confirm) if g.user["password_hash"]
+          else confirm.strip().lower() == g.user["email"])
+    if not ok:
+        flash(_("Enter your password to delete your account.") if g.user["password_hash"]
+              else _("Type your email address to delete your account."), "error")
         return redirect(url_for(".account"))
     db.delete_user(g.user["id"])
     session.clear()

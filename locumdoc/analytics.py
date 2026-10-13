@@ -12,6 +12,7 @@ Views report key moments with track("sign_up", method="doctor"); the event is he
 session and sent from the next page the visitor sees, once analytics has loaded.
 """
 import json
+import re
 
 from flask import current_app, g, request, session
 
@@ -24,23 +25,56 @@ CSP_SCRIPT = "https://www.googletagmanager.com"
 CSP_CONNECT = ("https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com "
                "https://firebase.googleapis.com https://firebaseinstallations.googleapis.com")
 CSP_IMG = "https://*.google-analytics.com https://www.googletagmanager.com"
+# Hosts Google sign-in (Firebase Authentication) uses: its helper script, and the token endpoints.
+CSP_AUTH_SCRIPT = "https://apis.google.com"
+CSP_AUTH_CONNECT = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"
+
+
+FIELDS = ("apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId", "measurementId")
+
+
+def parse_web_config(raw):
+    """Read the web-app config as JSON, or exactly as the Firebase console shows it:
+    `const firebaseConfig = { apiKey: "…", … };` (unquoted keys, trailing commas)."""
+    text = (raw or "").strip()
+    if not text:
+        return None
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        return None
+    body = text[start:end + 1]
+    body = re.sub(r"//[^\n]*", "", body)                                  # comments
+    body = re.sub(r'([{,]\s*)([A-Za-z_]\w*)\s*:', r'\1"\2":', body)   # quote keys
+    body = re.sub(r",\s*}", "}", body)                                    # trailing comma
+    try:
+        cfg = json.loads(body)
+    except ValueError:
+        return None
+    return {k: str(cfg[k]) for k in FIELDS if cfg.get(k)}
 
 
 def web_config():
+    """The Firebase web-app config, or None if it's missing or incomplete."""
     raw = current_app.config.get("FIREBASE_WEB_CONFIG") or ""
     if not raw:
         return None
-    try:
-        cfg = json.loads(raw)
-    except ValueError:
-        current_app.logger.warning("FIREBASE_WEB_CONFIG is not valid JSON; analytics is off.")
+    cfg = parse_web_config(raw)
+    if not cfg or not all(cfg.get(k) for k in ("apiKey", "projectId", "appId")):
+        current_app.logger.warning("FIREBASE_WEB_CONFIG couldn't be read (it needs apiKey, projectId and appId).")
         return None
-    keys = ("apiKey", "projectId", "appId", "measurementId")
-    if not all(cfg.get(k) for k in keys):
-        current_app.logger.warning("FIREBASE_WEB_CONFIG needs %s; analytics is off.", ", ".join(keys))
-        return None
-    return {k: cfg[k] for k in ("apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId",
-                                "measurementId") if cfg.get(k)}
+    return cfg
+
+
+def analytics_config():
+    """The config, when it includes Google Analytics (a measurementId)."""
+    cfg = web_config()
+    return cfg if cfg and cfg.get("measurementId") else None
+
+
+def google_signin_config():
+    """The config, when Google sign-in can work (it needs the auth domain)."""
+    cfg = web_config()
+    return cfg if cfg and cfg.get("authDomain") else None
 
 
 def consent():
@@ -52,7 +86,7 @@ def enabled_here():
     """Analytics may load on this page (if the visitor consents): configured, and not the admin area."""
     if request.path.startswith("/admin") or (g.get("user") and g.user["role"] == "admin"):
         return False
-    return web_config() is not None
+    return analytics_config() is not None
 
 
 def track(name, **params):

@@ -4,3 +4,6 @@ phonenumbers>=8.13,<10
 # Firebase: Firestore for records, Firebase Storage (Cloud Storage) for PDFs
 google-cloud-firestore>=2.16,<3
 google-cloud-storage>=2.14,<4
+# Checks Google sign-in tokens (also pulled in by the Google Cloud libraries)
+google-auth>=2.29,<3
+requests>=2.31,<3

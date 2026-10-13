@@ -34,6 +34,7 @@ DEFAULTS = {
     "cities": {"country_id": "", "name": ""},
     "specialties": {"name": "", "slug": ""},
     "users": {"email": "", "password_hash": "", "role": "", "is_active": 1, "lang": "en", "created_at": NOW,
+              "google_uid": None, "email_verified": 0,
               "last_login_at": None},
     "doctors": {"user_id": "", "title": "Dr", "first_name": "", "last_name": "", "phone": "", "nationality": "",
                 "current_country": "", "specialty_id": None, "subspecialty": "", "grade": "", "academic_rank": "",

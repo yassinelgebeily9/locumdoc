@@ -7,6 +7,10 @@
   <div class="auth-shell wide">
     <h1>{{ _('Join LocumDoc') }}</h1>
     <p>{{ _('Choose the account that fits you. Free for doctors.') }}</p>
+    {% if google_pending %}
+    <div class="callout teal"><p>{{ _('To finish signing up with Google (%(email)s), choose which account to create.', email=google_pending.email) }}
+      <a href="{{ url_for('auth.google_cancel') }}">{{ _('Cancel') }}</a></p></div>
+    {% endif %}
     <div class="choice-grid">
       <a class="choice" href="{{ url_for('auth.join_doctor') }}">
         <h2>{{ _("I'm a doctor") }}</h2>

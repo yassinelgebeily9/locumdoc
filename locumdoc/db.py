@@ -82,14 +82,16 @@ def user_by_email(email):
     return store.first("users", email=(email or "").strip().lower())
 
 
-def create_user(email, password, role, lang="en"):
-    """Create a login. Raises EmailTaken if the address is already registered (checked atomically)."""
+def create_user(email, password, role, lang="en", google_uid=None):
+    """Create a login. Raises EmailTaken if the address is already registered (checked atomically).
+    Accounts made with Google have no password (password=None) and a verified email."""
     email = email.strip().lower()
     uid = store._backend().new_id("users")
     if not store.create("emails", store.email_key(email), {"user_id": uid}, defaults=False):
         raise EmailTaken(email)
-    store.add("users", {"email": email, "password_hash": generate_password_hash(password), "role": role,
-                        "lang": lang}, doc_id=uid)
+    store.add("users", {"email": email, "password_hash": generate_password_hash(password) if password else "",
+                        "role": role, "lang": lang, "google_uid": google_uid,
+                        "email_verified": 1 if google_uid else 0}, doc_id=uid)
     return uid
 
 

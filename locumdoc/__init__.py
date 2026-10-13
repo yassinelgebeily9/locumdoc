@@ -1,7 +1,7 @@
 import os
 from datetime import date, timedelta
 
-from flask import Flask, g, render_template, request
+from flask import Flask, g, render_template, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import analytics, db, i18n, phones, refdata, security, storage, store, world
@@ -78,14 +78,19 @@ def create_app(test_config=None):
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-        a = analytics.web_config() is not None  # allow Google Analytics' hosts only when it's configured
+        # Google's hosts are allowed only for the features that are configured.
+        a = analytics.analytics_config() is not None
+        gs = analytics.google_signin_config()
+        extra = lambda on, hosts: (" " + hosts) if on else ""  # noqa: E731
+        auth_frame = f"https://{gs['authDomain']}" if gs else ""
         resp.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; "
-            f"img-src 'self' data:{' ' + analytics.CSP_IMG if a else ''}; "
+            f"img-src 'self' data:{extra(a, analytics.CSP_IMG)}; "
             "style-src 'self'; "
-            f"script-src 'self'{' ' + analytics.CSP_SCRIPT if a else ''}; "
-            f"connect-src 'self'{' ' + analytics.CSP_CONNECT if a else ''}; "
+            f"script-src 'self'{extra(a, analytics.CSP_SCRIPT)}{extra(gs, analytics.CSP_AUTH_SCRIPT)}; "
+            f"connect-src 'self'{extra(a, analytics.CSP_CONNECT)}{extra(gs, analytics.CSP_AUTH_CONNECT)}; "
+            f"frame-src {auth_frame or chr(39) + 'none' + chr(39)}; "
             "font-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
         )
         if app.config["SESSION_COOKIE_SECURE"]:
@@ -105,7 +110,9 @@ def create_app(test_config=None):
         return {
             "site_url": site,
             "cookie_consent": analytics.consent(),
-            "analytics_config": analytics.web_config() if analytics.enabled_here() else None,
+            "analytics_config": analytics.analytics_config() if analytics.enabled_here() else None,
+            "google_signin": analytics.google_signin_config(),
+            "google_pending": session.get("google_pending"),
             "analytics_events": analytics.pending_events,
             "canonical_url": site + request.path,
             "noindex": g.get("noindex") or request.blueprint in PRIVATE_BLUEPRINTS

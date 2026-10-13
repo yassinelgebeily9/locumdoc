@@ -7,6 +7,7 @@
   <div class="auth-shell wide">
     <h1>{{ _('Register a facility') }}</h1>
     <p>{{ _('We verify every facility before its jobs go live, usually within one working day. You can draft jobs straight away.') }}</p>
+    {% if google_pending %}{% include "partials/google_pending.html" %}{% else %}{% with intent='facility', next='' %}{% include "partials/google_signin.html" %}{% endwith %}{% endif %}
     <form class="panel panel-pad" method="post" novalidate>
       {{ m.csrf() }}
     {{ m.error_summary(form) }}
@@ -32,8 +33,10 @@
           {{ m.input(form, form.clean, 'contact_name', _('Your name'), attrs='autocomplete="name"') }}
           {{ m.input(form, form.clean, 'contact_role', _('Your role'), optional=True, attrs='placeholder="' ~ _('e.g. Medical staffing manager') ~ '"') }}
           {{ m.phone_input(form, form.clean, 'phone', _('Phone')) }}
+          {% if not google_pending %}
           {{ m.input(form, form.clean, 'email', _('Work email'), type='email', attrs='autocomplete="email"') }}
           {{ m.input(form, form.clean, 'password', _('Password'), type='password', cls='full', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
+          {% endif %}
           <div class="full">{% include "partials/consent.html" %}</div>
         </div>
       </fieldset>

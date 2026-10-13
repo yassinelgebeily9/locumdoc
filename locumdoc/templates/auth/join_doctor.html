@@ -7,6 +7,7 @@
   <div class="auth-shell">
     <h1>{{ _('Create a doctor profile') }}</h1>
     <p>{{ _("Start with the basics. You'll add qualifications, licensing and your CV next.") }}</p>
+    {% if google_pending %}{% include "partials/google_pending.html" %}{% else %}{% with intent='doctor', next='' %}{% include "partials/google_signin.html" %}{% endwith %}{% endif %}
     <form class="panel panel-pad" method="post" novalidate>
       {{ m.csrf() }}
     {{ m.error_summary(form) }}
@@ -21,8 +22,10 @@
         {% endcall %}
         {{ m.select(form, form.clean, 'grade', _('Clinical grade'), ref.GRADES, cls='full') }}
         {{ m.academic_select(form, form.clean, 'academic_rank', _('Academic title'), cls='full', help=_('Only if you hold a university teaching post.')) }}
+        {% if not google_pending %}
         {{ m.input(form, form.clean, 'email', _('Email'), type='email', cls='full', attrs='autocomplete="email"') }}
         {{ m.input(form, form.clean, 'password', _('Password'), type='password', cls='full', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10"') }}
+        {% endif %}
         <div class="full">
           <label class="check"><input type="checkbox" name="visible" value="1" checked> <span>{{ _('Let verified hospitals and clinics find my profile and invite me to jobs. You can change this any time.') }}</span></label>
         </div>

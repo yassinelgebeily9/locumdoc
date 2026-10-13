@@ -89,6 +89,34 @@
   <div class="wrap"><p class="note">{{ _("Summary based on DHP's published guidelines for physicians. Requirements change; DHP's current rules always apply.") }}</p></div>
 </section>
 
+<section class="section" aria-labelledby="spec-title">
+  <div class="wrap spec-grid">
+    <div class="intro">
+      <p class="eyebrow">{{ _('Open now') }}</p>
+      <h2 id="spec-title">{{ _('Every specialty, every grade') }}</h2>
+      <p>{{ _('From GP clinics to consultant-led ICU cover.') }}</p>
+      <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse all jobs') }}</a>
+    </div>
+    <section class="board board-specs" aria-labelledby="hiring-title">
+      <div class="board-head">
+        <h3 id="hiring-title">{{ _('Specialties hiring now') }}</h3>
+        <a href="{{ url_for('public.jobs') }}">{{ _('See all jobs') }}</a>
+      </div>
+      {% if hiring %}
+        {% for slug, name, n in hiring %}
+        <a class="board-row" href="{{ url_for('public.jobs', specialty=slug) }}"><span class="t">{{ _(name) }}</span><span class="r">{{ _('%(n)s open job', n=n) if n == 1 else _('%(n)s open jobs', n=n) }}</span></a>
+        {% endfor %}
+        <div class="board-foot">{{ _("Your specialty isn't listed? Create a profile anyway: facilities search the directory and invite doctors directly.") }}</div>
+      {% else %}
+        <div class="board-empty">
+          <p>{{ _('The first Qatar placements are being posted now. Create your profile today and verified facilities can invite you before jobs are even advertised.') }}</p>
+          <a class="btn btn-primary btn-sm" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</section>
+
 <section class="section-tight section-white" aria-labelledby="ctry-title">
   <div class="wrap">
     <div class="section-head">

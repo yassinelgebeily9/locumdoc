@@ -17,7 +17,13 @@ bp = Blueprint("public", __name__)
 def home():
     jobs = public_jobs()
     stats = {"open_jobs": len(jobs), "specialties": len({j["specialty_id"] for j in jobs})}
-    return render_template("public/home.html", jobs=jobs[:6], stats=stats, countries=db.countries())
+    # "Specialties hiring now": each specialty with open jobs and how many, busiest first.
+    counts = {}
+    for j in jobs:
+        name, n = counts.get(j["specialty_id"], (j["specialty"], 0))
+        counts[j["specialty_id"]] = (name, n + 1)
+    hiring = sorted(((slug, name, n) for slug, (name, n) in counts.items()), key=lambda h: (-h[2], h[1]))[:8]
+    return render_template("public/home.html", jobs=jobs[:6], stats=stats, countries=db.countries(), hiring=hiring)
 
 
 def _matches(text, q):

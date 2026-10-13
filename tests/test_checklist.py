@@ -217,6 +217,16 @@ class StickyCtaTests(Base):
             self.assertNotIn(b"data-sticky-cta", c.get(url).data, url)
         self.assertNotIn(b"data-sticky-cta", self.signup_doctor().get("/jobs").data)
 
+    def test_home_lists_specialties_hiring_now(self):
+        self.assertIn(b"The first Qatar placements are being posted now", self.client().get("/").data)
+        fac = self.signup_facility()
+        self.post_job(fac)
+        self.post(self.admin(), f"/admin/facilities/{self.rows('facilities')[0]['id']}", {"action": "verify"})
+        html = self.client().get("/").data.decode()
+        self.assertIn("Every specialty, every grade", html)
+        self.assertIn('href="/jobs?specialty=anaesthesia"', html)
+        self.assertIn("1 open job<", html)
+
     def test_ctas_above_the_fold_markers(self):
         c = self.client()
         for url in ("/", "/for-facilities", "/countries/qatar", "/about", "/jobs"):

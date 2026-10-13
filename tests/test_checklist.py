@@ -221,3 +221,12 @@ class StickyCtaTests(Base):
         c = self.client()
         for url in ("/", "/for-facilities", "/countries/qatar", "/about", "/jobs"):
             self.assertIn(b"data-hero-cta", c.get(url).data, url)
+
+
+class SourceHygieneTests(Base):
+    def test_no_merge_conflict_markers(self):
+        import pathlib
+        root = pathlib.Path(__file__).resolve().parent.parent / "locumdoc"
+        bad = [str(p) for p in root.rglob("*") if p.suffix in (".html", ".py", ".css", ".js", ".txt")
+               and re.search(r"^(<{7}|>{7}|={7})( |$)", p.read_text(encoding="utf8", errors="ignore"), re.M)]
+        self.assertEqual(bad, [])

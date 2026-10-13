@@ -36,17 +36,9 @@ Run the tests:
 python -m unittest discover tests
 ```
 
-## Languages (English and Arabic)
+## Language
 
-The whole doctor- and facility-facing site is available in English and Arabic, with a full right-to-left layout and the IBM Plex Sans Arabic font (self-hosted, SIL Open Font License). The admin panel stays in English.
-
-- **Switching:** the header shows "العربية" / "English". The choice is remembered in a cookie and on the user's account. First-time visitors get Arabic automatically if their browser prefers it.
-- **Emails** go out in each recipient's own language (`templates/email/ar/` holds the Arabic versions).
-- **Long pages** (About, Privacy, Terms, the Qatar licensing guide) have hand-written Arabic versions in `templates/public/ar/`. The Arabic privacy notice and terms say the English text prevails; have them reviewed along with the English ones.
-- **Short strings** are wrapped in `_("...")` in templates and Python, and translated in `locumdoc/translations/ar.py`. `tests/test_i18n.py` fails if any marked string is missing an Arabic translation, so new text can't slip through untranslated.
-- **What stays in the original language:** anything users type (job titles, descriptions, names, notes) is shown as entered.
-
-To add a third language later, add it to `LANGUAGES` in `locumdoc/i18n.py`, create `translations/<code>.py` and register it in `CATALOGS`.
+The site is English-only. Text is still marked with `_("...")` in templates and Python (it fills in values and returns the English), so a second language could be added later. The Arabic interface that existed until 13 Oct 2026 (translations, right-to-left layout, Arabic pages and emails) is preserved on the `arabic-archive` branch.
 
 ## Where the data lives: Firebase
 
@@ -120,7 +112,7 @@ In the admin panel go to **Countries**, add cities if needed, and click **Open**
 - Cloud Firestore (Firebase) for records, through a small layer in `store.py` that also has a local backend for development and tests. Firestore has no joins, so `db.py` fetches related records (a job's facility, a doctor's specialty) and caches them for the request. Every query filters on a single field, so Firestore needs no custom indexes.
 - Firebase Storage (Google Cloud Storage) for PDFs, kept private and served only through the app.
 - Security: hashed passwords, CSRF tokens on every form, strict Content-Security-Policy, rate-limited login/sign-up/reset, private uploads stored under random names and served only to authorised users, file-type checks by content, session invalidated on password change.
-- Fonts are self-hosted (TeX Gyre Adventor, Inter and IBM Plex Sans Arabic), so no visitor data goes to Google Fonts.
+- Fonts are self-hosted (TeX Gyre Adventor and Inter), so no visitor data goes to Google Fonts.
 
 ```
 locumdoc/
@@ -134,8 +126,7 @@ locumdoc/
   security.py       sessions, CSRF, role checks, rate limiting
   storage.py        private file uploads
   mail.py           email sending (in each recipient's language)
-  i18n.py           language detection, translation, Arabic dates and numbers
-  translations/     Arabic catalogue
+  i18n.py           the _() text helper, dates, money, plurals
   views/            public, auth, doctor, facility, admin, files
   templates/        HTML pages and email texts
   static/           CSS, fonts, logo, small JS

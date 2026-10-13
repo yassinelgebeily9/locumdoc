@@ -4,7 +4,7 @@ from datetime import date
 from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, render_template, request,
                    send_from_directory, session, url_for)
 
-from .. import analytics, db, i18n, mail, store
+from .. import analytics, db, mail, store
 from ..i18n import _
 from ..db import public_jobs
 from ..security import client_ip, rate_limited
@@ -30,9 +30,7 @@ def jobs():
     tests = []
     if f["q"]:
         q = f["q"]
-        # Also match Arabic specialty names, e.g. "تخدير" finds Anaesthesia jobs.
-        tests.append(lambda j: (_matches(j["title"], q) or _matches(j["specialty"], q) or _matches(j["facility"], q)
-                                or q in i18n.AR.get(j["specialty"] or "", "")))
+        tests.append(lambda j: _matches(j["title"], q) or _matches(j["specialty"], q) or _matches(j["facility"], q))
     if f["specialty"]:
         tests.append(lambda j: j["specialty_id"] == f["specialty"])
     if f["city"]:
@@ -142,9 +140,7 @@ def cookies():
 
 
 def render_localized(name, **ctx):
-    """Long-form pages have a hand-written Arabic version in templates/public/ar/."""
-    names = [f"public/ar/{name}", f"public/{name}"] if g.lang == "ar" else [f"public/{name}"]
-    return render_template(names, **ctx)
+    return render_template(f"public/{name}", **ctx)
 
 
 @bp.route("/about")
@@ -164,17 +160,12 @@ def terms():
 
 @bp.route("/language/<code>")
 def set_language(code):
-    """Switch the interface language and remember it (cookie, plus the account if logged in)."""
-    if code not in i18n.LANGUAGES:
-        abort(404)
+    """The site is English-only now; old language-switch links simply return to the page."""
     target = request.args.get("next", "")
     if not target.startswith("/") or target.startswith("//"):
         target = url_for(".home")
     resp = redirect(target)
-    resp.set_cookie(i18n.COOKIE, code, max_age=365 * 24 * 3600, samesite="Lax", httponly=True,
-                    secure=current_app.config["SESSION_COOKIE_SECURE"])
-    if g.user:
-        store.update("users", g.user["id"], lang=code)
+    resp.delete_cookie("lang")
     return resp
 
 
@@ -204,7 +195,7 @@ def manifest():
     """Lets phones add LocumDoc to the home screen with the right name, colours and icons."""
     icon = lambda f: url_for("static", filename=f"img/{f}")  # noqa: E731
     data = {
-        "name": "LocumDoc", "short_name": "LocumDoc", "lang": g.lang, "dir": "rtl" if g.lang == "ar" else "ltr",
+        "name": "LocumDoc", "short_name": "LocumDoc", "lang": "en", "dir": "ltr",
         "description": _("Locum work for doctors of every specialty in the Gulf, starting with Qatar. One profile, one CV upload, verified hospitals and clinics."),
         "start_url": "/", "scope": "/", "display": "standalone", "background_color": "#f3f5f6", "theme_color": "#7a1631",
         "icons": [

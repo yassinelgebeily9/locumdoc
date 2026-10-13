@@ -1,6 +1,0 @@
-{% if answer == 'accepted' %}قبل د. {{ doctor.first_name }} {{ doctor.last_name }} دعوتكم.
-
-اطّلعوا على ملفه وسيرته الذاتية:
-{{ site_url }}/facility/doctors/{{ doctor.user_id }}{% else %}اعتذر د. {{ doctor.first_name }} {{ doctor.last_name }} عن دعوتكم.{% endif %}
-
-فريق LocumDoc

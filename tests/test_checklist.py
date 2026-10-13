@@ -20,8 +20,7 @@ class MetadataTests(Base):
     def test_every_public_page_has_its_own_title_and_description(self):
         c = self.client()
         titles, descs = {}, {}
-        for lang in ("en", "ar"):
-            c.set_cookie("lang", lang)
+        for lang in ("en",):
             for url in PUBLIC:
                 html = c.get(url).data.decode()
                 title = re.search(r"<title>(.*?)</title>", html, re.S).group(1).strip()
@@ -60,7 +59,7 @@ class MetadataTests(Base):
         self.assertTrue(any(i.get("purpose") == "maskable" for i in data["icons"]))
         for icon in data["icons"]:
             self.assertEqual(c.get(icon["src"]).status_code, 200, icon["src"])
-        for f in ("og-en.png", "og-ar.png"):
+        for f in ("og-en.png",):
             r = c.get("/static/img/" + f)
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.data[16:24], (1200).to_bytes(4, "big") + (630).to_bytes(4, "big"))  # PNG width/height
@@ -143,8 +142,6 @@ class PageTests(Base):
         privacy = c.get("/privacy").data.decode()
         for text in ('id="cookies"', "Google Analytics for Firebase", "Render", "Cookie settings"):
             self.assertIn(text, privacy)
-        c.set_cookie("lang", "ar")
-        self.assertIn("Google Analytics for Firebase", c.get("/privacy").data.decode())
         self.assertIn("13 Oct 2026", self.client().get("/terms").data.decode())
 
 

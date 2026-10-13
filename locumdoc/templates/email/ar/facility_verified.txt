@@ -1,8 +1,0 @@
-{{ fac.contact_name }}،
-
-أصبحت {{ fac.name }} منشأة موثّقة في LocumDoc. وظائفكم المفتوحة متاحة الآن للأطباء، ويمكنكم البحث في دليل الأطباء ودعوتهم مباشرة.
-
-انشروا وظيفة: {{ site_url }}/facility/jobs/new
-ابحثوا عن أطباء: {{ site_url }}/facility/doctors
-
-فريق LocumDoc

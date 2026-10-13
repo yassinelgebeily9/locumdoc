@@ -68,7 +68,7 @@ def create_app(test_config=None):
     @app.before_request
     def _before():
         security.load_user()
-        g.lang = i18n.detect(g.user)
+        g.lang = "en"
         if not request.path.startswith("/static/"):
             security.check_csrf()
 
@@ -120,13 +120,13 @@ def create_app(test_config=None):
             "lang": i18n.current(),
             "text_dir": i18n.direction(),
             "languages": i18n.LANGUAGES,
-            "comma": "، " if i18n.current() == "ar" else ", ",
+            "comma": ", ",
             "weeks_n": i18n.weeks,
             "country_options": lambda: world.options(i18n.gettext),
-        "phone_country_options": lambda: phones.options(i18n.gettext, i18n.current() == "ar"),
+        "phone_country_options": lambda: phones.options(i18n.gettext),
         "phone_parts": phones.parts,
         "phone_code_for": phones.code_for_country,
-            "currency_name": lambda code: i18n.CURRENCY_AR.get(code, code) if i18n.current() == "ar" else code,
+            "currency_name": lambda code: code,
         }
 
     @app.template_filter("d")

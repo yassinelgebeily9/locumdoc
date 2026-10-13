@@ -25,18 +25,15 @@ def code_for_country(name, default="QA"):
     return code if code and dial_code(code) else default
 
 
-def _label(region, gettext, rtl):
-    name = gettext(NAMES[region])
-    code = f"+{dial_code(region)}"
-    # The dropdown is always left-to-right (dial codes are), so "+974 قطر" reads correctly in Arabic too.
-    return f"{code} {name}"
+def _label(region, gettext):
+    return f"+{dial_code(region)} {gettext(NAMES[region])}"
 
 
-def options(gettext, rtl=False):
+def options(gettext):
     """(common, everything) as lists of (ISO code, label) for the country-code dropdown."""
     usable = [c for c, _n in world.WORLD if dial_code(c)]
-    common = [(c, _label(c, gettext, rtl)) for c in COMMON if c in usable]
-    everything = sorted(((c, _label(c, gettext, rtl)) for c in usable),
+    common = [(c, _label(c, gettext)) for c in COMMON if c in usable]
+    everything = sorted(((c, _label(c, gettext)) for c in usable),
                         key=lambda x: world._sort_key(gettext(NAMES[x[0]])))
     return common, everything
 

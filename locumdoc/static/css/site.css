@@ -4,10 +4,6 @@
 
 @font-face { font-family: "Adventor"; src: url("../fonts/adventor-700.woff") format("woff"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Adventor"; src: url("../fonts/adventor-400.woff") format("woff"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Plex Arabic"; src: url("../fonts/plex-arabic-400.woff") format("woff"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Plex Arabic"; src: url("../fonts/plex-arabic-500.woff") format("woff"); font-weight: 500; font-display: swap; }
-@font-face { font-family: "Plex Arabic"; src: url("../fonts/plex-arabic-600.woff") format("woff"); font-weight: 600; font-display: swap; }
-@font-face { font-family: "Plex Arabic"; src: url("../fonts/plex-arabic-700.woff") format("woff"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Inter"; src: url("../fonts/inter-400.woff") format("woff"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Inter"; src: url("../fonts/inter-500.woff") format("woff"); font-weight: 500; font-display: swap; }
 @font-face { font-family: "Inter"; src: url("../fonts/inter-600.woff") format("woff"); font-weight: 600; font-display: swap; }
@@ -295,9 +291,8 @@ table.data { width: 100%; border-collapse: collapse; font-size: var(--s0); }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
 .form-grid .full { grid-column: 1 / -1; }
 .phone-row { display: grid; grid-template-columns: minmax(0, 11.5rem) minmax(0, 1fr); gap: 8px; }
-.phone-row select, [dir=rtl] .phone-row select { text-overflow: ellipsis; background-position: right 14px center; padding-inline: 12px 34px; }
+.phone-row select { text-overflow: ellipsis; background-position: right 14px center; padding-inline: 12px 34px; }
 .phone-row input { direction: ltr; text-align: start; }
-[dir=rtl] .phone-row input { text-align: right; }
 .field label, .field .label { display: block; font-weight: 600; margin-bottom: 6px; font-size: var(--s0); }
 .field .opt { font-weight: 400; color: var(--ink-3); }
 .field .help { display: block; font-size: var(--s-1); color: var(--ink-3); margin-top: 6px; }
@@ -308,7 +303,6 @@ input[type=text], input[type=email], input[type=password], input[type=tel], inpu
 }
 textarea { min-height: 120px; resize: vertical; line-height: 1.55; }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%234b5764' stroke-width='1.6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-inline-end: 36px; }
-[dir=rtl] select { background-position: left 14px center; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--maroon); box-shadow: 0 0 0 3px color-mix(in srgb, var(--maroon) 18%, transparent); }
 .has-error input, .has-error select, .has-error textarea { border-color: var(--red); }
 .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; cursor: pointer; }
@@ -537,21 +531,6 @@ body:has(.cookie-banner:not([hidden])) .site-footer { padding-bottom: 140px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 @media print { .site-header, .site-footer, .btn, form { display: none !important; } body { background: #fff; } }
 
-/* ---------------------------------------------------------------- Arabic / right-to-left */
-:root[lang=ar] {
-  --display: "Plex Arabic", "Geeza Pro", "Segoe UI", sans-serif;
-  --text: "Plex Arabic", "Geeza Pro", "Segoe UI", system-ui, sans-serif;
-}
-[lang=ar] body { line-height: 1.75; }
-[lang=ar] h1, [lang=ar] h2, [lang=ar] h3, [lang=ar] h4,
-[lang=ar] .hero h1, [lang=ar] .brand span { letter-spacing: 0; }
-[lang=ar] h1, [lang=ar] h2, [lang=ar] h3 { line-height: 1.3; }
-[lang=ar] .hero h1 { line-height: 1.2; font-size: clamp(2.25rem, 4.6vw, 3.6rem); }
-.brand span { font-family: "Adventor", "Avenir Next", sans-serif; direction: ltr; }
-[dir=rtl] .checklist .done .tick::after { transform: rotate(45deg) translate(1px, -1px); }
-[dir=rtl] .steps li, [dir=rtl] .board-row, [dir=rtl] .board-cols { direction: rtl; }
+/* ---------------------------------------------------------------- text direction helpers */
+.brand span { font-family: "Adventor", "Avenir Next", sans-serif; }
 .ltr, input[type=email], input[type=tel], input[type=url], input[type=password] { direction: ltr; }
-[dir=rtl] input[type=email], [dir=rtl] input[type=tel], [dir=rtl] input[type=url], [dir=rtl] input[type=password] { text-align: right; }
-.lang-switch { font-weight: 500; }
-.lang-switch[lang=ar] { font-family: "Plex Arabic", sans-serif; }
-.lang-switch[lang=en] { font-family: "Inter", sans-serif; }

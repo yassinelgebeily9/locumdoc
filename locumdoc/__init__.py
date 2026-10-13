@@ -7,6 +7,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from . import analytics, db, i18n, phones, refdata, security, storage, store, world
 
 
+def _site_url(v):
+    """The public address, always with a scheme: "locumdoc.me" becomes "https://locumdoc.me"."""
+    v = (v or "http://localhost:5000").strip().rstrip("/")
+    return v if v.startswith(("http://", "https://")) else "https://" + v
+
+
 def _bool(v):
     return str(v).lower() in ("1", "true", "yes", "on")
 
@@ -29,7 +35,7 @@ def create_app(test_config=None):
         LEGACY_SQLITE_PATH=os.path.join(data_dir, "locumdoc.sqlite3"),  # imported once by the local store
         UPLOAD_DIR=os.environ.get("UPLOAD_DIR", os.path.join(data_dir, "uploads")),
         MAX_CONTENT_LENGTH=int(os.environ.get("MAX_UPLOAD_MB", "10")) * 1024 * 1024,
-        SITE_URL=os.environ.get("SITE_URL", "http://localhost:5000").rstrip("/"),
+        SITE_URL=_site_url(os.environ.get("SITE_URL")),
         MAIL_FROM=os.environ.get("MAIL_FROM", "LocumDoc <hello@locumdoc.me>"),
         ADMIN_NOTIFY_EMAIL=os.environ.get("ADMIN_NOTIFY_EMAIL", ""),
         CONTACT_EMAIL=os.environ.get("CONTACT_EMAIL", "hello@locumdoc.me"),

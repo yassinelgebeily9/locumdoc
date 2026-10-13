@@ -89,18 +89,6 @@
   <div class="wrap"><p class="note">{{ _("Summary based on DHP's published guidelines for physicians. Requirements change; DHP's current rules always apply.") }}</p></div>
 </section>
 
-<section class="section" aria-labelledby="spec-title">
-  <div class="wrap">
-    <div class="section-head">
-      <div><h2 id="spec-title">{{ _('Every specialty, every grade') }}</h2><p>{{ _('From GP clinics to consultant-led ICU cover.') }}</p></div>
-      <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse all jobs') }}</a>
-    </div>
-    <ul class="spec-cloud">
-      {% for s in ref.SPECIALTIES %}<li><a href="{{ url_for('public.jobs', q=s) }}">{{ _(s) }}</a></li>{% endfor %}
-    </ul>
-  </div>
-</section>
-
 <section class="section-tight section-white" aria-labelledby="ctry-title">
   <div class="wrap">
     <div class="section-head">

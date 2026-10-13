@@ -198,10 +198,6 @@ p { margin: 0 0 1em; max-width: 68ch; }
 .pathway span { color: var(--ink-2); }
 .note { font-size: var(--s-1); color: var(--ink-3); margin-top: 24px; max-width: 60ch; }
 
-.spec-cloud { columns: 4 200px; column-gap: 32px; list-style: none; margin: 0; padding: 0; }
-.spec-cloud li { break-inside: avoid; padding: 7px 0; border-bottom: 1px solid var(--line-2); }
-.spec-cloud a { color: var(--ink); text-decoration: none; font-weight: 500; }
-.spec-cloud a:hover { color: var(--maroon); text-decoration: underline; }
 
 .countries-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
 .country-cell { padding: 20px 18px; border-inline-end: 1px solid var(--line); text-decoration: none; color: var(--ink); }

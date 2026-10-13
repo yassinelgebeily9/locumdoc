@@ -36,6 +36,12 @@ class MetadataTests(Base):
                 self.assertTrue(img.startswith("http") and img.endswith(f"og-{lang}.png"), url)
                 self.assertEqual(meta(html, "name", "twitter:card"), "summary_large_image")
 
+    def test_site_url_always_has_a_scheme(self):
+        from locumdoc import _site_url
+        self.assertEqual(_site_url("locumdoc.me/"), "https://locumdoc.me")
+        self.assertEqual(_site_url("http://localhost:5050"), "http://localhost:5050")
+        self.assertEqual(_site_url(None), "http://localhost:5000")
+
     def test_private_and_one_off_pages_are_noindex(self):
         doc = self.client()
         self.assertIn('content="noindex, nofollow"', doc.get("/no-such-page").data.decode())

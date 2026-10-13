@@ -53,7 +53,7 @@ def profile():
         form.phone()
         countries_all = [(n, n) for _c, n in world.WORLD]
         form.choice("nationality", countries_all, label=_("your nationality"))
-        form.choice("current_country", countries_all, label=_("where you live now"))
+        form.choice("current_country", countries_all, label=_("your country of residence"))
         form.choice("specialty_id", [(s["id"], s["name"]) for s in specialties], label=_("your specialty"))
         form.text("subspecialty", max_len=120)
         form.choice("grade", refdata.GRADES, label=_("your grade"))
@@ -67,7 +67,7 @@ def profile():
         form.choice("exam_status", refdata.EXAM_STATUS)
         form.flag("has_psv")
         form.flag("good_standing")
-        form.text("languages", max_len=200)
+        form.text("languages", required=True, max_len=200, label=_("the languages you speak"))
         start = form.date("available_from")
         end = form.date("available_to")
         if start and end and end < start:

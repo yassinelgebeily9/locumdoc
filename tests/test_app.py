@@ -71,7 +71,7 @@ class Base(unittest.TestCase):
         if ready:
             r = self.post(c, "/doctor/profile", {
                 "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone_country": "GB", "phone": "07911 123456", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
-                "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant",
+                "current_country": "United Kingdom", "languages": "English", "specialty_id": spec, "grade": "consultant",
                 "years_experience": "12", "qualifications": "MBBS, FRCA", "primary_license": "GMC",
                 "qatar_license_status": "evaluating", "exam_status": "exempt", "available_from": "2030-01-01",
                 "preferred_countries": ["QA", "AE"], "visible_to_facilities": "1"})
@@ -332,7 +332,7 @@ class GradeTests(Base):
         spec = "anaesthesia"
         r = self.post(doc, "/doctor/profile", {
             "title": "Prof", "first_name": "Amal", "last_name": "Nasser", "phone_country": "GB", "phone": "07911 123456", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
-            "current_country": "United Kingdom", "specialty_id": spec, "grade": "senior_consultant",
+            "current_country": "United Kingdom", "languages": "English", "specialty_id": spec, "grade": "senior_consultant",
             "academic_rank": "associate_professor", "years_experience": "22", "qualifications": "MBBS, FRCA",
             "primary_license": "GMC", "qatar_license_status": "eligible", "exam_status": "exempt",
             "available_from": "2030-01-01", "visible_to_facilities": "1"})
@@ -349,7 +349,7 @@ class GradeTests(Base):
         # An Egyptian "assistant professor" (أستاذ مساعد) sits at the Gulf associate-professor level
         base = {"title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone": "+20 100 123 4567", "nationality": "Egypt",
                 "medical_school": "Cairo University (Kasr Al Ainy)", "graduation_year": "2005",
-                "current_country": "Egypt", "specialty_id": spec, "grade": "consultant", "years_experience": "20",
+                "current_country": "Egypt", "languages": "English", "specialty_id": spec, "grade": "consultant", "years_experience": "20",
                 "qualifications": "MBBCh, MD", "primary_license": "Egyptian Medical Syndicate",
                 "qatar_license_status": "eligible", "exam_status": "exempt", "available_from": "2030-01-01",
                 "visible_to_facilities": "1"}
@@ -361,6 +361,10 @@ class GradeTests(Base):
         self.assertIn(b"Assistant professor (Egypt)", page)
         self.assertIn(b"equivalent to associate professor", page)
         self.assertIn(b"Cairo University (Kasr Al Ainy)", page)
+        # languages are required
+        r = self.post(doc, "/doctor/profile", dict(base, languages=""))
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b"Enter the languages you speak.", r.data)
         # nationality must come from the country list; university is required
         r = self.post(doc, "/doctor/profile", dict(base, nationality="Egyptian", medical_school=""))
         self.assertEqual(r.status_code, 200)
@@ -368,7 +372,7 @@ class GradeTests(Base):
         # clearing it is allowed
         self.post(doc, "/doctor/profile", {
             "title": "Dr", "first_name": "Amal", "last_name": "Nasser", "phone_country": "GB", "phone": "07911 123456", "nationality": "United Kingdom", "medical_school": "University of Leeds", "graduation_year": "2008",
-            "current_country": "United Kingdom", "specialty_id": spec, "grade": "consultant", "academic_rank": "",
+            "current_country": "United Kingdom", "languages": "English", "specialty_id": spec, "grade": "consultant", "academic_rank": "",
             "years_experience": "22", "qualifications": "MBBS", "primary_license": "GMC",
             "qatar_license_status": "eligible", "exam_status": "exempt"})
         self.assertEqual(self.rows("doctors")[0]["academic_rank"], "")
@@ -376,7 +380,7 @@ class GradeTests(Base):
     def test_phone_numbers_checked_per_country(self):
         doc = self.signup_doctor()
         base = {"title": "Dr", "first_name": "Amal", "last_name": "Nasser", "nationality": "United Kingdom",
-                "medical_school": "University of Leeds", "current_country": "United Kingdom", "specialty_id": "anaesthesia",
+                "medical_school": "University of Leeds", "current_country": "United Kingdom", "languages": "English", "specialty_id": "anaesthesia",
                 "grade": "consultant", "years_experience": "12", "qualifications": "MBBS", "primary_license": "GMC",
                 "qatar_license_status": "eligible", "exam_status": "exempt"}
         stored = lambda: self.rows("doctors")[0]["phone"]

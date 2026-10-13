@@ -19,8 +19,8 @@
         {{ m.input(form, v, 'last_name', _('Last name')) }}
         {{ m.phone_input(form, v, 'phone', _('Phone'), phone_code_for(v.get('current_country'))) }}
         {{ m.country_select(form, v, 'nationality', _('Nationality')) }}
-        {{ m.country_select(form, v, 'current_country', _('Country you live in now')) }}
-        {{ m.input(form, v, 'languages', _('Languages'), optional=True, attrs='placeholder="' ~ _('English, Arabic') ~ '"') }}
+        {{ m.country_select(form, v, 'current_country', _('Country of residence')) }}
+        {{ m.input(form, v, 'languages', _('Languages'), attrs='placeholder="' ~ _('English, Arabic') ~ '"') }}
       </div>
     </fieldset>
 

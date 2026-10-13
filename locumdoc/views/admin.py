@@ -63,7 +63,7 @@ def doctors():
 def _doctors_csv(rows):
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["Name", "Email", "Phone", "Specialty", "Grade", "Academic title", "Years", "University", "Graduated", "Nationality", "Lives in",
+    w.writerow(["Name", "Email", "Phone", "Specialty", "Grade", "Academic title", "Years", "University", "Graduated", "Nationality", "Country of residence",
                 "Qatar licence", "Available from", "Available to", "Verified", "Has CV"])
     for d in rows:
         w.writerow([f"{d['title']} {d['first_name']} {d['last_name']}", d["email"], phones.display(d["phone"]), d["specialty"],

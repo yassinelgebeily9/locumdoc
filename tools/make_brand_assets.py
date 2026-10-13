@@ -2,7 +2,7 @@
 
     python tools/make_brand_assets.py
 
-Writes into locumdoc/static/img/: og-en.png, og-ar.png (1200x630), favicon.ico (16/32/48),
+Writes into locumdoc/static/img/: og-en.png (1200x630), favicon.ico (16/32/48),
 favicon-32.png, apple-touch-icon.png (180), icon-192.png, icon-512.png, icon-maskable-512.png.
 Needs Playwright with Chromium, and Pillow.
 """
@@ -44,17 +44,12 @@ FONT_CSS = f"""
 @font-face {{ font-family: Adventor; src: url({FONTS}/adventor-700.woff); font-weight: 700; }}
 @font-face {{ font-family: Inter; src: url({FONTS}/inter-500.woff); font-weight: 500; }}
 @font-face {{ font-family: Inter; src: url({FONTS}/inter-600.woff); font-weight: 600; }}
-@font-face {{ font-family: Plex; src: url({FONTS}/plex-arabic-700.woff); font-weight: 700; }}
-@font-face {{ font-family: Plex; src: url({FONTS}/plex-arabic-500.woff); font-weight: 500; }}
 """
 
 COPY = {
     "en": dict(dir="ltr", head="Locum jobs for doctors in Qatar and the Gulf",
                sub="Every specialty. Verified facilities. Free for doctors.",
                tag="Now placing doctors in Qatar", font="Adventor", body="Inter"),
-    "ar": dict(dir="rtl", head="وظائف مؤقتة للأطباء في قطر والخليج",
-               sub="كل التخصصات. منشآت موثّقة. مجاني للأطباء.",
-               tag="نوظّف الأطباء الآن في قطر", font="Plex", body="Plex"),
 }
 
 
@@ -113,8 +108,7 @@ def main():
                 pathlib.Path(path).write_bytes(data)
             return data
 
-        for lang in ("en", "ar"):
-            shot(og_html(lang), 1200, 630, IMG / f"og-{lang}.png")
+        shot(og_html("en"), 1200, 630, IMG / "og-en.png")
         shot(icon_html(180, 0.12, "#ffffff"), 180, 180, IMG / "apple-touch-icon.png")
         shot(icon_html(192, 0.04), 192, 192, IMG / "icon-192.png", transparent=True)
         shot(icon_html(512, 0.04), 512, 512, IMG / "icon-512.png", transparent=True)

@@ -83,12 +83,12 @@ ACADEMIC_TITLE_GROUPS = [
         ("professor_emeritus", "Emeritus professor", "Emeritus professor", 6),
     ]),
     ("Egyptian universities", [
-        ("eg_demonstrator", "Demonstrator (معيد)", "Demonstrator (Egypt)", 1),
-        ("eg_assistant_lecturer", "Assistant lecturer (مدرس مساعد)", "Assistant lecturer (Egypt)", 2),
-        ("eg_lecturer", "Lecturer (مدرس)", "Lecturer (Egypt)", 3),
-        ("eg_assistant_professor", "Assistant professor (أستاذ مساعد)", "Assistant professor (Egypt)", 4),
-        ("eg_professor", "Professor (أستاذ)", "Professor (Egypt)", 5),
-        ("eg_emeritus", "Emeritus professor (أستاذ متفرغ)", "Emeritus professor (Egypt)", 6),
+        ("eg_demonstrator", "Demonstrator", "Demonstrator (Egypt)", 1),
+        ("eg_assistant_lecturer", "Assistant lecturer", "Assistant lecturer (Egypt)", 2),
+        ("eg_lecturer", "Lecturer", "Lecturer (Egypt)", 3),
+        ("eg_assistant_professor", "Assistant professor", "Assistant professor (Egypt)", 4),
+        ("eg_professor", "Professor", "Professor (Egypt)", 5),
+        ("eg_emeritus", "Emeritus professor", "Emeritus professor (Egypt)", 6),
     ]),
 ]
 # Earlier options, kept so existing profiles still display and filter correctly.

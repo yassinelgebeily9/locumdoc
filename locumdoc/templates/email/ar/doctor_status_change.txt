@@ -1,9 +1,0 @@
-د. {{ doctor.last_name }}،
-
-حدّثت {{ facility }} حالة طلبك لوظيفة {{ job_title }}.
-
-الحالة الجديدة: {{ label(ref.APPLICATION_STATUSES, status) }}
-
-اطّلع على طلباتك: {{ site_url }}/doctor/applications
-
-فريق LocumDoc

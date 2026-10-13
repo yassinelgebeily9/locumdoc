@@ -1,7 +1,6 @@
 """Outgoing email. Uses SMTP when configured, otherwise writes messages to the log.
 
-Each email is rendered in the recipient's language: templates live in
-templates/email/<name>.txt (English) and templates/email/ar/<name>.txt (Arabic).
+Templates live in templates/email/<name>.txt.
 """
 import smtplib
 import ssl
@@ -14,15 +13,13 @@ from . import i18n
 
 
 def send(to, subject, template, lang="en", subject_args=None, **ctx):
-    """Send `template` to `to`. `subject` is an English message id, translated into `lang`."""
+    """Send `template` to `to`. `lang` is accepted for older callers; every email is English."""
     if not to:
         return
     app = current_app._get_current_object()
     ctx.setdefault("site_url", app.config["SITE_URL"])
-    with i18n.override(lang):
-        subject_text = i18n.gettext(subject, **(subject_args or {}))
-        names = [f"email/{lang}/{template}.txt", f"email/{template}.txt"] if lang != "en" else [f"email/{template}.txt"]
-        body = render_template(app.jinja_env.select_template(names), **ctx)
+    subject_text = i18n.gettext(subject, **(subject_args or {}))
+    body = render_template(f"email/{template}.txt", **ctx)
     msg = EmailMessage()
     msg["Subject"] = subject_text
     msg["From"] = app.config["MAIL_FROM"]

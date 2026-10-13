@@ -196,5 +196,5 @@
 
 {# Academic title as shown to facilities, with the Gulf equivalent for Egyptian titles. #}
 {% macro academic_title(key) -%}
-{{ label(ref.ACADEMIC_RANKS, key) }}{% set eq = ref.academic_equivalent(key) %}{% if eq %}{{ comma }}<span class="muted">{{ _('equivalent to %(title)s', title=_(eq)|lower if lang == 'en' else _(eq)) }}</span>{% endif %}
+{{ label(ref.ACADEMIC_RANKS, key) }}{% set eq = ref.academic_equivalent(key) %}{% if eq %}{{ comma }}<span class="muted">{{ _('equivalent to %(title)s', title=_(eq)|lower) }}</span>{% endif %}
 {%- endmacro %}

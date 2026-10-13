@@ -1,68 +1,36 @@
-"""Lightweight translation layer (English source strings, Arabic catalogue).
+"""Text helpers. The site is English-only.
 
-Usage in Python and templates:  _("Find locum jobs")  or  _("Hello %(name)s", name=x)
-Untranslated strings fall back to English, and tests/test_i18n.py fails if any
-string marked with _() is missing from the Arabic catalogue.
+Templates and views still mark text with _("...") / _("Hello %(name)s", name=x): it fills in the
+values and returns the English text, and keeps every string in one recognisable form should a
+second language ever be added again. (The Arabic interface removed on 13 Oct 2026 is preserved on
+the `arabic-archive` branch.)
 """
+from contextlib import contextmanager
 from datetime import date, datetime
 
-from flask import g, request
-
-from .translations.ar import AR
-
-LANGUAGES = {"en": {"name": "English", "dir": "ltr"}, "ar": {"name": "العربية", "dir": "rtl"}}
+LANGUAGES = {"en": {"name": "English", "dir": "ltr"}}
 DEFAULT = "en"
-COOKIE = "lang"
-
-CATALOGS = {"ar": AR}
-
-AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر",
-             "أكتوبر", "نوفمبر", "ديسمبر"]
-
-CURRENCY_AR = {"QAR": "ر.ق", "AED": "د.إ", "SAR": "ر.س", "KWD": "د.ك", "OMR": "ر.ع", "BHD": "د.ب"}
 
 
 def current():
-    return g.get("lang_override") or g.get("lang") or DEFAULT
+    return DEFAULT
 
 
 def gettext(message, **kwargs):
-    lang = current()
-    text = CATALOGS.get(lang, {}).get(message, message) if lang != "en" else message
-    return text % kwargs if kwargs else text
+    return message % kwargs if kwargs else message
 
 
 _ = gettext
 
 
 def direction():
-    return LANGUAGES[current()]["dir"]
+    return "ltr"
 
 
-def detect(user=None):
-    """Pick the language for this request: explicit cookie, then account preference, then browser."""
-    if request.path.startswith("/admin"):
-        return "en"  # the admin panel is English-only
-    cookie = request.cookies.get(COOKIE)
-    if cookie in LANGUAGES:
-        return cookie
-    if user is not None and user["lang"] in LANGUAGES:
-        return user["lang"]
-    return request.accept_languages.best_match(list(LANGUAGES), default=DEFAULT) or DEFAULT
-
-
-class override:
-    """Render something (an email) in a given language: `with override('ar'): ...`."""
-
-    def __init__(self, lang):
-        self.lang = lang if lang in LANGUAGES else DEFAULT
-
-    def __enter__(self):
-        self.prev = g.get("lang_override")
-        g.lang_override = self.lang
-
-    def __exit__(self, *exc):
-        g.lang_override = self.prev
+@contextmanager
+def override(_lang):
+    """Kept so email code reads the same; everything renders in English."""
+    yield
 
 
 # ------------------------------------------------------------------ formatting
@@ -74,39 +42,24 @@ def format_date(value, with_year=True):
         d = datetime.fromisoformat(str(value)[:19]) if not isinstance(value, (date, datetime)) else value
     except ValueError:
         return value
-    if current() == "ar":
-        out = f"{d.day} {AR_MONTHS[d.month - 1]}"
-    else:
-        out = d.strftime("%-d %b")
+    out = d.strftime("%-d %b")
     return f"{out} {d.year}" if with_year else out
 
 
 def format_money(amount, currency="QAR"):
     if amount in (None, ""):
-        return _("Rate on request")
-    if current() == "ar":
-        return f"{int(amount):,} {CURRENCY_AR.get(currency, currency)}"
+        return "Rate on request"
     return f"{currency} {int(amount):,}"
 
 
-def count_noun(n, en_one, en_many, ar_forms):
-    """Number + noun with correct plural. ar_forms = (one, two, few (3-10), many (11+))."""
+def _count(n, one, many):
     n = int(n)
-    if current() != "ar":
-        return f"{n} {en_one if n == 1 else en_many}"
-    one, two, few, many = ar_forms
-    if n == 1:
-        return one
-    if n == 2:
-        return two
-    if 3 <= n % 100 <= 10:
-        return f"{n} {few}"
-    return f"{n} {many}"
+    return f"{n} {one if n == 1 else many}"
 
 
 def weeks(n):
-    return count_noun(n, "week", "weeks", ("أسبوع واحد", "أسبوعان", "أسابيع", "أسبوعًا"))
+    return _count(n, "week", "weeks")
 
 
 def years(n):
-    return count_noun(n, "year", "years", ("سنة واحدة", "سنتان", "سنوات", "سنة"))
+    return _count(n, "year", "years")

@@ -1,5 +1,5 @@
 {% import "partials/macros.html" as m with context %}<!doctype html>
-<html lang="{{ lang }}" dir="{{ text_dir }}" data-loading-text="{{ _('Working…') }}">
+<html lang="en" dir="ltr" data-loading-text="{{ _('Working…') }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,28 +13,23 @@
   <meta property="og:description" content="{{ self.description() }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ canonical_url }}">
-  <meta property="og:locale" content="{{ 'ar_QA' if lang == 'ar' else 'en_GB' }}">
-  <meta property="og:locale:alternate" content="{{ 'en_GB' if lang == 'ar' else 'ar_QA' }}">
-  <meta property="og:image" content="{{ site_url }}{{ url_for('static', filename='img/og-' ~ ('ar' if lang == 'ar' else 'en') ~ '.png') }}">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:image" content="{{ site_url }}{{ url_for('static', filename='img/og-en.png') }}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="{{ _('LocumDoc: locum jobs for doctors in Qatar and the Gulf') }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
-  <meta name="twitter:image" content="{{ site_url }}{{ url_for('static', filename='img/og-' ~ ('ar' if lang == 'ar' else 'en') ~ '.png') }}">
+  <meta name="twitter:image" content="{{ site_url }}{{ url_for('static', filename='img/og-en.png') }}">
   {# Icons: browser tab, home screen, installed app #}
   <link rel="icon" href="{{ url_for('public.favicon') }}" sizes="48x48">
   <link rel="icon" href="{{ url_for('static', filename='img/mark.svg') }}" type="image/svg+xml">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
   <link rel="manifest" href="{{ url_for('public.manifest') }}">
   <meta name="theme-color" content="#7a1631">
-  {% if lang == 'ar' %}
-  <link rel="preload" href="{{ url_for('static', filename='fonts/plex-arabic-700.woff') }}" as="font" type="font/woff" crossorigin>
-  {% else %}
   <link rel="preload" href="{{ url_for('static', filename='fonts/adventor-700.woff') }}" as="font" type="font/woff" crossorigin>
-  {% endif %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=6">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -71,11 +66,6 @@
       {% endif %}
     </nav>
     <div class="header-actions">
-      {% if not request.path.startswith('/admin') %}
-        {% set other = 'en' if lang == 'ar' else 'ar' %}
-        <a class="btn btn-ghost btn-sm lang-switch" lang="{{ other }}" hreflang="{{ other }}"
-           href="{{ url_for('public.set_language', code=other, next=request.full_path.rstrip('?')) }}">{{ languages[other].name }}</a>
-      {% endif %}
       {% if current_user %}
         <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.account') }}">{{ _('Account') }}</a>
         <form method="post" action="{{ url_for('auth.logout') }}">{{ m.csrf() }}<button class="btn btn-outline btn-sm" type="submit">{{ _('Log out') }}</button></form>

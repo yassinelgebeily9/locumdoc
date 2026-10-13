@@ -286,8 +286,7 @@ COMMON = [
 
 
 def _sort_key(label):
-    # Arabic: treat the alef forms alike so أ / إ / آ / ا sort together.
-    return label.replace("أ", "ا").replace("إ", "ا").replace("آ", "ا").casefold()
+    return label.casefold()
 
 
 def options(gettext):

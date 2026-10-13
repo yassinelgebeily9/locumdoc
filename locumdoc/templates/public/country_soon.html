@@ -16,7 +16,7 @@
       <p>{{ _("Create your profile now and tick %(country)s under preferred countries. When facilities there start posting, you'll already be in their search results.", country=_(country.name)) }}</p>
       <div class="form-actions">
         <a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
-        <a class="btn btn-outline" href="{{ url_for('public.contact') }}">{{ _('Hiring in %(country)s? Talk to us', country=_(country.name)) }}</a>
+        <a class="btn btn-outline" href="{{ url_for('public.contact') }}">{{ _('Hiring in %(country)s? Contact us', country=_(country.name)) }}</a>
       </div>
     {% endif %}
   </div>

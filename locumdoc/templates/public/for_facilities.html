@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Locum doctors for hospitals and clinics in Qatar — LocumDoc') }}{% endblock %}
-{% block description %}{{ _('Find locum doctors for your hospital or clinic in Qatar. Post jobs free, review applicants with their CVs, and search doctors by specialty, grade and licence status.') }}{% endblock %}
+{% block description %}{{ _('Find locum doctors for your hospital or clinic in Qatar. Post jobs, review applicants with their CVs, and search doctors by specialty, grade and licence status.') }}{% endblock %}
 {% block sticky_cta %}{% if not current_user %}
 <div class="sticky-cta" data-sticky-cta>
   <a class="btn btn-primary" href="{{ url_for('auth.join_facility') }}">{{ _('Register your facility') }}</a>
@@ -75,7 +75,7 @@
 
 <section class="section-tight">
   <div class="wrap cta-strip">
-    <h2>{{ _('Registering is free. Post your first job in minutes.') }}</h2>
+    <h2>{{ _('Register in minutes and post your first job.') }}</h2>
     <a class="btn btn-ink btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register your facility') }}</a>
   </div>
 </section>

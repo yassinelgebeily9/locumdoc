@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Join LocumDoc') }}{% endblock %}
-{% block description %}{{ _('Join LocumDoc free: as a doctor looking for locum work, or as a hospital or clinic hiring locum doctors in Qatar.') }}{% endblock %}
+{% block description %}{{ _('Join LocumDoc as a doctor looking for locum work, or as a hospital or clinic hiring locum doctors in Qatar.') }}{% endblock %}
 {% block sticky_cta %}{% endblock %}
 {% block main %}
 <div class="wrap">
   <div class="auth-shell wide">
     <h1>{{ _('Join LocumDoc') }}</h1>
-    <p>{{ _('Choose the account that fits you. Both are free.') }}</p>
+    <p>{{ _('Choose the account that fits you. Free for doctors.') }}</p>
     <div class="choice-grid">
       <a class="choice" href="{{ url_for('auth.join_doctor') }}">
         <h2>{{ _("I'm a doctor") }}</h2>

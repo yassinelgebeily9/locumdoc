@@ -8,6 +8,7 @@
 <div class="wrap content">
   <form class="panel panel-pad" method="post" novalidate>
     {{ m.csrf() }}
+    {{ m.error_summary(form) }}
     <div class="form-grid">
       {{ m.input(form, v, 'name', _('Facility name'), cls='full') }}
       {{ m.select(form, v, 'facility_type', _('Type'), ref.FACILITY_TYPES, placeholder=None) }}

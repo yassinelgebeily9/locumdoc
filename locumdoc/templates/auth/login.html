@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Log in') }} — LocumDoc{% endblock %}
+{% block description %}{{ _('Log in to LocumDoc to manage your profile, applications or locum jobs.') }}{% endblock %}
+{% block sticky_cta %}{% endblock %}
 {% block main %}
 <div class="wrap">
   <div class="auth-shell">
@@ -7,6 +9,7 @@
     <p>{{ _('Doctors, facilities and administrators all log in here.') }}</p>
     <form class="panel panel-pad" method="post" novalidate>
       {{ m.csrf() }}
+    {{ m.error_summary(form) }}
       <div class="form-grid">
         {{ m.input(None, form.clean, 'email', _('Email'), type='email', cls='full', attrs='autocomplete="email" autofocus') }}
         {% call m.field_wrap(form, 'password', _('Password'), cls='full') %}
@@ -14,7 +17,7 @@
         {% endcall %}
       </div>
       <div class="form-actions">
-        <button class="btn btn-primary btn-lg" type="submit">{{ _('Log in') }}</button>
+        <button class="btn btn-primary btn-lg" type="submit" data-loading="{{ _('Logging in…') }}">{{ _('Log in') }}</button>
         <a href="{{ url_for('auth.forgot') }}">{{ _('Forgot your password?') }}</a>
       </div>
     </form>

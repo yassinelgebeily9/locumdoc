@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Choose a new password') }} — LocumDoc{% endblock %}
+{% block sticky_cta %}{% endblock %}
 {% block main %}
 <div class="wrap">
   <div class="auth-shell">
     <h1>{{ _('Choose a new password') }}</h1>
     <form class="panel panel-pad" method="post" novalidate>
       {{ m.csrf() }}
+    {{ m.error_summary(form) }}
       {{ m.input(form, {}, 'password', _('New password'), type='password', help=_('At least 10 characters.'), attrs='autocomplete="new-password" minlength="10" autofocus') }}
       <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Save new password') }}</button></div>
     </form>

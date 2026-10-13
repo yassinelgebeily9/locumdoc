@@ -1,13 +1,28 @@
 {% extends "base.html" %}
 {% block title %}{{ title }} — LocumDoc{% endblock %}
+{% block description %}{{ text }}{% endblock %}
+{% block sticky_cta %}{% endblock %}
 {% block main %}
 <div class="wrap error-page">
-  <div class="code">{{ code }}</div>
+  <div class="code" aria-hidden="true">{{ code }}</div>
   <h1>{{ title }}</h1>
   <p class="muted">{{ text }}</p>
+  {% if code in (404, 405) %}
+  <form class="error-search" method="get" action="{{ url_for('public.jobs') }}" role="search">
+    <label class="visually-hidden" for="err-q">{{ _('Search locum jobs') }}</label>
+    <input id="err-q" type="search" name="q" placeholder="{{ _('Search jobs by specialty or title') }}">
+    <button class="btn btn-ink" type="submit">{{ _('Search') }}</button>
+  </form>
+  <nav class="error-links" aria-label="{{ _('Popular pages') }}">
+    <a href="{{ url_for('public.jobs') }}">{{ _('Find locum jobs') }}</a>
+    <a href="{{ url_for('public.for_facilities') }}">{{ _('For hospitals & clinics') }}</a>
+    <a href="{{ url_for('public.country', slug='qatar') }}">{{ _('Licensing in Qatar') }}</a>
+    <a href="{{ url_for('public.contact') }}">{{ _('Talk to us') }}</a>
+  </nav>
+  {% endif %}
   <div class="form-actions">
     <a class="btn btn-primary" href="{{ url_for('public.home') }}">{{ _('Go to the home page') }}</a>
-    <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse jobs') }}</a>
+    {% if code == 500 %}<a class="btn btn-outline" href="mailto:{{ contact_email }}">{{ _('Email us') }}</a>{% endif %}
   </div>
 </div>
 {% endblock %}

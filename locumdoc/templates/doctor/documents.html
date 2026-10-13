@@ -22,11 +22,15 @@
         </div>
         <div class="field">
           <label for="file">{{ _('File') }}</label>
-          <input id="file" type="file" name="file" required accept=".pdf,application/pdf">
-          <span class="help">{{ _('PDF only, up to 10 MB.') }}</span>
+          <input id="file" type="file" name="file" required accept=".pdf,application/pdf"
+            data-pdf-only data-max-bytes="{{ config.MAX_CONTENT_LENGTH }}" aria-describedby="file-help"
+            data-msg-type="{{ _('Choose a PDF file. In Word or Pages, use Export or Save As PDF first.') }}"
+            data-msg-size="{{ _('That file is larger than %(mb)s MB. Compress the PDF or split it, then upload again.', mb=config.MAX_CONTENT_LENGTH // 1048576) }}">
+          <span class="help" id="file-help">{{ _('PDF only, up to 10 MB.') }}</span>
+          <span class="error" id="file-error" hidden></span>
         </div>
       </div>
-      <div class="form-actions"><button class="btn btn-primary" type="submit">{{ _('Upload') }}</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit" data-loading="{{ _('Uploading…') }}">{{ _('Upload') }}</button></div>
     </form>
 
     <div class="panel">

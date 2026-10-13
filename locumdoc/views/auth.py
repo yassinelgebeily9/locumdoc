@@ -2,7 +2,7 @@ from flask import (Blueprint, current_app, flash, g, redirect, render_template, 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .. import db, mail, refdata, store
+from .. import analytics, db, mail, refdata, store
 from ..i18n import _
 from ..db import EmailTaken, create_user, user_by_email
 from ..security import client_ip, login_required, login_user, rate_limited
@@ -73,6 +73,7 @@ def join_doctor():
                                   "academic_rank": c["academic_rank"],
                                   "visible_to_facilities": 1 if request.form.get("visible") else 0}, doc_id=uid)
             login_user(store.get("users", uid))
+            analytics.track("sign_up", method="email", account_type="doctor")
             mail.send(email, "Welcome to LocumDoc", "welcome_doctor", g.lang, first_name=c["first_name"])
             mail.notify_admin("New doctor sign-up", "admin_new_user", kind="doctor",
                               name=f"Dr {c['first_name']} {c['last_name']}", email=email)
@@ -116,6 +117,7 @@ def join_facility():
                                      "contact_name": c["contact_name"], "contact_role": c["contact_role"],
                                      "phone": c["phone"]}, doc_id=uid)
             login_user(store.get("users", uid))
+            analytics.track("sign_up", method="email", account_type="facility")
             mail.send(email, "Your LocumDoc facility account", "welcome_facility", g.lang,
                       contact_name=c["contact_name"], facility=c["name"])
             mail.notify_admin("New facility to verify", "admin_new_user", kind="facility",
@@ -140,6 +142,8 @@ def login():
         if user and user["is_active"] and check_password_hash(user["password_hash"], pw):
             login_user(user)
             store.update("users", user["id"], last_login_at=store.now())
+            if user["role"] != "admin":
+                analytics.track("login", method="email")
             return redirect(_safe_next(request.args.get("next")) or home_for(user))
         form.errors["password"] = _("That email and password don't match an account.")
     return render_template("auth/login.html", form=form)

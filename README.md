@@ -57,6 +57,7 @@ In production, every record (accounts, profiles, jobs, applications, invitations
 | `FIREBASE_PROJECT_ID` | the project ID, e.g. `locumdoc-qa` |
 | `FIREBASE_STORAGE_BUCKET` | e.g. `locumdoc-qa.firebasestorage.app` |
 | `FIREBASE_CREDENTIALS_JSON` | the whole contents of the service account key file |
+| `FIREBASE_WEB_CONFIG` | optional: the web app's `firebaseConfig`, to turn on Analytics (loaded only with cookie consent) |
 
 Without those settings the app falls back to the local store described above.
 
@@ -124,6 +125,8 @@ In the admin panel go to **Countries**, add cities if needed, and click **Open**
 ```
 locumdoc/
   __init__.py       app factory, config, security headers, template filters
+  analytics.py      cookie consent and Firebase Analytics (consent-gated), event queue
+  phones.py         country-code phone fields, checked with libphonenumber
   store.py          Firestore and local backends, record defaults, per-request cache
   db.py             lookups that join records, users, CLI commands, demo data
   import_sqlite.py  one-off copy from the earlier SQLite version
@@ -138,6 +141,9 @@ locumdoc/
   static/           CSS, fonts, logo, small JS
 tests/test_app.py   end-to-end tests
 tests/test_firestore_backend.py   the same flows through the Firestore code path
+tests/test_checklist.py   launch checklist: metadata, icons, robots/sitemap, error and thank-you pages, consent
+tools/make_brand_assets.py   renders the share images and icon set
+tools/firebase-sdk/          builds the self-hosted Firebase Analytics bundle
 ```
 
 Useful commands:

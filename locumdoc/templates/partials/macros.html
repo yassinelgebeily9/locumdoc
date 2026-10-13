@@ -29,6 +29,16 @@
 {%- endmacro %}
 
 {# ---------- form fields ---------- #}
+{# A list of every problem at the top of a form, each linking to its field. Focused on load (site.js). #}
+{% macro error_summary(form) -%}
+{% if form and form.errors %}
+<div class="error-summary" role="alert" tabindex="-1" data-error-summary>
+  <h2>{{ _('Please fix %(n)s thing before continuing', n=form.errors|length) if form.errors|length == 1 else _('Please fix %(n)s things before continuing', n=form.errors|length) }}</h2>
+  <ul>{% for name, msg in form.errors.items() %}<li><a href="#f-{{ name }}">{{ msg }}</a></li>{% endfor %}</ul>
+</div>
+{% endif %}
+{%- endmacro %}
+
 {% macro field_wrap(form, name, label_text, help=None, optional=False, cls='') -%}
 <div class="field {{ cls }}{% if form and form.errors.get(name) %} has-error{% endif %}">
   <label for="f-{{ name }}">{{ label_text }}{% if optional %} <span class="opt">{{ _('(optional)') }}</span>{% endif %}</label>

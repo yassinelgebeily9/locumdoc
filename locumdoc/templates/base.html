@@ -1,22 +1,40 @@
 {% import "partials/macros.html" as m with context %}<!doctype html>
-<html lang="{{ lang }}" dir="{{ text_dir }}">
+<html lang="{{ lang }}" dir="{{ text_dir }}" data-loading-text="{{ _('Working…') }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}LocumDoc{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ _('Locum work for doctors of every specialty in the Gulf, starting with Qatar. One profile, one CV upload, verified hospitals and clinics.') }}{% endblock %}">
+  <meta name="robots" content="{% block robots %}{{ 'noindex, nofollow' if noindex else 'index, follow' }}{% endblock %}">
+  {% if not noindex %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
+  {# Social previews (Facebook, LinkedIn, WhatsApp, X) #}
+  <meta property="og:site_name" content="LocumDoc">
   <meta property="og:title" content="{{ self.title() }}">
   <meta property="og:description" content="{{ self.description() }}">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ canonical_url }}">
   <meta property="og:locale" content="{{ 'ar_QA' if lang == 'ar' else 'en_GB' }}">
-  <meta name="theme-color" content="#7a1631">
+  <meta property="og:locale:alternate" content="{{ 'en_GB' if lang == 'ar' else 'ar_QA' }}">
+  <meta property="og:image" content="{{ site_url }}{{ url_for('static', filename='img/og-' ~ ('ar' if lang == 'ar' else 'en') ~ '.png') }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ _('LocumDoc: locum jobs for doctors in Qatar and the Gulf') }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.title() }}">
+  <meta name="twitter:description" content="{{ self.description() }}">
+  <meta name="twitter:image" content="{{ site_url }}{{ url_for('static', filename='img/og-' ~ ('ar' if lang == 'ar' else 'en') ~ '.png') }}">
+  {# Icons: browser tab, home screen, installed app #}
+  <link rel="icon" href="{{ url_for('public.favicon') }}" sizes="48x48">
   <link rel="icon" href="{{ url_for('static', filename='img/mark.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ url_for('public.manifest') }}">
+  <meta name="theme-color" content="#7a1631">
   {% if lang == 'ar' %}
   <link rel="preload" href="{{ url_for('static', filename='fonts/plex-arabic-700.woff') }}" as="font" type="font/woff" crossorigin>
   {% else %}
   <link rel="preload" href="{{ url_for('static', filename='fonts/adventor-700.woff') }}" as="font" type="font/woff" crossorigin>
   {% endif %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=5">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -109,6 +127,7 @@
           <li><a href="{{ url_for('public.about') }}">{{ _('About') }}</a></li>
           <li><a href="{{ url_for('public.privacy') }}">{{ _('Privacy') }}</a></li>
           <li><a href="{{ url_for('public.terms') }}">{{ _('Terms') }}</a></li>
+          <li><a href="{{ url_for('public.cookies') }}">{{ _('Cookie settings') }}</a></li>
         </ul>
       </div>
     </div>
@@ -118,7 +137,32 @@
     </div>
   </div>
 </footer>
+
+{# Phones: keep the main action in reach. Pages can replace or remove it with this block. #}
+{% block sticky_cta %}
+{% if not current_user %}
+<div class="sticky-cta" data-sticky-cta>
+  <a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
+  <a class="btn btn-outline" href="{{ url_for('auth.join_facility') }}">{{ _('Post a job') }}</a>
 </div>
-<script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
+{% endif %}
+{% endblock %}
+
+{% if not cookie_consent and request.endpoint != 'public.cookies' and not request.path.startswith('/admin') %}
+<section class="cookie-banner" role="region" aria-label="{{ _('Cookie choice') }}" data-cookie-banner>
+  <div class="wrap cookie-inner">
+    <p>{{ _("We use essential cookies to keep you logged in and remember your language. With your permission we'd also use Google Analytics (through Firebase) to see which pages help doctors and facilities, so we can improve them.") }}
+      <a href="{{ url_for('public.cookies') }}">{{ _('Cookie details') }}</a></p>
+    {% include "partials/cookie_choice.html" %}
+  </div>
+</section>
+{% endif %}
+</div>
+{% if analytics_config %}
+<script type="application/json" id="ld-analytics-config">{{ analytics_config|tojson }}</script>
+<script type="application/json" id="ld-analytics-events">{{ analytics_events()|tojson }}</script>
+<script type="module" src="{{ url_for('static', filename='js/analytics.js') }}?v=1"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/site.js') }}?v=5" defer></script>
 </body>
 </html>

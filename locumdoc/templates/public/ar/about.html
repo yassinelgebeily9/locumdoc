@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% block title %}عن LocumDoc{% endblock %}
+{% block description %}يربط LocumDoc الأطباء من كل التخصصات بمستشفيات وعيادات موثّقة للعمل المؤقت في قطر، وتليها بقية دول الخليج.{% endblock %}
 {% block main %}
 <div class="wrap page-head">
   <h1>عن LocumDoc</h1>
   <p>منصة للتوظيف المؤقت (لوكم) تجمع الأطباء والمنشآت الصحية في الخليج.</p>
+  <div class="hero-ctas" data-hero-cta>
+    <a class="btn btn-primary" href="{{ url_for('auth.join_doctor') }}">أنشئ ملف طبيب</a>
+    <a class="btn btn-outline" href="{{ url_for('auth.join_facility') }}">سجّل منشأة</a>
+  </div>
 </div>
 <div class="wrap content">
   <div class="panel panel-pad prose">

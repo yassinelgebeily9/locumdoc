@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Locum doctors for hospitals and clinics in Qatar — LocumDoc') }}{% endblock %}
+{% block description %}{{ _('Find locum doctors for your hospital or clinic in Qatar. Post jobs free, review applicants with their CVs, and search doctors by specialty, grade and licence status.') }}{% endblock %}
+{% block sticky_cta %}{% if not current_user %}
+<div class="sticky-cta" data-sticky-cta>
+  <a class="btn btn-primary" href="{{ url_for('auth.join_facility') }}">{{ _('Register your facility') }}</a>
+  <a class="btn btn-outline" href="{{ url_for('public.contact') }}">{{ _('Talk to us') }}</a>
+</div>{% endif %}{% endblock %}
 {% block main %}
 <section class="hero">
   <div class="wrap hero-grid">
@@ -7,7 +13,7 @@
       <div class="launch">{{ m.qatar_flag() }} {{ _('For facilities in Qatar') }}</div>
       <h1>{{ _('Cover the rota before the gap opens.') }}</h1>
       <p class="lede">{{ _("Post locum jobs, receive applications with CVs attached, and search a directory of doctors who've told you their specialty, availability and DHP licensing status up front.") }}</p>
-      <div class="hero-ctas">
+      <div class="hero-ctas" data-hero-cta>
         <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Register your facility') }}</a>
         <a class="btn btn-outline btn-lg" href="{{ url_for('public.contact') }}">{{ _('Talk to us first') }}</a>
       </div>

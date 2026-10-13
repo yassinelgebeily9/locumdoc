@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Register a facility') }} — LocumDoc{% endblock %}
+{% block description %}{{ _('Register your hospital or clinic on LocumDoc to post locum jobs in Qatar and find doctors. Free to start.') }}{% endblock %}
+{% block sticky_cta %}{% endblock %}
 {% block main %}
 <div class="wrap">
   <div class="auth-shell wide">
@@ -7,6 +9,7 @@
     <p>{{ _('We verify every facility before its jobs go live, usually within one working day. You can draft jobs straight away.') }}</p>
     <form class="panel panel-pad" method="post" novalidate>
       {{ m.csrf() }}
+    {{ m.error_summary(form) }}
       <fieldset class="fieldset">
         <legend>{{ _('Facility') }}</legend>
         <p class="legend-help">{{ _('As it should appear to doctors.') }}</p>
@@ -34,7 +37,7 @@
           <div class="full">{% include "partials/consent.html" %}</div>
         </div>
       </fieldset>
-      <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit">{{ _('Register facility') }}</button></div>
+      <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit" data-loading="{{ _('Registering…') }}">{{ _('Register facility') }}</button></div>
     </form>
     <p class="muted">{{ _('Looking for work?') }} <a href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>. {{ _('Already registered?') }} <a href="{{ url_for('auth.login') }}">{{ _('Log in') }}</a></p>
   </div>

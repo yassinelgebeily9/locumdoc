@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Privacy notice — LocumDoc{% endblock %}
+{% block description %}How LocumDoc collects, uses, stores and protects the personal data of doctors, facilities and visitors, including cookies and analytics.{% endblock %}
 {% block main %}
-<div class="wrap page-head"><h1>Privacy notice</h1><p>Last updated {{ today|d }}</p></div>
+<div class="wrap page-head"><h1>Privacy notice</h1><p>Last updated {{ '2026-10-13'|d }}</p></div>
 <div class="wrap content">
   <div class="panel panel-pad prose legal-doc">
     <p>This notice explains what personal data LocumDoc ("we") collects through locumdoc.me, why, and the choices you have. We process data in line with the EU General Data Protection Regulation (GDPR) and Qatar's Personal Data Privacy Protection Law (Law No. 13 of 2016).</p>
@@ -22,7 +23,13 @@
     </ul>
 
     <h2>Who can see your data</h2>
-    <p>Doctor documents are never public. Facilities see a doctor's profile and documents only when that doctor has applied to one of their jobs, or when the doctor has chosen to appear in the directory and the facility has been verified. Our administrators can see all accounts to verify and support them. We use hosting and email providers who process data on our behalf under written agreements.</p>
+    <p>Doctor documents are never public. Facilities see a doctor's profile and documents only when that doctor has applied to one of their jobs, or when the doctor has chosen to appear in the directory and the facility has been verified. Our administrators can see all accounts to verify and support them.</p>
+    <p>These providers process data on our behalf, under written data processing terms:</p>
+    <ul>
+      <li><strong>Google (Firebase and Google Cloud):</strong> stores account records in Cloud Firestore and uploaded documents in Cloud Storage, in the European Union, and provides analytics if you allow it.</li>
+      <li><strong>Render:</strong> runs the website's servers, in the European Union (Frankfurt).</li>
+      <li><strong>Our email provider:</strong> delivers account and application emails.</li>
+    </ul>
 
     <h2>International transfers</h2>
     <p>Because placements are in the Gulf, profiles you share with facilities are transferred to those facilities in Qatar (and, later, other Gulf countries). We only make this transfer when you apply or allow directory visibility.</p>
@@ -33,8 +40,10 @@
     <h2>Your rights</h2>
     <p>You can access, correct, download or delete your data, object to processing, or withdraw consent. Most of this you can do yourself from your profile and account pages. For anything else, email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. You can also complain to your local data protection authority.</p>
 
-    <h2>Cookies</h2>
-    <p>We use one essential cookie to keep you logged in and protect forms from forgery, and one to remember your preferred language. We don't use advertising or analytics cookies, and fonts are served from our own server.</p>
+    <h2 id="cookies">Cookies and analytics</h2>
+    <p>Essential cookies make the site work and don't need your permission: one keeps you logged in and protects forms from forgery, one remembers your language, and one remembers your cookie choice.</p>
+    <p>With your permission only, we use <strong>Google Analytics for Firebase</strong> to understand how the site is used, for example which pages people visit, which device and browser they use, their approximate location (country or city), and when key steps such as signing up or applying happen. It sets the cookies <span class="ltr">_ga</span> and <span class="ltr">_ga_*</span> for six months. Analytics never receives your name, email, profile details or documents, Google signals and ad personalisation are switched off, and Google Analytics doesn't store IP addresses. Google may process this data outside the EU, including in the United States, under the EU-US Data Privacy Framework and the EU's standard contractual clauses. The legal basis is your consent.</p>
+    <p>You can change your choice at any time in <a href="{{ url_for('public.cookies') }}">Cookie settings</a>, linked at the bottom of every page. Fonts are served from our own server, and we don't use advertising cookies.</p>
 
     <h2>Contact</h2>
     <p>LocumDoc, <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>

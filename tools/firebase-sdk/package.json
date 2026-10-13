@@ -1,0 +1,12 @@
+{
+  "name": "locumdoc-firebase-sdk",
+  "private": true,
+  "description": "Builds static/js/vendor/firebase-analytics.js: the parts of the Firebase web SDK LocumDoc uses, self-hosted so the site's Content-Security-Policy stays strict.",
+  "scripts": {
+    "build": "esbuild entry.js --bundle --format=esm --minify --legal-comments=eof --target=es2019 --outfile=../../locumdoc/static/js/vendor/firebase-analytics.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "firebase": "12.19.0"
+  }
+}

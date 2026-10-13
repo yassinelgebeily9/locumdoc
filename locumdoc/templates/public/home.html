@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ _('LocumDoc — Locum jobs for doctors in Qatar and the Gulf') }}{% endblock %}
+{% block description %}{{ _('Locum work for doctors of every specialty in the Gulf, starting with Qatar. One profile, one CV upload, verified hospitals and clinics.') }}{% endblock %}
 {% block body_class %}cine{% endblock %}
 {% block head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cine.css') }}?v=2">
@@ -19,7 +20,7 @@
       <span class="ln ln-2"><span class="cine-in d2">{{ _('Doctors want placements.') }}</span></span>
     </h1>
     <p class="cine-lede cine-in d3">{{ _('LocumDoc brings them together: locum work in the Gulf, matched to your specialty, at hospitals and clinics we have verified.') }}</p>
-    <div class="hero-ctas cine-in d4">
+    <div class="hero-ctas cine-in d4" data-hero-cta>
       <a class="btn btn-primary btn-lg" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
       <a class="btn btn-outline btn-lg" href="{{ url_for('auth.join_facility') }}">{{ _('Post a locum job') }}</a>
     </div>

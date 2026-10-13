@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Application sent') if kind == 'application' else _('Thank you') }} — LocumDoc{% endblock %}
+{% block description %}{{ _('Thank you for getting in touch with LocumDoc.') }}{% endblock %}
+{% block sticky_cta %}{% endblock %}
+{% block main %}
+<div class="wrap thanks">
+  <div class="panel panel-pad thanks-card">
+    <div class="thanks-icon">{{ m.icon('check') }}</div>
+    {% if kind == 'application' %}
+      <h1>{{ _('Application sent') }}</h1>
+      {% if job %}<p class="lede">{{ _('Your application for %(title)s at %(facility)s is with the facility now.', title=job.title, facility=job.facility) }}</p>{% endif %}
+      <h2>{{ _('What happens next') }}</h2>
+      <ol class="steps">
+        <li><div><strong>{{ _('The facility reviews you') }}</strong><span>{{ _('They see your profile, licensing status and CV, exactly as you saved them.') }}</span></div></li>
+        <li><div><strong>{{ _("You'll get an email at every step") }}</strong><span>{{ _('Shortlisted, interview, offer: each change is emailed to you and shown under Applications.') }}</span></div></li>
+        <li><div><strong>{{ _('Licensing starts with an offer') }}</strong><span>{{ _("If you're offered the role, the facility starts DHP licensing with you. Many placements include licensing support.") }}</span></div></li>
+      </ol>
+      <div class="form-actions">
+        <a class="btn btn-primary" href="{{ url_for('doctor.applications') }}">{{ _('Track your applications') }}</a>
+        <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse more jobs') }}</a>
+      </div>
+    {% else %}
+      <h1>{{ _('Thank you, %(name)s', name=sent.name) }}</h1>
+      <p class="lede">{{ _("Your message is on its way. We reply within one working day, to %(email)s.", email=sent.email) }}</p>
+      <p class="muted">{{ _("If it's urgent, email us at %(email)s.", email=contact_email) }}</p>
+      <div class="form-actions">
+        <a class="btn btn-primary" href="{{ url_for('public.jobs') }}">{{ _('Browse locum jobs') }}</a>
+        <a class="btn btn-outline" href="{{ url_for('public.for_facilities') }}">{{ _('How it works for facilities') }}</a>
+      </div>
+    {% endif %}
+  </div>
+  {% if similar %}
+  <section class="thanks-more" aria-labelledby="more-title">
+    <h2 id="more-title">{{ _('Similar jobs you might like') }}</h2>
+    <ul class="job-list">{% for j in similar %}{{ m.job_item(j) }}{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

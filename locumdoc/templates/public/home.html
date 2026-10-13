@@ -161,9 +161,7 @@
       <p class="ch-num dark"><span>04</span> {{ _('Open now') }}</p>
       <h2 id="ch4-title">{{ _('Every specialty, every grade') }}</h2>
       <p class="ch-sub">{{ _('From GP clinics to consultant-led ICU cover.') }}</p>
-      <ul class="spec-cols">
-        {% for s in ref.SPECIALTIES %}<li><a href="{{ url_for('public.jobs', q=s) }}">{{ _(s) }}</a></li>{% endfor %}
-      </ul>
+      <a class="btn btn-outline" href="{{ url_for('public.jobs') }}">{{ _('Browse all jobs') }}</a>
     </div>
     <section class="board reveal" aria-labelledby="board-title">
       <div class="board-head">
@@ -190,7 +188,6 @@
   </div>
 </section>
 
-<<<<<<< HEAD
 {# ---------------------------------------------------------------- finale #}
 <section class="chapter ch-maroon ch-finale" aria-labelledby="fin-title">
   <div class="wrap fin-inner">
@@ -198,59 +195,6 @@
     <h2 id="fin-title" class="reveal">{{ _('Qatar first, the Gulf next') }}</h2>
     <p class="reveal">{{ _("Mark the countries you'd consider on your profile and you'll hear first when each one opens.") }}</p>
     <div class="countries-row reveal">
-=======
-<section class="serrated" aria-labelledby="how-title">
-  <div class="wrap">
-    <h2 id="how-title">{{ _('How LocumDoc works') }}</h2>
-    <p>{{ _('Two sides, one platform. Doctors show what they can cover and when. Facilities show what they need.') }}</p>
-    <div class="tracks">
-      <div class="track">
-        <h3>{{ _('For doctors') }}</h3>
-        <ol class="steps">
-          <li><div><strong>{{ _('Create your profile') }}</strong><span>{{ _("Specialty, grade, qualifications, current licence and where you stand with Qatar's DHP.") }}</span></div></li>
-          <li><div><strong>{{ _('Upload your CV and credentials') }}</strong><span>{{ _('Stored privately. Only verified facilities you apply to, or that you allow to search, can open them.') }}</span></div></li>
-          <li><div><strong>{{ _('Apply, or get invited') }}</strong><span>{{ _('Apply to open jobs in one step, accept invitations from facilities, and track every status change.') }}</span></div></li>
-        </ol>
-        <a class="btn btn-light" href="{{ url_for('auth.join_doctor') }}">{{ _('Create a doctor profile') }}</a>
-      </div>
-      <div class="track">
-        <h3>{{ _('For hospitals and clinics') }}</h3>
-        <ol class="steps">
-          <li><div><strong>{{ _('Register your facility') }}</strong><span>{{ _('We verify every employer before its jobs are shown, usually within one working day.') }}</span></div></li>
-          <li><div><strong>{{ _('Post the cover you need') }}</strong><span>{{ _("Specialty, grade, dates, rate and what's included: accommodation, flights, licensing support.") }}</span></div></li>
-          <li><div><strong>{{ _('Review, shortlist, or search') }}</strong><span>{{ _('See applicants with CVs attached, move them through your pipeline, or invite doctors from the directory.') }}</span></div></li>
-        </ol>
-        <a class="btn btn-outline" href="{{ url_for('public.for_facilities') }}">{{ _('How it works for facilities') }}</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section-white" aria-labelledby="lic-title">
-  <div class="wrap licence-grid">
-    <div class="intro">
-      <h2 id="lic-title">{{ _('Licensing in Qatar, in plain terms') }}</h2>
-      <p>{{ _('Doctors practise in Qatar under a licence from the Department of Healthcare Professions (DHP) at the Ministry of Public Health. Your profile records where you are in this process, so facilities can plan start dates realistically.') }}</p>
-      <p>{{ _('Many placements come with licensing support from the facility.') }}</p>
-      <a class="btn btn-outline" href="{{ url_for('public.country', slug='qatar') }}">{{ _('Read the full Qatar guide') }}</a>
-    </div>
-    <ol class="pathway">
-      <li><strong>{{ _('Primary source verification') }}</strong><span>{{ _('A DHP-approved verification company confirms your degree, licences and experience with the issuing bodies.') }}</span></li>
-      <li><strong>{{ _('DHP evaluation') }}</strong><span>{{ _("DHP reviews your file against its qualification categories. Category 1 and 2 specialty qualifications don't need the qualifying exam.") }}</span></li>
-      <li><strong>{{ _('Qualifying exam, if required') }}</strong><span>{{ _('Needed for some qualifications. Recognised exams such as PLAB 1 or USMLE Step 2 can exempt general practitioners.') }}</span></li>
-      <li><strong>{{ _('Licence for the role') }}</strong><span>{{ _('Locum licences cover a permanent physician for up to six months. Temporary licences last six months while a full licence is processed.') }}</span></li>
-    </ol>
-  </div>
-  <div class="wrap"><p class="note">{{ _("Summary based on DHP's published guidelines for physicians. Requirements change; DHP's current rules always apply.") }}</p></div>
-</section>
-
-<section class="section-tight section-white" aria-labelledby="ctry-title">
-  <div class="wrap">
-    <div class="section-head">
-      <div><h2 id="ctry-title">{{ _('Qatar first, the Gulf next') }}</h2><p>{{ _("Mark the countries you'd consider on your profile and you'll hear first when each one opens.") }}</p></div>
-    </div>
-    <div class="countries-row">
->>>>>>> main
       {% for c in countries %}
       <a class="country-cell{% if c.active %} live{% endif %}" href="{{ url_for('public.country', slug=c.slug) }}">
         <strong>{{ _(c.name) }}</strong><span>{{ _('Placing now') if c.active else _('Opening soon') }}</span>

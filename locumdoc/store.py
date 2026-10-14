@@ -50,6 +50,7 @@ DEFAULTS = {
                   "size_bytes": 0, "created_at": NOW},
     "jobs": {"facility_id": "", "title": "", "specialty_id": "", "grade": "", "country_id": "", "city_id": None,
              "start_date": "", "end_date": "", "rate_amount": None, "rate_currency": "QAR", "rate_period": "month",
+             "show_rate": 0,
              "accommodation": 0, "flights": 0, "transport": 0, "licensing_support": 0, "description": "",
              "requirements": "", "status": "open", "created_at": NOW, "updated_at": NOW},
     "applications": {"job_id": "", "doctor_id": "", "cover_note": "", "status": "submitted", "created_at": NOW,

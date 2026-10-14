@@ -138,7 +138,7 @@ p { margin: 0 0 1em; max-width: 68ch; }
 .board-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 20px 22px 14px; }
 .board-head h2 { color: #fff; font-size: var(--s1); margin: 0; letter-spacing: 0; }
 .board-head a { color: var(--sand); font-weight: 500; font-size: var(--s-1); white-space: nowrap; }
-.board-cols, .board-row { display: grid; grid-template-columns: minmax(0, 1fr) 92px 112px; gap: 14px; padding: 0 22px; }
+.board-cols, .board-row { display: grid; grid-template-columns: minmax(0, 1fr) 92px; gap: 14px; padding: 0 22px; }
 .board-cols { font-size: 0.75rem; color: #9aa6b2; padding-bottom: 8px; border-bottom: 1px solid #2a3643; }
 .board-cols span:nth-child(n+2), .board-row > :nth-child(n+2) { text-align: end; }
 .board-row { padding-top: 14px; padding-bottom: 14px; border-bottom: 1px solid #2a3643; color: #fff; text-decoration: none; align-items: center; }
@@ -508,7 +508,6 @@ body:has(.cookie-banner:not([hidden])) .site-footer { padding-bottom: 140px; }
   :root { --s3: 1.5rem; --s4: 1.9rem; }
   .board-cols { display: none; }
   .board-row { grid-template-columns: 1fr auto; }
-  .board-row .d { display: none; }
   .hero-proof { flex-direction: column; gap: 16px; }
   .countries-row { grid-template-columns: 1fr 1fr; }
   .country-cell { border-inline-end: 1px solid var(--line) !important; border-bottom: 1px solid var(--line); }

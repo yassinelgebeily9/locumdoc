@@ -140,6 +140,15 @@ def create_app(test_config=None):
     def _fmt_date(value, fmt="%-d %b %Y"):
         return i18n.format_date(value, with_year="%Y" in fmt)
 
+    @app.template_global("rate_shown")
+    def _rate_shown(job):
+        """Doctors and visitors see a job's rate only if the facility chose to show it. The facility
+        that posted the job, and admins, always see it."""
+        if job.get("show_rate"):
+            return True
+        u = g.get("user")
+        return bool(u and (u["role"] == "admin" or u["id"] == job.get("facility_id")))
+
     @app.template_filter("money")
     def _money(amount, currency="QAR"):
         return i18n.format_money(amount, currency)

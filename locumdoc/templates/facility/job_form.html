@@ -37,6 +37,10 @@
         {{ m.input(form, v, 'rate_amount', _('Rate (%(currency)s)', currency=currency_name(fac.currency or 'QAR')), type='number', optional=True, help=_('Leave empty to show "Rate on request".'), attrs='min="1" inputmode="numeric"') }}
         {{ m.select(form, v, 'rate_period', _('Paid'), ref.RATE_PERIODS, placeholder=None) }}
       </div>
+      <div class="field">
+        <label class="check"><input type="checkbox" name="show_rate" value="1" aria-describedby="h-show_rate" {% if v.show_rate %}checked{% endif %}> <span>{{ _('Show the rate to doctors') }}</span></label>
+        <span class="help" id="h-show_rate">{{ _('Leave this off to keep the rate private: doctors see "Rate on request" and you can discuss pay with applicants directly.') }}</span>
+      </div>
     </fieldset>
 
     <fieldset class="fieldset">

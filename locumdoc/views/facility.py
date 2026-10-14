@@ -99,6 +99,7 @@ def _job_form(fac, job=None):
             form.errors["start_date"] = _("The start date can't be in the past.")
         form.integer("rate_amount", min_v=1, max_v=10_000_000)
         form.choice("rate_period", refdata.RATE_PERIODS)
+        form.flag("show_rate")
         for perk in ("accommodation", "flights", "transport", "licensing_support"):
             form.flag(perk)
         form.text("description", required=True, max_len=5000, label=_("a description"))
@@ -107,7 +108,7 @@ def _job_form(fac, job=None):
             c = form.clean
             city = next(x for x in cities if str(x["id"]) == c["city_id"])
             vals = {k: c[k] for k in ("title", "specialty_id", "grade", "start_date", "end_date", "rate_amount",
-                                      "rate_period", "accommodation", "flights", "transport", "licensing_support",
+                                      "rate_period", "show_rate", "accommodation", "flights", "transport", "licensing_support",
                                       "description", "requirements")}
             vals.update(country_id=city["country_id"], city_id=city["id"], rate_currency=city["currency"])
             if job:

@@ -25,12 +25,11 @@
         <a href="{{ url_for('public.jobs') }}">{{ _('See all jobs') }}</a>
       </div>
       {% if jobs %}
-      <div class="board-cols" aria-hidden="true"><span>{{ _('Role') }}</span><span>{{ _('Starts') }}</span><span>{{ _('Rate') }}</span></div>
+      <div class="board-cols" aria-hidden="true"><span>{{ _('Role') }}</span><span>{{ _('Starts') }}</span></div>
       {% for j in jobs %}
       <a class="board-row" href="{{ url_for('public.job', job_id=j.id) }}">
         <span><span class="t">{{ j.title }}</span><span class="s">{{ _(j.specialty) }}{{ comma }}{{ _(j.city) }}{{ comma }}{{ j|weeks }}</span></span>
         <span class="d">{{ j.start_date|d('%-d %b') }}</span>
-        <span class="r">{{ j.rate_amount|money(j.rate_currency) }}{% if j.rate_amount %}<small>{{ label(ref.RATE_PERIODS, j.rate_period) }}</small>{% endif %}</span>
       </a>
       {% endfor %}
       <div class="board-foot">{{ _('New jobs are posted by facilities directly. Create a profile to get matched.') }}</div>

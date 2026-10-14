@@ -190,7 +190,7 @@ def application_full(a, specialty_of="doctor"):
     spec = j.get("specialty_id") if specialty_of == "job" else d.get("specialty_id")
     return dict(a, title=j.get("title", ""), start_date=j.get("start_date"), end_date=j.get("end_date"),
                 rate_amount=j.get("rate_amount"), rate_currency=j.get("rate_currency"),
-                rate_period=j.get("rate_period"), job_status=j.get("status"), facility_id=j.get("facility_id"),
+                rate_period=j.get("rate_period"), show_rate=j.get("show_rate"), job_status=j.get("status"), facility_id=j.get("facility_id"),
                 facility=f.get("name"), city=ci["name"] if ci else None,
                 dtitle=d.get("title"), first_name=d.get("first_name", ""), last_name=d.get("last_name", ""),
                 grade=d.get("grade"), academic_rank=d.get("academic_rank"),

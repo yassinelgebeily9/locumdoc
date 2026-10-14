@@ -109,8 +109,10 @@
     {{ perks(job) }}
   </div>
   <div class="rate">
+    {% if rate_shown(job) %}
     <b>{{ job.rate_amount|money(job.rate_currency) }}</b>
     {% if job.rate_amount %}<span>{{ label(ref.RATE_PERIODS, job.rate_period) }}</span>{% endif %}
+    {% endif %}
     {% if applied %}<div><span class="pill pill-submitted">{{ _('Applied') }}</span></div>{% endif %}
   </div>
 </li>

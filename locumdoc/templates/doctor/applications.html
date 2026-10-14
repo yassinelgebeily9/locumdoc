@@ -44,7 +44,7 @@
       <tr>
         <td><a class="row-link" href="{{ url_for('public.job', job_id=a.job_id) }}">{{ a.title }}</a><span class="sub">{{ a.facility }}{{ comma }}{{ _(a.city) }}. {{ _('Applied %(date)s', date=a.created_at|d) }}</span></td>
         <td class="hide-sm num">{{ a.start_date|d('%-d %b') }} – {{ a.end_date|d }}</td>
-        <td class="hide-sm num">{{ a.rate_amount|money(a.rate_currency) }}{% if a.rate_amount %} <span class="sub">{{ label(ref.RATE_PERIODS, a.rate_period) }}</span>{% endif %}</td>
+        <td class="hide-sm num">{% if rate_shown(a) %}{{ a.rate_amount|money(a.rate_currency) }}{% if a.rate_amount %} <span class="sub">{{ label(ref.RATE_PERIODS, a.rate_period) }}</span>{% endif %}{% else %}{{ _('Rate on request') }}{% endif %}</td>
         <td>{{ m.pill(a.status, ref.APPLICATION_STATUSES) }}</td>
         <td class="actions">
           {% if a.status not in ('placed', 'withdrawn', 'declined') %}

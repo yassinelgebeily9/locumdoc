@@ -53,8 +53,13 @@
 
   <aside class="stack aside-first">
     <div class="panel panel-pad apply-box" id="apply" data-hero-cta>
+      {% if rate_shown(job) %}
       <div class="rate-big">{{ job.rate_amount|money(job.rate_currency) }}</div>
       {% if job.rate_amount %}<div class="muted">{{ label(ref.RATE_PERIODS, job.rate_period) }}</div>{% endif %}
+      {% if job.rate_amount and not job.show_rate %}<div class="small muted">{{ _('Only you can see this rate. Doctors see "Rate on request".') }}</div>{% endif %}
+      {% else %}
+      <div class="rate-big">{{ _('Rate on request') }}</div>
+      {% endif %}
       {{ m.perks(job) }}
       <div class="stack">
       {% if not is_public %}

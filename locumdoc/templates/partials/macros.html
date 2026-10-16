@@ -6,10 +6,6 @@
 <a class="brand" href="{{ href }}" aria-label="{{ _('LocumDoc home') }}">{{ mark() }}<span>locum<b>doc</b></span></a>
 {%- endmacro %}
 
-{% macro qatar_flag() -%}
-<svg class="flag" viewBox="0 0 28 11" preserveAspectRatio="none" aria-hidden="true"><rect width="28" height="11" fill="#7a1631"/><path d="M0 0h8l2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111 2 0.6111 -2 0.6111H0z" fill="#fff"/></svg>
-{%- endmacro %}
-
 {% macro icon(name) -%}
 {%- if name == 'pin' -%}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 14s5-4.3 5-8A5 5 0 0 0 3 6c0 3.7 5 8 5 8Z"/><circle cx="8" cy="6" r="1.8"/></svg>
 {%- elif name == 'cal' -%}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5.5 1.5v3M10.5 1.5v3"/></svg>

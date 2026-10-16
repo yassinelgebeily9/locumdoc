@@ -31,15 +31,6 @@ BAND_MARK = ('<svg class="mark" viewBox="0 0 32 32" aria-hidden="true">'
              '<rect x="20.5" y="1" width="3.5" height="7" rx="1.75" fill="#e4d4b7"/>'
              '<path d="M13.5 10.5h5v5h5v5h-5v5h-5v-5h-5v-5h5z" fill="#fff"/></svg>')
 
-# The serrated edge of the Qatari flag: nine white points against maroon.
-def serration(height=630, teeth=9, depth=46):
-    step = height / teeth
-    pts = ["0,0"]
-    for i in range(teeth):
-        pts.append(f"{depth},{i * step + step / 2:.1f}")
-        pts.append(f"0,{(i + 1) * step:.1f}")
-    return f'<svg class="teeth" viewBox="0 0 {depth} {height}" preserveAspectRatio="none"><polygon points="{" ".join(pts)}" fill="#f3f5f6"/></svg>'
-
 FONT_CSS = f"""
 @font-face {{ font-family: Adventor; src: url({FONTS}/adventor-700.woff); font-weight: 700; }}
 @font-face {{ font-family: Inter; src: url({FONTS}/inter-500.woff); font-weight: 500; }}
@@ -69,8 +60,6 @@ h1 {{ margin-top: 22px; font-family: {c['font']}; font-weight: 700; font-size: {
 p {{ margin-top: 22px; font-size: 26px; line-height: 1.4; color: #4b5764; font-weight: 500; max-width: 720px; }}
 .url {{ margin-top: auto; font-family: Inter; font-weight: 600; font-size: 24px; color: #7a1631; direction: ltr; align-self: flex-start; }}
 .band {{ width: 330px; background: #7a1631; position: relative; display: flex; align-items: center; justify-content: center; }}
-.band .teeth {{ position: absolute; top: 0; height: 630px; width: 46px; left: 0; }}
-[dir=rtl] .band .teeth {{ left: auto; right: 0; transform: scaleX(-1); }}
 .band .mark {{ width: 176px; height: 176px; }}
 </style></head><body>
 <div class="copy">
@@ -80,7 +69,7 @@ p {{ margin-top: 22px; font-size: 26px; line-height: 1.4; color: #4b5764; font-w
   <p>{c['sub']}</p>
   <div class="url">locumdoc.me</div>
 </div>
-<div class="band">{serration()}{BAND_MARK}</div>
+<div class="band">{BAND_MARK}</div>
 </body></html>"""
 
 

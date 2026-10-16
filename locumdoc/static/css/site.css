@@ -125,7 +125,8 @@ p { margin: 0 0 1em; max-width: 68ch; }
 .hero { background: var(--surface); padding: clamp(40px, 7vw, 88px) 0 clamp(48px, 7vw, 96px); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 72px); align-items: start; }
 .launch { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; color: var(--ink-2); margin-bottom: 22px; }
-.launch .flag { width: 26px; height: 16px; border-radius: 2px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px var(--line); }
+.launch .pin { width: 28px; height: 28px; border-radius: 999px; background: var(--maroon-soft); color: var(--maroon); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.launch .pin svg { width: 15px; height: 15px; }
 .hero h1 { font-size: clamp(2.5rem, 5.4vw, 4.25rem); line-height: 1.02; letter-spacing: -0.03em; margin-bottom: 24px; }
 .hero .lede { font-size: var(--s1); color: var(--ink-2); max-width: 46ch; margin-bottom: 32px; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -153,16 +154,11 @@ p { margin: 0 0 1em; max-width: 68ch; }
 .board-empty p { margin-bottom: 14px; }
 .board-foot { padding: 14px 22px; background: #1b2733; font-size: var(--s-1); color: #9aa6b2; }
 
-/* serrated maroon band (from the Qatari flag's nine-point edge) */
-.serrated { position: relative; background: var(--maroon); color: #fff; padding: clamp(56px, 8vw, 96px) 0; }
-.serrated::before {
-  content: ""; position: absolute; left: 0; right: 0; top: -17px; height: 18px; background: var(--maroon);
-  -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 34px 100%;
-          mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 34px 100%;
-}
-.serrated h2, .serrated h3 { color: #fff; }
-.serrated p { color: #f0dce2; }
-.serrated a { color: #fff; }
+/* maroon band */
+.band-maroon { position: relative; background: var(--maroon); color: #fff; padding: clamp(56px, 8vw, 96px) 0; }
+.band-maroon h2, .band-maroon h3 { color: #fff; }
+.band-maroon p { color: #f0dce2; }
+.band-maroon a { color: #fff; }
 .tracks { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 80px); margin-top: 40px; }
 .track h3 { font-size: var(--s2); padding-bottom: 16px; border-bottom: 1px solid #9a3a54; margin-bottom: 8px; }
 .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
@@ -171,10 +167,10 @@ p { margin: 0 0 1em; max-width: 68ch; }
 .steps strong { display: block; font-weight: 600; margin-bottom: 4px; color: #fff; }
 .steps span { color: #f0dce2; }
 .track .btn { margin-top: 24px; }
-.serrated .btn-outline { background: transparent; color: #fff; border-color: #b45a73; }
-.serrated .btn-outline:hover { border-color: #fff; }
-.serrated .btn-light { background: #fff; color: var(--maroon); }
-.serrated .btn-light:hover { background: var(--sand-soft); }
+.band-maroon .btn-outline { background: transparent; color: #fff; border-color: #b45a73; }
+.band-maroon .btn-outline:hover { border-color: #fff; }
+.band-maroon .btn-light { background: #fff; color: var(--maroon); }
+.band-maroon .btn-light:hover { background: var(--sand-soft); }
 
 /* ---------------------------------------------------------------- sections */
 .section { padding: clamp(56px, 8vw, 104px) 0; }
